@@ -1,0 +1,18 @@
+{
+  "name": "gestor-de-tarefas",
+  "productName": "Gestor de Tarefas",
+  "version": "1.0.0",
+  "description": "Gestor de Tarefas - Londe & Rodrigues",
+  "author": "Londe & Rodrigues",
+  "main": "main.js",
+  "scripts": { "dist": "electron-builder --win nsis --publish never" },
+  "devDependencies": { "electron": "31.7.7", "electron-builder": "24.13.3" },
+  "build": {
+    "appId": "br.com.londerodrigues.gestor",
+    "productName": "Gestor de Tarefas",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "offline.html", "build/icon.png"],
+    "win": { "target": "nsis", "icon": "build/icon.ico", "artifactName": "Gestor-de-Tarefas-Instalador.exe" },
+    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": "always", "createStartMenuShortcut": true, "shortcutName": "Gestor de Tarefas", "runAfterFinish": true }
+  }
+}

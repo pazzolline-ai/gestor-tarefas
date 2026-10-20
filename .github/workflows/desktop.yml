@@ -1,0 +1,30 @@
+name: Programa para Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['desktop/**', '.github/workflows/desktop.yml']
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Gerar instalador
+        working-directory: desktop
+        run: npm run dist
+      - name: Publicar na página de downloads
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: programa-windows
+          name: Gestor de Tarefas para Windows
+          body: Instalador do Gestor de Tarefas para Windows. Baixe o arquivo Gestor-de-Tarefas-Instalador.exe e execute.
+          files: desktop/dist/Gestor-de-Tarefas-Instalador.exe
+          make_latest: true
