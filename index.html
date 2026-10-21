@@ -1396,7 +1396,7 @@ html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-ca
 (function(){
 "use strict";
 const SB_URL='https://nhrbbsgmipkwqeqqkgjj.supabase.co';
-const SB_KEY='sb_publishable_nlkmXweFZ56jY3HnGN179g_Mh18B2ox';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ocmJic2dtaXBrd3FlcXFrZ2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3OTYxODEsImV4cCI6MjEwNzM3MjE4MX0.o9hUAuGTJTnaW9hhPZ7vLdOjUecdpp6PUCNCHI_T02g';
 const ok=!!(window.supabase&&window.supabase.createClient);
 const sb=ok?window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'gt.auth'}}):null;
 window.GT={sb,url:SB_URL,membro:null,membros:[],siteUrl:'https://pazzolline-ai.github.io/gestor-tarefas/'};
@@ -1446,7 +1446,7 @@ function liberar(){const el=document.getElementById('sbLogin');if(el)el.remove()
 const PRIV=p=>{const s=p.split('/');return s[0]==='data'&&s[1]==='users'?'priv/'+s[2]+'/'+s.slice(3).join('/'):p};
 const docLoc=p=>{if(p==='config/mestre')return ['config_mestre','mestre'];const s=p.split('/');const id=s.pop();return [PRIV(s.join('/')),id]};
 const L={};// col -> Set(listeners)
-let canal=null;
+let canal=null,canalOk=false;GT.status=()=>({tempoReal:canalOk});
 function snapOf(rows){return {docs:rows.map(r=>({id:r.id,exists:true,data:()=>JSON.parse(JSON.stringify(r.data))})),empty:!rows.length,size:rows.length}}
 const CACHE={};// col -> Map(id->data)
 function emitir(col){const m=CACHE[col];if(!m||!L[col])return;const rows=[...m.entries()].map(([id,data])=>({id,data}));L[col].forEach(f=>{try{f.cb(snapOf(rows))}catch(e){console.error(e)}})}
@@ -1455,12 +1455,20 @@ function ligarCanal(){if(canal)return;
   canal=sb.channel('docs-mudancas').on('postgres_changes',{event:'*',schema:'public',table:'docs'},p=>{
     const r=p.new&&p.new.col?p.new:p.old;if(!r||!r.col||!CACHE[r.col])return;
     if(p.eventType==='DELETE')CACHE[r.col].delete(r.id);else CACHE[r.col].set(r.id,r.data);
-    emitirLogo(r.col);DOCL.forEach(d=>{if(d.col===r.col&&d.id===r.id)d.cb(p.eventType==='DELETE'?null:r.data)})}).subscribe(st=>{if(st==='SUBSCRIBED')Object.keys(CACHE).forEach(c=>recarregar(c))})}
+    emitirLogo(r.col);DOCL.forEach(d=>{if(d.col===r.col&&d.id===r.id)d.cb(p.eventType==='DELETE'?null:r.data)})}).subscribe((st,err)=>{canalOk=st==='SUBSCRIBED';if(st==='SUBSCRIBED')Object.keys(CACHE).forEach(c=>recarregar(c));if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'||st==='CLOSED'){console.warn('tempo real:',st,err);const c=canal;canal=null;try{sb.removeChannel(c)}catch(e){}setTimeout(ligarCanal,5000)}})}
+// Segurança: se o tempo real cair, atualiza a cada 20 s; e sempre que a janela volta ao foco
+setInterval(()=>{if(!canalOk&&!document.hidden)Object.keys(CACHE).forEach(c=>recarregar(c))},20000);
+window.addEventListener('focus',()=>{Object.keys(CACHE).forEach(c=>recarregar(c))});
 async function lerCol(col){const out=[];let de=0;for(;;){const {data,error}=await sb.from('docs').select('id,data').eq('col',col).range(de,de+999);if(error)throw error;out.push(...(data||[]));if(!data||data.length<1000)break;de+=1000}return out}
-async function recarregar(col){try{const rows=await lerCol(col);CACHE[col]=new Map(rows.map(r=>[r.id,r.data]));emitir(col)}catch(e){L[col]&&L[col].forEach(f=>f.err&&f.err(e))}}
+async function recarregar(col){try{const rows=await lerCol(col);const m=new Map(rows.map(r=>[r.id,r.data]));PEND.forEach((d,k)=>{const [c,i]=k.split('|');if(c===col)m.set(i,d)});CACHE[col]=m;emitir(col)}catch(e){L[col]&&L[col].forEach(f=>f.err&&f.err(e))}}
 const DOCL=new Set();
 function erro(e){const x=new Error(traduz(e));x.code=(e&&e.code==='42501')?'permission_denied':(e&&e.code)||'erro';return x}
-async function gravar(col,id,data){const org=GT.membro.org_id;const {error}=await sb.from('docs').upsert({org_id:org,col,id,data},{onConflict:'org_id,col,id'});if(error)throw erro(error);if(CACHE[col]){CACHE[col].set(id,data);emitirLogo(col)}}
+const PEND=new Map();
+async function gravar(col,id,data){const org=GT.membro.org_id;const k=col+'|'+id;const tinha=CACHE[col]&&CACHE[col].has(id),antes=tinha?CACHE[col].get(id):undefined;
+  if(CACHE[col]){CACHE[col].set(id,data);emitirLogo(col)}PEND.set(k,data);
+  let r;try{r=await Promise.race([sb.from('docs').upsert({org_id:org,col,id,data},{onConflict:'org_id,col,id'}),new Promise((_,rej)=>setTimeout(()=>rej({message:'A internet está lenta. Tente de novo.'}),25000))])}catch(e){r={error:e}}
+  PEND.delete(k);
+  if(r&&r.error){if(CACHE[col]){if(tinha)CACHE[col].set(id,antes);else CACHE[col].delete(id);emitirLogo(col)}throw erro(r.error)}}
 function docRef(col,id){return{
   id,
   async set(d){await gravar(col,id,JSON.parse(JSON.stringify(d)))},
@@ -1498,7 +1506,7 @@ function room(){
   const ch=sb.channel('presenca',{config:{presence:{key:peer}}});let handlers=[];let ant=new Map();let dados={};
   const lista=()=>{const st=ch.presenceState();const out=[];Object.keys(st).forEach(k=>{const p=(st[k]||[])[0]||{};out.push({peer:k,by:p.by||null,isMe:k===peer,sameTab:k===peer,kind:'viewer',guest:false,presence:p})});return out};
   ch.on('presence',{event:'sync'},()=>{const ps=lista();const now=new Map(ps.map(p=>[p.peer,p]));const joined=ps.filter(p=>!ant.has(p.peer));const left=[...ant.values()].filter(p=>!now.has(p.peer));ant=now;handlers.forEach(h=>{try{h({peers:ps,joined,left,updated:[]})}catch(e){}})});
-  ch.subscribe(async st=>{if(st==='SUBSCRIBED')await ch.track(Object.assign({by:uid},dados))});
+  ch.subscribe(async st=>{if(st==='SUBSCRIBED')await ch.track(Object.assign({by:uid},dados));else console.warn('presença:',st)});
   return{
     async presence(p){Object.assign(dados,p||{});try{await ch.track(Object.assign({by:uid},dados))}catch(e){}},
     peers:lista,
