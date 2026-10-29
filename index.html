@@ -2765,8 +2765,8 @@ function taskForm(id,pre,restore){
 }
 /* ---------- Prazos padrão e checklists por categoria (config/prazos) ---------- */
 const PZ_PADRAO={regras:{
-  'DAS - Simples Nacional':{tipo:'dia',dia:20,aviso:3},'DAS-MEI':{tipo:'dia',dia:20,aviso:3},'FGTS Digital':{tipo:'dia',dia:20,aviso:3},
-  'eSocial - Folha':{tipo:'dia',dia:15,aviso:3},'EFD-Reinf':{tipo:'dia',dia:15,aviso:3},'DCTFWeb':{tipo:'dia',dia:15,aviso:3},
+  'DAS - Simples Nacional':{tipo:'dia',dia:20,aviso:3,prorroga:true},'DAS-MEI':{tipo:'dia',dia:20,aviso:3,prorroga:true},'FGTS Digital':{tipo:'dia',dia:20,aviso:3},
+  'eSocial - Folha':{tipo:'dia',dia:15,aviso:3},'EFD-Reinf':{tipo:'dia',dia:15,aviso:3},'DCTFWeb':{tipo:'utilMes',mes:0,aviso:5},
   'DEFIS':{tipo:'anual',data:'03-31',aviso:15},'DASN-SIMEI':{tipo:'anual',data:'05-31',aviso:15},'ECD':{tipo:'utilMes',mes:6,aviso:20},'ECF':{tipo:'utilMes',mes:7,aviso:20}},
  checks:{
   'Abertura de empresa':['Consulta de viabilidade na prefeitura','Documentos dos sócios (RG, CPF, comprovante)','Contrato social assinado','Registro na Junta Comercial','CNPJ (DBE)','Inscrição municipal / estadual','Alvarás (prefeitura, bombeiros, vigilância)','Opção pelo Simples Nacional','Certificado digital','Cadastro no sistema e entrega ao cliente'],
@@ -2779,10 +2779,13 @@ function pzConf(){return PZ||PZ_PADRAO}
 function pzLigar(){if(pzLigar.on||mode!=='db'||!db)return;pzLigar.on=true;try{db.doc('config/prazos').onSnapshot(s=>{PZ=s.exists?s.data():null},()=>{})}catch(e){}}
 function pzRegra(cat){const r=pzConf().regras||{};const k=Object.keys(r).find(x=>norm(x)===norm(cat||''));return k?r[k]:null}
 function pzCheck(cat){const r=pzConf().checks||{};const k=Object.keys(r).find(x=>norm(x)===norm(cat||''));return k?r[k]:null}
+const antecipaF=d=>{while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);return d};
 function antecipa(d){while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);return d}
-function pzCalc(rg,base){const h=base?toD(base):toD(hoje());const y=h.getFullYear(),m=h.getMonth();let d;
+function prorroga(d){while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);return d}
+function pzCalc(rg,base){const h=base?toD(base):toD(hoje());const y=h.getFullYear(),m=h.getMonth();let d;const antecipa=rg.prorroga?prorroga:antecipaF;
   if(rg.tipo==='dia'){d=antecipa(new Date(y,m,+rg.dia||20));if(d<h)d=antecipa(new Date(y,m+1,+rg.dia||20))}
   else if(rg.tipo==='anual'){const [mm,dd]=String(rg.data||'12-31').split('-').map(Number);d=antecipa(new Date(y,mm-1,dd));if(d<h)d=antecipa(new Date(y+1,mm-1,dd))}
+  else if(rg.tipo==='utilMes'&&!+rg.mes){d=antecipa(new Date(y,m+1,0));if(d<h)d=antecipa(new Date(y,m+2,0))}
   else if(rg.tipo==='utilMes'){d=antecipa(new Date(y,+rg.mes,0));if(d<h)d=antecipa(new Date(y+1,+rg.mes,0))}
   return d?isoD(d):''}
 function pzAvisos(){
@@ -2794,12 +2797,12 @@ setInterval(pzAvisos,60*60e3);
 function pzModal(){
   if(!GT.gestor())return;const c=JSON.parse(JSON.stringify(pzConf()));const cats=[...new Set(categorias('').concat(Object.keys(c.regras||{}),Object.keys(c.checks||{})))].sort((a,b)=>a.localeCompare(b,'pt'));
   const linha=cat=>{const r=pzRegra.call(null,cat)&&(c.regras||{})[Object.keys(c.regras||{}).find(x=>norm(x)===norm(cat))]||{};const ck=(c.checks||{})[Object.keys(c.checks||{}).find(x=>norm(x)===norm(cat))]||[];
-    return `<details class="pz-it" data-cat="${esc(cat)}" style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><summary style="cursor:pointer;font-weight:500">${esc(cat)} <small style="color:var(--dim);font-weight:400">${r.tipo?'· prazo '+(r.tipo==='dia'?'dia '+r.dia:r.tipo==='anual'?fmt('2000-'+r.data).slice(0,5):'último dia útil do mês '+r.mes):''}${ck.length?' · '+plural(ck.length,'item','itens'):''}</small></summary>
-    <div class="fg" style="margin-top:10px"><div class="fd"><label>Prazo padrão</label><select class="sel pz-t"><option value="">Sem prazo padrão</option><option value="dia" ${r.tipo==='dia'?'selected':''}>Todo mês, no dia…</option><option value="anual" ${r.tipo==='anual'?'selected':''}>Uma vez por ano, em…</option><option value="utilMes" ${r.tipo==='utilMes'?'selected':''}>Último dia útil do mês…</option></select></div>
+    return `<details class="pz-it" data-cat="${esc(cat)}" style="border:1px solid var(--line);border-radius:10px;padding:8px 12px"><summary style="cursor:pointer;font-weight:500">${esc(cat)} <small style="color:var(--dim);font-weight:400">${r.tipo?'· prazo '+(r.tipo==='dia'?'dia '+r.dia:r.tipo==='anual'?fmt('2000-'+r.data).slice(0,5):(+r.mes?'último dia útil do mês '+r.mes:'último dia útil de todo mês')):''}${ck.length?' · '+plural(ck.length,'item','itens'):''}</small></summary>
+    <div class="fg" style="margin-top:10px"><div class="fd"><label>Prazo padrão</label><select class="sel pz-t"><option value="">Sem prazo padrão</option><option value="dia" ${r.tipo==='dia'?'selected':''}>Todo mês, no dia…</option><option value="anual" ${r.tipo==='anual'?'selected':''}>Uma vez por ano, em…</option><option value="utilMes" ${r.tipo==='utilMes'?'selected':''}>Último dia útil do mês… (0 = todo mês)</option></select></div>
     <div class="fd"><label>Dia / data / mês</label><input class="inp pz-v" value="${esc(r.tipo==='dia'?r.dia:r.tipo==='anual'?fmt('2000-'+r.data).slice(0,5):r.tipo==='utilMes'?r.mes:'')}" placeholder="20  ·  31/03  ·  6"></div>
     <div class="fd"><label>Avisar quantos dias antes</label><input class="inp pz-a" type="number" min="0" max="60" value="${r.aviso!=null?r.aviso:3}"></div>
     <div class="fd full"><label>Checklist (um item por linha)</label><textarea class="inp pz-c" rows="4">${esc(ck.join('\n'))}</textarea></div></div></details>`};
-  openModal(`${mh('Prazos e checklists por categoria')}<form id="pzF"><div class="mb"><div style="font-size:12.5px;color:var(--mut)">Ao criar uma tarefa dessa categoria, o prazo é preenchido sozinho e o checklist entra na tarefa. O responsável recebe aviso no computador nos dias antes do vencimento. Fim de semana antecipa para sexta. <b>Confira as datas legais</b>: elas mudam de tempos em tempos.</div>
+  openModal(`${mh('Prazos e checklists por categoria')}<form id="pzF"><div class="mb"><div style="font-size:12.5px;color:var(--mut)">Ao criar uma tarefa dessa categoria, o prazo é preenchido sozinho e o checklist entra na tarefa. O responsável recebe aviso no computador nos dias antes do vencimento. Prazo em fim de semana antecipa para sexta (DAS e DAS-MEI vão para segunda). <b>Confira as datas legais</b>: elas mudam de tempos em tempos.</div>
     <div style="display:flex;flex-direction:column;gap:8px">${cats.map(linha).join('')}</div>
     <div class="note-add"><input class="inp" id="pzNova" placeholder="Outra categoria (ex.: DCTF, SPED Fiscal)"><button type="button" class="btn sm" id="pzAdd">Adicionar</button></div>
   </div><div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
@@ -2809,7 +2812,8 @@ function pzModal(){
       const ck=it.querySelector('.pz-c').value.split('\n').map(x=>x.trim()).filter(Boolean);if(ck.length)out.checks[cat]=ck;
       if(t==='dia'){const d=+v;if(!(d>=1&&d<=31)){erro=cat;return}out.regras[cat]={tipo:'dia',dia:d,aviso:a}}
       else if(t==='anual'){const m=v.match(/^(\d{1,2})\/(\d{1,2})$/);if(!m){erro=cat;return}out.regras[cat]={tipo:'anual',data:pad(+m[2])+'-'+pad(+m[1]),aviso:a}}
-      else if(t==='utilMes'){const m=+v;if(!(m>=1&&m<=12)){erro=cat;return}out.regras[cat]={tipo:'utilMes',mes:m,aviso:a}}});
+      else if(t==='utilMes'){const m=+v;if(!(m>=0&&m<=12)||v===''){erro=cat;return}out.regras[cat]={tipo:'utilMes',mes:m,aviso:a}}
+      const ant=(pzConf().regras||{})[cat];if(out.regras[cat]&&ant&&ant.prorroga)out.regras[cat].prorroga=true});
     if(erro){toast('Confira o prazo de "'+erro+'": dia 1 a 31, data no formato 31/03 ou mês 1 a 12.');return}
     try{await db.doc('config/prazos').set(out);PZ=out;closeModal();toast('Prazos e checklists salvos')}catch(e){toast('Só gestor e diretoria podem alterar.')}});
 }
