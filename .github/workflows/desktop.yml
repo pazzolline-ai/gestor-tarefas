@@ -6,6 +6,7 @@ on:
     paths: ['desktop/**', '.github/workflows/desktop.yml']
 permissions:
   contents: write
+  actions: write
 jobs:
   windows:
     runs-on: windows-latest
@@ -20,11 +21,20 @@ jobs:
       - name: Gerar instalador
         working-directory: desktop
         run: npm run dist
+      - name: Ler versão
+        id: v
+        shell: bash
+        run: echo "ver=$(node -p "require('./desktop/package.json').version")" >> $GITHUB_OUTPUT
       - name: Publicar na página de downloads
         uses: softprops/action-gh-release@v2
         with:
           tag_name: programa-windows
-          name: Gestor de Tarefas para Windows
+          name: Gestor de Tarefas para Windows ${{ steps.v.outputs.ver }}
           body: Instalador do Gestor de Tarefas para Windows. Baixe o arquivo Gestor-de-Tarefas-Instalador.exe e execute.
           files: desktop/dist/Gestor-de-Tarefas-Instalador.exe
           make_latest: true
+      - name: Avisar os usuários (republica o site com a nova versão)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run site.yml --ref main -R ${{ github.repository }}

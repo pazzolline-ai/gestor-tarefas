@@ -7,6 +7,7 @@ const HOST = new URL(URL_SISTEMA).host;
 const PERMITIDOS = [HOST, 'nhrbbsgmipkwqeqqkgjj.supabase.co', 'cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 if (!app.requestSingleInstanceLock()) { app.quit(); }
+app.userAgentFallback = app.userAgentFallback + ' GestorPC/' + app.getVersion();
 let win, tray, saindo = false;
 const ICONE = () => nativeImage.createFromPath(path.join(__dirname, 'build', 'icon.png'));
 function criar() {

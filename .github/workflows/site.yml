@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore: ['desktop/**', '.github/workflows/desktop.yml']
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -22,7 +22,15 @@ jobs:
       - uses: actions/configure-pages@v5
         with:
           enablement: true
-      - run: mkdir site && cp index.html manifest.webmanifest icon-*.png site/
+      - name: Montar site e versão
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir site && cp index.html manifest.webmanifest icon-*.png site/
+          sed -i "s/__BUILD__/${GITHUB_SHA}/" site/index.html
+          PC=$(gh api repos/${{ github.repository }}/releases/tags/programa-windows --jq .name 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 1.0.0)
+          echo "{\"site\":\"${GITHUB_SHA}\",\"programa\":\"${PC}\"}" > site/version.json
+          cat site/version.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
