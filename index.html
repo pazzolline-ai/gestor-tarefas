@@ -2192,7 +2192,7 @@ function vEmpresas(){
   const list=[...D.empresas.entries()].map(([id,e])=>Object.assign({id},e)).filter(e=>((UI.empInat==='proprias'?donosDe(e).length>0:UI.empInat==='todas'||(UI.empInat==='inativas'?!!e.inativa:!e.inativa)))&&(!q||[e.razao,e.fantasia,e.cnpj,(e.cnpj||'').replace(/\D/g,''),e.responsavel,e.ie,e.im].join(' ').toLowerCase().includes(q))).sort((a,b)=>(a.fantasia||a.razao||'').localeCompare(b.fantasia||b.razao||'','pt'));
   const ts=[...D.tarefas.values()];
   const hasEx=[...D.empresas.values(),...D.tarefas.values(),...D.contatos.values()].some(x=>x.exemplo);
-  return `<div class="bar"><div class="search">${svg('search')}<input class="inp" id="empQ" placeholder="Buscar por nome ou CNPJ" value="${esc(UI.empQ)}"></div>${(()=>{const ni=[...D.empresas.values()].filter(e=>e.inativa).length;const na=D.empresas.size-ni;const m=UI.empInat||'ativas';return `<div class="seg">${[['ativas','Ativas',na],['inativas','Inativas / baixadas',ni],['proprias','Dos associados',[...D.empresas.values()].filter(e=>donosDe(e).length).length],['todas','Todas',D.empresas.size]].map(([k,l,n])=>`<button class="${m===k?'on':''}" data-emp-inat="${k}">${l} <span style="font-family:var(--f-mono);font-size:11px;opacity:.7">${n}</span></button>`).join('')}</div>`})()}<span style="flex:1"></span>${D.empresas.size?`<button class="btn" data-selmode>${UI.selMode?'Cancelar seleção':'Selecionar para excluir'}</button>`:''}<button class="btn" data-importar>Importar planilha</button><button class="btn pri" data-nova-emp>${svg('plus',2.2)}Nova empresa</button></div>
+  return `<div class="bar"><div class="search">${svg('search')}<input class="inp" id="empQ" placeholder="Buscar por nome ou CNPJ" value="${esc(UI.empQ)}"></div>${(()=>{const ni=[...D.empresas.values()].filter(e=>e.inativa).length;const na=D.empresas.size-ni;const m=UI.empInat||'ativas';return `<div class="seg">${[['ativas','Ativas',na],['inativas','Inativas / baixadas',ni],['proprias','Dos associados',[...D.empresas.values()].filter(e=>donosDe(e).length).length],['todas','Todas',D.empresas.size]].map(([k,l,n])=>`<button class="${m===k?'on':''}" data-emp-inat="${k}">${l} <span style="font-family:var(--f-mono);font-size:11px;opacity:.7">${n}</span></button>`).join('')}</div>`})()}<span style="flex:1"></span>${D.empresas.size?`<button class="btn" data-selmode>${UI.selMode?'Cancelar seleção':'Selecionar para excluir'}</button>`:''}<button class="btn" data-exp-emp>${svg('pdf')}Relatório Excel</button><button class="btn" data-importar>Importar planilha</button><button class="btn pri" data-nova-emp>${svg('plus',2.2)}Nova empresa</button></div>
   ${UI.selMode?`<div class="selbar"><b>${UI.sel.size} selecionada${UI.sel.size===1?'':'s'}</b><button class="btn sm" data-selall="${list.map(e=>e.id).join(',')}">${list.length&&list.every(e=>UI.sel.has(e.id))?'Desmarcar todas':`Selecionar todas (${list.length})`}</button><span style="flex:1"></span><button class="btn warn sm" data-del-sel ${UI.sel.size?'':'disabled style="opacity:.5;pointer-events:none"'}>Excluir selecionadas</button></div>`:''}
   ${list.length?`<div class="emp-grid">${list.map(e=>{const mt=ts.filter(t=>t.empresaId===e.id);const ab=mt.filter(t=>t.status!=='concluida');const ag=ab.filter(t=>t.status==='aguard_cliente'||t.status==='aguard_orgao').length;const atr=ab.filter(t=>info(t).atraso).length;
     return `<button class="ec ${UI.selMode&&UI.sel.has(e.id)?'picked':''}" ${UI.selMode?`data-pick="${e.id}"`:`data-emp="${e.id}"`}><div class="rz" style="display:flex;gap:8px;align-items:center">${UI.selMode?`<span class="ck">${UI.sel.has(e.id)?'✓':''}</span>`:''}<span style="overflow:hidden;text-overflow:ellipsis">${esc(e.fantasia||e.razao)}</span>${e.inativa?`<span class="flag ${e.situacao==='baixada'?'amb':''}" style="margin-left:auto;flex:none">${e.situacao==='baixada'?'Baixada':'Inativa'}</span>`:''}</div>${e.fantasia?`<div class="fn">${esc(e.razao)}</div>`:''}<div class="mono" style="font-size:12px;color:var(--mut)">${esc(e.cnpj||'CNPJ não informado')}</div>
@@ -2921,6 +2921,7 @@ document.addEventListener('input',e=>{if(e.target.id==='obQ'){UIOB.q=e.target.va
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-10-30c',data:'30/10/2026',itens:['Empresas: botão Relatório Excel com nome, CNPJ, cidade, UF, inscrições estadual e municipal e mais.','Importar planilha agora atualiza cidade, UF e inscrições de várias empresas de uma vez.']},
  {id:'2026-10-30b',data:'30/10/2026',itens:['Manual do sistema e espaço de sugestões (menu Manual e sugestões).','Cadastro de Obrigações por departamento, com edição e importação em lote.','Ao atualizar, o sistema mostra o que mudou.']},
  {id:'2026-10-30a',data:'30/10/2026',itens:['Olho para mostrar a senha.','Vários responsáveis por tarefa ("Também participam").','Anexos dentro da tarefa.','Rotinas mensais por regime.','Prazos pulam feriados nacionais.','Backup automático todo domingo.','Nome do usuário travado: segue o cadastro da Equipe.']},
  {id:'2026-10-29',data:'29/10/2026',itens:['CNPJ preenche o cadastro sozinho (com sócios, telefone e e-mail).','Avisos no PC de toda alteração em tarefas.','Chat retirado.','Nome e logo do sistema; foto dos usuários.','Carga de trabalho e termômetro de contratação.','Quem acessou o sistema.','Senha ao abrir o programa do PC.','Mensagem de bom dia.','Prazos e checklists por categoria, cronômetro e relatório da semana.']}];
@@ -3251,6 +3252,13 @@ const COLS={
   email:['email','emails','correioeletronico'],
   regime:['regimetributario','regime','tributacao','enquadramento'],
   obs:['observacoes','observacao','obs','anotacoes'],
+  cidade:['cidade','municipio','municipiouf','cidadeuf','localidade'],
+  uf:['uf','estado','siglauf'],
+  ie:['inscricaoestadual','ie','inscestadual','inscrestadual','inscricaoest'],
+  im:['inscricaomunicipal','im','inscmunicipal','inscrmunicipal','ccm','cadastromunicipal'],
+  ramo:['ramo','atividade','ramodeatividade'],
+  respInterno:['responsavelnoescritorio','respinterno','responsavelinterno','responsavelescritorio'],
+  situacao:['situacao','status'],
   honorario:['honorario','honorariomensal','honorariosmensais','honorarios','mensalidade','valorhonorario','valormensal','valorr'],
   diaPagamento:['diapagamento','diadopagamento','diadepagamento','diavencimento','diadovencimento','vencimento'],
   formaPagamento:['formapagamento','formadepagamento','formadopagamento','forma','meiodepagamento'],
@@ -3276,7 +3284,7 @@ function importModal(){
   IMP=null;
   openModal(`${mh('Importar clientes')}<div class="mb" id="impBody">
     <label class="drop" id="impDrop" for="impFile"><b>Escolha ou arraste sua planilha aqui</b><span>Excel (.xlsx, .xls) ou CSV · a primeira aba é lida</span><input type="file" id="impFile" accept=".xlsx,.xls,.csv,.txt" hidden></label>
-    <div class="cols">Colunas reconhecidas (o nome não precisa ser exato): <code>Razão Social</code> <code>Nome Fantasia</code> <code>CNPJ</code> <code>Responsável</code> <code>Telefone</code> <code>WhatsApp</code> <code>E-mail</code> <code>Regime Tributário</code> <code>Observações</code>${WS==='pessoal'?' <code>Honorário mensal</code> <code>Dia do pagamento</code> <code>Forma de pagamento</code>':''}. Só a razão social é obrigatória. Empresas com o mesmo CNPJ não são duplicadas.</div>
+    <div class="cols">Dica: para atualizar várias empresas de uma vez, baixe o <b>Relatório Excel</b> na tela Empresas, corrija na planilha e suba aqui escolhendo "Atualizar". Células vazias não apagam o que já existe; a empresa é encontrada pelo CNPJ.<br>Colunas reconhecidas (o nome não precisa ser exato): <code>Razão Social</code> <code>Nome Fantasia</code> <code>CNPJ</code> <code>Cidade</code> <code>UF</code> <code>Inscrição Estadual</code> <code>Inscrição Municipal</code> <code>Responsável</code> <code>Telefone</code> <code>WhatsApp</code> <code>E-mail</code> <code>Regime Tributário</code> <code>Observações</code>${WS==='pessoal'?' <code>Honorário mensal</code> <code>Dia do pagamento</code> <code>Forma de pagamento</code>':''}. Só a razão social é obrigatória. Empresas com o mesmo CNPJ não são duplicadas.</div>
     <div><button class="btn sm" id="impModelo">Baixar planilha-modelo</button></div>
   </div><div class="mf"><button class="btn" data-close>Cancelar</button><button class="btn pri" id="impGo" disabled style="opacity:.5;pointer-events:none">Importar</button></div>`);
   const f=$('#impFile'),dz=$('#impDrop');
@@ -3321,6 +3329,9 @@ function prepararImport(aoa,nome){
     if(!o.razao&&o.fantasia)o.razao=o.fantasia;
     if(!o.razao&&!o.cnpj)return; // linha vazia
     if(o.cnpj)o.cnpj=fixCNPJ(o.cnpj);if(o.regime)o.regime=fixRegime(o.regime);
+    if(o.cidade||o.uf){let c=String(o.cidade||'').trim(),u=String(o.uf||'').trim().toUpperCase();const m=c.match(/^(.*?)\s*[-\/]\s*([A-Za-z]{2})$/);if(m){c=m[1];if(!u)u=m[2].toUpperCase()}o._cid=c;o._uf=u}delete o.cidade;delete o.uf;
+    if(o.situacao){const sv=norm(o.situacao);if(sv.startsWith('inat'))o.inativa=true;else if(sv.startsWith('ativ'))o.inativa=false}delete o.situacao;
+    ['ie','im'].forEach(k=>{if(o[k]!=null)o[k]=String(o[k]).trim()});
     if(o.honorario!=null){let v=String(o.honorario).replace(/[^\d,.-]/g,'');if(v.includes(',')&&v.includes('.'))v=v.replace(/\./g,'').replace(',','.');else if(v.includes(','))v=v.replace(',','.');const n=parseFloat(v);if(isNaN(n))delete o.honorario;else o.honorario=n}
     if(o.diaPagamento!=null){const d=parseInt(String(o.diaPagamento).replace(/\D/g,''),10);if(d>=1&&d<=31)o.diaPagamento=d;else delete o.diaPagamento}
     if(o.formaPagamento){const f=norm(o.formaPagamento);o.formaPagamento=f.includes('pix')?'Pix':f.includes('boleto')?'Boleto':f.includes('transf')||f.includes('ted')?'Transferência':f.includes('dinheiro')||f.includes('especie')?'Dinheiro':String(o.formaPagamento).trim()}
@@ -3358,8 +3369,9 @@ async function executarImport(){
   let novas=0,atual=0,falhas=0;const now=agora();
   for(let i=0;i<todo.length;i++){
     const x=todo[i];let id,data;
-    if(x.st==='nova'){id=uid();data=Object.assign({criadoEm:now,proxContato:null},x.o)}
-    else{id=x.id;const old=D.empresas.get(id)||{};const o2=Object.assign({},x.o);if(old.obs&&o2.obs&&!old.obs.includes(o2.obs))o2.obs=old.obs+'\n'+o2.obs;else if(old.obs)delete o2.obs;data=Object.assign({},old,o2)}
+    const mun=(old0,o)=>{if(o._cid==null&&o._uf==null)return;const pm=String(old0||'').match(/^(.*?)(?:\s*-\s*([A-Za-z]{2}))?$/)||[];const c=o._cid||pm[1]||'',u=o._uf||pm[2]||'';o.municipio=c&&u?c+' - '+u:(c||u);delete o._cid;delete o._uf};
+    if(x.st==='nova'){id=uid();const o1=Object.assign({},x.o);mun('',o1);data=Object.assign({criadoEm:now,proxContato:null},o1)}
+    else{id=x.id;const old=D.empresas.get(id)||{};const o2=Object.assign({},x.o);mun(old.municipio,o2);if(old.obs&&o2.obs&&!old.obs.includes(o2.obs))o2.obs=old.obs+'\n'+o2.obs;else if(old.obs)delete o2.obs;data=Object.assign({},old,o2)}
     data=JSON.parse(JSON.stringify(data));
     try{if(mode==='db')await C('empresas').doc(id).set(data);D.empresas.set(id,data);x.st==='nova'?novas++:atual++}
     catch(e){falhas++;if(e&&e.code==='quota_exceeded')break}
@@ -3371,6 +3383,20 @@ async function executarImport(){
   if(UI.view!=='empresas')go('empresas');
 }
 
+/* ---------- Relatório Excel das empresas ---------- */
+async function exportarEmpresas(){
+  if(!window.XLSX){toast('Não consegui carregar o Excel. Verifique a internet e tente de novo.');return}
+  const head=['Razão Social','Nome Fantasia','CNPJ','Cidade','UF','Inscrição Estadual','Inscrição Municipal','Regime Tributário','Responsável','Telefone','WhatsApp','E-mail','Ramo','Responsável no escritório','Situação'];
+  const rows=[...D.empresas.values()].sort((a,b)=>(a.razao||'').localeCompare(b.razao||'','pt')).map(e=>{const m=String(e.municipio||'').match(/^(.*?)(?:\s*-\s*([A-Za-z]{2}))?$/)||[];
+    return [e.razao||'',e.fantasia||'',e.cnpj||'',m[1]||'',(m[2]||'').toUpperCase(),e.ie||'',e.im||'',e.regime||'',e.responsavel||'',e.telefone||'',e.whatsapp||'',e.email||'',e.ramo||'',e.respInterno||'',e.inativa?'Inativa':'Ativa']});
+  const ws=XLSX.utils.aoa_to_sheet([head].concat(rows));
+  ws['!cols']=[40,26,20,22,5,20,20,18,26,16,16,28,26,22,9].map(w=>({wch:w}));ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:head.length-1}})};
+  for(let r=1;r<=rows.length;r++)[2,5,6].forEach(c=>{const a=XLSX.utils.encode_cell({r,c});if(ws[a])ws[a].t='s'});
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Empresas');
+  const data=XLSX.write(wb,{bookType:'xlsx',type:'array'});const name='empresas-'+hoje()+'.xlsx';
+  try{const dl=await window.claude.use('downloads');await dl.save({filename:name,data:new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})});toast(plural(rows.length,'empresa exportada','empresas exportadas'))}catch(e){toast('Não foi possível baixar o arquivo.')}
+}
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-exp-emp]'))exportarEmpresas()});
 /* ---------- Exclusão de empresas ---------- */
 function excluirEmpresas(ids){
   ids=ids.filter(id=>D.empresas.has(id));if(!ids.length)return;
