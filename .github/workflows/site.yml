@@ -26,7 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir site && cp index.html manifest.webmanifest icon-*.png site/
+          mkdir site && cp index.html manifest.webmanifest sw.js icon-*.png site/
           sed -i "s/__BUILD__/${GITHUB_SHA}/" site/index.html
           PC=$(gh api repos/${{ github.repository }}/releases/tags/programa-windows --jq .name 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 1.0.0)
           echo "{\"site\":\"${GITHUB_SHA}\",\"programa\":\"${PC}\"}" > site/version.json
