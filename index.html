@@ -1478,16 +1478,19 @@ const BUILD='__BUILD__';
 const LINK_PC='https://github.com/pazzolline-ai/gestor-tarefas/releases/latest/download/Gestor-de-Tarefas-Instalador.exe';
 const verNum=v=>String(v||'0').split('.').map(n=>+n||0).reduce((a,n)=>a*1000+n,0);
 let verUlt=0;
+const visto=k=>{try{return localStorage.getItem(k)==='visto'}catch(e){return false}},marcar=k=>{try{localStorage.setItem(k,'visto')}catch(e){}};
 async function verAtualizacao(){if(Date.now()-verUlt<5*60e3)return;verUlt=Date.now();
   let v;try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;v=await r.json()}catch(e){return}
-  const pc=(navigator.userAgent.match(/GestorPC\/([\d.]+)/)||[])[1]||(NO_PC?'1.0.0':null);
-  if(v.site&&BUILD!=='__BUILD__'&&v.site!==BUILD)faixa('site',v.site,'🔄 Saiu uma atualização do sistema. Nada do que foi lançado se perde.','Atualizar agora',()=>location.reload());
-  else if(pc&&v.programa&&verNum(v.programa)>verNum(pc))faixa('pc',v.programa,`⬇️ Nova versão do programa do PC (${esc(v.programa)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{window.open(LINK_PC,'_blank')})}
+  if(BUILD!=='__BUILD__'&&v.site===BUILD)marcar('gt.faixa.site.'+v.site);
+  const pc=(navigator.userAgent.match(/GestorPC\/([\d.]+)/)||[])[1]||null;
+  if(pc&&v.programa&&verNum(pc)>=verNum(v.programa))marcar('gt.faixa.pc.'+v.programa);
+  if(v.site&&BUILD!=='__BUILD__'&&v.site!==BUILD&&!visto('gt.faixa.site.'+v.site))faixa('site',v.site,'🔄 Saiu uma atualização do sistema. Nada do que foi lançado se perde.','Atualizar agora',()=>{const u=location.href.split('#')[0].split('?')[0];location.replace(u+'?v='+v.site.slice(0,7)+location.hash)});
+  else if(NO_PC&&v.programa&&(!pc||verNum(v.programa)>verNum(pc))&&!visto('gt.faixa.pc.'+v.programa))faixa('pc',v.programa,`⬇️ Nova versão do programa do PC (${esc(v.programa)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{window.open(LINK_PC,'_blank')})}
 function faixa(tipo,ver,txt,bt,fn){const k='gt.faixa.'+tipo+'.'+ver;let el=document.getElementById('gtFaixa');if(el&&el.dataset.k===k)return;
   if(!el){el=document.createElement('div');el.id='gtFaixa';document.body.appendChild(el)}el.dataset.k=k;
-  el.innerHTML=`<span>${txt}</span><button class="btn pri sm" id="gtFxGo">${bt}</button><button class="btn ghost sm" id="gtFxX" aria-label="Depois">Depois</button>`;
-  el.querySelector('#gtFxGo').onclick=fn;el.querySelector('#gtFxX').onclick=()=>el.remove();
-  try{if(localStorage.getItem(k)!=='1'&&'Notification' in window&&Notification.permission==='granted'){new Notification(tipo==='pc'?'Nova versão do programa do PC':'Sistema atualizado',{body:tipo==='pc'?'Clique em Baixar na faixa do sistema para instalar.':'Clique em Atualizar agora.'});localStorage.setItem(k,'1')}}catch(e){}}
+  el.innerHTML=`<span>${txt}</span><button class="btn pri sm" id="gtFxGo">${bt}</button><button class="btn ghost sm" id="gtFxX">Agora não</button>`;
+  el.querySelector('#gtFxGo').onclick=()=>{marcar(k);el.remove();fn()};el.querySelector('#gtFxX').onclick=()=>{marcar(k);el.remove()};
+  try{if('Notification' in window&&Notification.permission==='granted')new Notification(tipo==='pc'?'Nova versão do programa do PC':'Sistema atualizado',{body:tipo==='pc'?'Clique em Baixar na faixa do sistema para instalar.':'Clique em Atualizar agora.',tag:k})}catch(e){}}
 setInterval(verAtualizacao,10*60e3);window.addEventListener('focus',verAtualizacao);
 
 function liberar(){const el=document.getElementById('sbLogin');if(el)el.remove();aplicarMarca();
@@ -1939,8 +1942,8 @@ function info(t){
     cobradoHoje:!!lastCob&&lastCob.slice(0,10)===h,lastCob,nCob:cobs.length,
     emAberto:dias((t.criadoEm||h).slice(0,10),aberta?h:(t.concluidoEm||h).slice(0,10))};
 }
-function tarefas(){let a=[...D.tarefas.entries()].map(([id,t])=>Object.assign({id},t));if(UI.mod)a=a.filter(t=>modDe(t)===UI.mod);if(UI.resp)a=a.filter(t=>t.responsavel===UI.resp);return a}
-function responsaveis(){const s=new Set(equipeLista().map(p=>p.nome));if(!s.size)RESP_PADRAO.forEach(r=>s.add(r));D.tarefas.forEach(t=>t.responsavel&&s.add(t.responsavel));return [...s]}
+function tarefas(){let a=[...D.tarefas.entries()].map(([id,t])=>Object.assign({id},t));if(UI.mod)a=a.filter(t=>modDe(t)===UI.mod);if(UI.resp)a=a.filter(t=>norm(t.responsavel)===norm(UI.resp));return a}
+function responsaveis(){const s=new Set(equipeLista().map(p=>p.nome));if(!s.size)RESP_PADRAO.forEach(r=>s.add(r));D.tarefas.forEach(t=>{if(t.responsavel&&![...s].some(x=>norm(x)===norm(t.responsavel)))s.add(t.responsavel)});return [...s]}
 const byPrazo=(a,b)=>(a.prazo||'9999').localeCompare(b.prazo||'9999');
 function cobrarList(){
   return tarefas().map(t=>Object.assign(t,{_i:info(t)})).filter(t=>t._i.cobrar)
@@ -2062,7 +2065,7 @@ function vDashboard(){
   ${mode==='local'?'<div class="banner">Modo local: os dados ficam salvos apenas neste navegador.</div>':''}
   ${mode==='db'&&!canWrite?'<div class="banner" style="background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent);color:var(--fg)"><b>Seu acesso é só de visualização.</b> Você não consegue criar tarefas nem avisos. Fale com a diretoria.</div>':''}
   ${WS==='pessoal'?(()=>{const a=finAtrasados(),hj=finLinhas(hoje().slice(0,7)).filter(x=>x.hoje);return a.length||hj.length?`<div class="reminder" style="${a.length?'background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)':''}">${svg('money')}<div style="flex:1;min-width:200px">${a.length?`<b style="color:var(--red)">${plural(a.length,'pagamento atrasado','pagamentos atrasados')}</b> · ${brlF(a.reduce((s,x)=>s+x.valor,0))}`:''}${a.length&&hj.length?' · ':''}${hj.length?`<b>${plural(hj.length,'vence','vencem')} hoje</b> · ${brlF(hj.reduce((s,x)=>s+x.valor,0))}`:''}</div><button class="btn sm" data-go="financeiro">Ver financeiro</button></div>`:''})():''}
-  ${UI.mod?'':(()=>{const ts=[...D.tarefas.values()].filter(t=>!UI.resp||t.responsavel===UI.resp);return `<div class="mod-strip">${MODS.map(([k,l,c])=>{const m=ts.filter(t=>modDe(t)===k&&t.status!=='concluida');const at=m.filter(t=>t.prazo&&t.prazo<h).length;return `<button class="mod-card" data-mod="${k}" style="--c:${c}"><span class="mc-l"><i></i>${l}</span><span class="mc-n">${m.length}<small>abertas</small></span><span class="mc-s ${at?'late':''}">${at?plural(at,'atrasada','atrasadas'):'Em dia'}</span></button>`}).join('')}</div>`})()}
+  ${UI.mod?'':(()=>{const ts=[...D.tarefas.values()].filter(t=>!UI.resp||norm(t.responsavel)===norm(UI.resp));return `<div class="mod-strip">${MODS.map(([k,l,c])=>{const m=ts.filter(t=>modDe(t)===k&&t.status!=='concluida');const at=m.filter(t=>t.prazo&&t.prazo<h).length;return `<button class="mod-card" data-mod="${k}" style="--c:${c}"><span class="mc-l"><i></i>${l}</span><span class="mc-n">${m.length}<small>abertas</small></span><span class="mc-s ${at?'late':''}">${at?plural(at,'atrasada','atrasadas'):'Em dia'}</span></button>`}).join('')}</div>`})()}
   ${WS!=='pessoal'?(()=>{const e=equipeLista().find(p=>souEu(p.nome));const d=e&&rdDoc(e.nome);return e&&rdVeAlerta(e.nome,d)?`<div class="reminder" style="background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)">${svg('perf')}<div style="flex:1;min-width:200px"><b style="color:var(--red)">Seu rendimento precisa de atenção</b> · ${esc((d.motivos||[]).join(' · '))}</div><button class="btn sm" data-go="rendimento">Ver</button></div>`:''})():''}
   ${(()=>{const n=rdMeusAlertas();return n&&!equipeLista().some(p=>souEu(p.nome)&&rdVeAlerta(p.nome,rdDoc(p.nome)))?`<div class="reminder">${svg('perf')}<div style="flex:1;min-width:200px"><b>${plural(n,'pessoa precisa','pessoas precisam')} de feedback</b> sobre o rendimento</div><button class="btn sm" data-go="rendimento">Ver rendimento</button></div>`:''})()}
   ${WS!=='pessoal'?(()=>{const hj=aniversariantes().filter(p=>p.a.dias===0),nv=muralNovos(),fx=avisosLista().filter(a=>a.fixo).length;return (hj.length?`<div class="reminder bdr">${svg('bolo')}<div style="flex:1;min-width:200px"><b>Aniversário hoje:</b> ${hj.map(p=>esc(p.nome)).join(', ')} 🎉</div><button class="btn sm" data-festa>🎉 Comemorar</button><button class="btn sm" data-go="mural">Ver mural</button></div>`:'')+(nv||fx?`<div class="reminder">${svg('mural')}<div style="flex:1;min-width:200px">${nv?`<b>${plural(nv,'aviso novo','avisos novos')}</b> no mural`:''}${nv&&fx?' · ':''}${fx?plural(fx,'aviso fixado','avisos fixados'):''}</div><button class="btn sm" data-go="mural">Abrir mural</button></div>`:'')})():''}
@@ -2683,7 +2686,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#sideFoot').innerHTML=`${WS==='pessoal'?'<button class="btn sm" data-bloquear style="align-self:flex-start">Bloquear espaço Lucas</button>':''}<span id="gDot">${gDotTxt()}</span>${mode==='db'&&ME?`<div class="side-me">${aviHtml(ME_AV,meuNome(),'')}<span>${esc(meuNome())}</span></div>`:''}${onlineHtml()}<span>${mode==='db'?'Dados compartilhados':'Modo local'}</span>`;
   $('#meChip').innerHTML=mode==='db'&&ME?`${aviHtml(ME_AV,meuNome(),'sm')}<span>${esc(ME)}</span>`:'';$('#meChip').title=mode==='db'?meuNome():'';
   const bk=$('#btnBackup');if(bk)bk.hidden=!rbTotal();const bu=$('#btnUsers');if(bu)bu.hidden=!rbTotal();['btnAcessos','btnMarca','btnPrazos'].forEach(i=>{const b=document.getElementById(i);if(b)b.hidden=!(mode==='db'&&GT.gestor())});if(UI.view==='chat')UI.view='dashboard';
-  const modCnt=k=>{let n=0;D.tarefas.forEach(t=>{if(t.status!=='concluida'&&(!k||modDe(t)===k)&&(!UI.resp||t.responsavel===UI.resp))n++});return n};
+  const modCnt=k=>{let n=0;D.tarefas.forEach(t=>{if(t.status!=='concluida'&&(!k||modDe(t)===k)&&(!UI.resp||norm(t.responsavel)===norm(UI.resp)))n++});return n};
   $('#mods').innerHTML='<div class="nav-g">Módulos</div>'+[['','Todos os módulos','#8a93a2']].concat(MODS).map(([k,l,c])=>`<button class="${UI.mod===k?'on':''}" data-mod="${k}" style="--c:${c}" title="${l}"><i></i><span>${l}</span><em>${modCnt(k)}</em></button>`).join('');
   $('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
