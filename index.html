@@ -4439,18 +4439,18 @@ function perfilModal(uid){
   openModal(`${mh(eu?'Minha foto e avisos':'Editar '+esc(m.nome))}<form id="pfF"><div class="mb">
     <div style="display:flex;gap:14px;align-items:center"><div id="pfImg" style="width:84px;height:84px;border-radius:50%;overflow:hidden;background:var(--bg3,#22262e);display:grid;place-items:center;flex:none"></div>
     <div style="display:flex;flex-direction:column;gap:8px"><label class="btn sm" style="cursor:pointer">Escolher foto<input type="file" id="pfArq" accept="image/*" hidden></label><button type="button" class="btn sm ghost" id="pfTira">Remover foto</button></div></div>
-    <div class="fd"><label for="pfNome">Nome</label><input class="inp" id="pfNome" value="${esc(m.nome)}" ${ges?'':'disabled'}>${ges?`<small style="font-size:11.5px;color:var(--dim)">Ao trocar o nome, as tarefas e o cadastro da equipe com o nome antigo passam para o novo.</small>`:`<small style="font-size:11.5px;color:var(--dim)">Para trocar o nome, peça ao gestor.</small>`}</div>
+    <div class="fd"><label for="pfNome">Nome</label><input class="inp" id="pfNome" value="${esc(m.nome)}" disabled><small style="font-size:11.5px;color:var(--dim)">O nome segue o cadastro da Equipe e não pode ser trocado aqui.</small></div>
     ${eu&&ges?`<label class="chk"><input type="checkbox" id="pfAviso" ${lsGet('gt.avisoTudo','1')!=='0'?'checked':''}> Avisar no computador toda vez que alguém mexer numa tarefa</label>`:''}
   </div><div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`);
   prev();
   $('#pfArq').addEventListener('change',async ev=>{try{foto=await imgReduzir(ev.target.files[0],256,'image/jpeg');prev()}catch(e){toast(e.message)}});
   $('#pfTira').addEventListener('click',()=>{foto='';prev()});
   $('#pfF').addEventListener('submit',async ev=>{ev.preventDefault();const nome=val('pfNome');
-    if(ges&&!nome){toast('Digite o nome.');return}
+
     if(document.getElementById('pfAviso'))lsSet('gt.avisoTudo',$('#pfAviso').checked?'1':'0');
-    const mudouNome=ges&&nome!==m.nome;
+    const mudouNome=false;
     if(mudouNome&&!(await new Promise(r=>confirmBox(`Trocar <b>${esc(m.nome)}</b> por <b>${esc(nome)}</b> no sistema todo?`,'Trocar',()=>r(true))))){return}
-    const {error}=await GT.sb.rpc('salvar_perfil',{p_uid:uid,p_nome:ges?nome:null,p_foto:foto});
+    const {error}=await GT.sb.rpc('salvar_perfil',{p_uid:uid,p_nome:null,p_foto:foto});
     if(error){toast(error.message||'Não foi possível salvar.');return}
     await GT.recarregarMembros();if(eu){const mm=GT.membro;try{const me=await UAPI.me();ME_AV=me.avatarUrl||''}catch(e){}if(mudouNome){MEFULL=mm.nome;ME=mm.nome.split(' ')[0]}}
     closeModal();toast(mudouNome?'Nome e foto salvos':'Salvo');render();if(document.getElementById('usNovo'))usuariosModal()});
@@ -4567,7 +4567,7 @@ async function usuariosModal(){
   <div style="font-size:13px;color:var(--mut)">Cada pessoa entra com o próprio e-mail e senha. <b>Colaborador</b> vê as próprias tarefas; <b>Gestor</b> cuida das empresas, cobranças e reembolsos; <b>Diretoria</b> vê tudo e cadastra a equipe.</div>
   <div>${ms.map(m=>`<div class="us-row ${m.ativo?'':'off'}"><div style="display:flex;gap:10px;align-items:center">${aviHtml(m.foto||'',m.nome,'')}<div><b>${esc(m.nome)}</b>${m.dono?' <span class="flag">Administrador</span>':''}<small>${esc(m.email||'')}${m.ativo?'':' · desativado'}</small></div></div>
     <select class="sel" data-us-papel="${m.user_id}" ${m.dono||m.user_id===UID?'disabled':''}>${Object.keys(PAPEL).map(k=>`<option value="${k}" ${m.papel===k?'selected':''}>${PAPEL[k]}</option>`).join('')}</select>
-    <div style="display:flex;gap:6px"><button class="btn sm" data-us-perfil="${m.user_id}">Nome e foto</button>${m.dono||m.user_id===UID?'':`<button class="btn sm" data-us-senha="${m.user_id}">Nova senha</button><button class="btn sm ${m.ativo?'danger':''}" data-us-ativo="${m.user_id}" data-v="${m.ativo?0:1}">${m.ativo?'Desativar':'Reativar'}</button>`}</div></div>`).join('')}</div>
+    <div style="display:flex;gap:6px"><button class="btn sm" data-us-perfil="${m.user_id}">Foto</button>${m.dono||m.user_id===UID?'':`<button class="btn sm" data-us-senha="${m.user_id}">Nova senha</button><button class="btn sm ${m.ativo?'danger':''}" data-us-ativo="${m.user_id}" data-v="${m.ativo?0:1}">${m.ativo?'Desativar':'Reativar'}</button>`}</div></div>`).join('')}</div>
   <form id="usNovo" style="border:1px dashed var(--line2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px"><b style="font-size:13px">Novo acesso</b>
   <div class="fg"><div class="fd"><label for="un_n">Nome (como na equipe)</label><input class="inp" id="un_n" required></div><div class="fd"><label for="un_e">E-mail</label><input class="inp" id="un_e" type="email" required></div>
   <div class="fd"><label for="un_p">Perfil</label><select class="sel" id="un_p"><option value="colaborador">Colaborador</option><option value="gestor">Gestor</option><option value="diretoria">Diretoria</option></select></div>
