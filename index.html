@@ -1384,6 +1384,7 @@ html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-ca
 #sbLogin .lg-ic{width:42px;height:42px;border-radius:11px;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center;font-weight:700;font-size:15px}
 #sbLogin label{font-size:12px;font-weight:500;display:flex;flex-direction:column;gap:5px}
 #sbLogin .inp{width:100%}
+.trofeu-mini{position:fixed;right:18px;bottom:18px;z-index:160;display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid color-mix(in srgb,#f5b82e 55%,var(--line));border-radius:14px;box-shadow:var(--shadow);padding:12px 16px;transform:translateY(20px) scale(.96);opacity:0;transition:.35s cubic-bezier(.2,.9,.3,1.3)}.trofeu-mini.on{transform:none;opacity:1}.trofeu-mini span{font-size:34px;animation:tfp 1s ease}.trofeu-mini b{display:block;font-size:14px}.trofeu-mini small{font-size:12px;color:var(--mut)}@keyframes tfp{0%{transform:scale(.3) rotate(-20deg)}60%{transform:scale(1.25) rotate(8deg)}100%{transform:none}}@media (prefers-reduced-motion:reduce){.trofeu-mini span{animation:none}}
 .pw-w{position:relative;display:block}.pw-w .inp{padding-right:40px}.pw-eye{all:unset;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--mut);display:grid;place-items:center;width:28px;height:28px;border-radius:6px}.pw-eye:hover{color:var(--fg)}.pw-eye:focus-visible{outline:2px solid var(--acc)}
 #sbLogin .btn{justify-content:center;height:40px}
 #sbLogin .lg-msg{font-size:12.5px;color:var(--red);min-height:16px}
@@ -1765,7 +1766,7 @@ function assinar(){
     UNSUB.push(C(col).onSnapshot(snap=>{
       if(ws!==WS)return;
       const m=new Map();snap.docs.forEach(d=>{if(d.exists)m.set(d.id,d.data())});
-      if(col==='tarefas')tarefasNovas(m);let mv=m;if(col==='tarefas'){TALL=m;mv=visTarefas(m)}D[col]=mv;loaded[col]=true;if(col==='equipe'&&loaded.tarefas)D.tarefas=visTarefas(TALL);render();
+      if(col==='tarefas')tarefasNovas(m);if(col==='empresas')empresasNovas(m);let mv=m;if(col==='tarefas'){TALL=m;mv=visTarefas(m)}D[col]=mv;loaded[col]=true;if(col==='equipe'&&loaded.tarefas)D.tarefas=visTarefas(TALL);render();
       if(col==='equipe'&&WS==='pessoal'&&!m.size&&!assinar.semeado){assinar.semeado=true;put('equipe','eu',{nome:ME!=='Gestor'?ME:'Lucas',departamento:'Titular',ativo:true})}
       if(loaded.tarefas&&loaded.empresas)gcalSchedule(firstSync?400:2500);
     },err=>{toast('Conexão com os dados interrompida. Recarregue a página.')}));
@@ -2782,7 +2783,7 @@ function taskForm(id,pre,restore){
     }
     n.concluidoEm=n.status==='concluida'?(old&&old.status==='concluida'?old.concluidoEm:now):'';
     if(!old&&n.status!=='afazer')n.hist.push({em:now,tipo:'status',txt:statusTxt(n.status),por:ME});
-    put('tarefas',id||uid(),n);closeModal();toast(id?'Tarefa salva':'Tarefa criada');
+    put('tarefas',id||uid(),n);closeModal();if(old&&old.status!=='concluida'&&n.status==='concluida')trofeuTarefa(n);else toast(id?'Tarefa salva':'Tarefa criada');
   });
 }
 /* ---------- Prazos padrão e checklists por categoria (config/prazos) ---------- */
@@ -2929,8 +2930,27 @@ document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.
   else if(t.id==='obAll'){obLista().filter(o=>!UIOB.dep||o.dep===UIOB.dep).forEach(o=>t.checked?UIOB.sel.add(o.id):UIOB.sel.delete(o.id));render()}});
 document.addEventListener('input',e=>{if(e.target.id==='obQ'){UIOB.q=e.target.value;clearTimeout(UIOB.t);UIOB.t=setTimeout(()=>{render();const i=document.getElementById('obQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}});
 
+/* ---------- Troféu: novo cliente e tarefa concluída ---------- */
+const MOTIVA=['Cada cliente que chega é a prova de que o trabalho bem feito aparece.','Confiança se conquista entregando. Bora fazer valer!','Mais uma empresa acreditando na Londe & Rodrigues. Orgulho da equipe!','Crescer é isso: um cliente de cada vez, com excelência.','Contrato fechado é começo de uma parceria. Vamos encantar!','O sucesso do cliente é o nosso sucesso.'];
+const MOTIVA_T=['Mandou bem! Mais uma entregue.','Tarefa concluída é cliente tranquilo.','Um passo a mais. Continue assim!','Feito! Bom trabalho.','Missão cumprida! 💪','Entrega no capricho. Valeu!'];
+const sorteia=l=>l[Math.floor(Math.random()*l.length)];
+const EN={ini:false,ids:new Set()};
+function empresasNovas(m){if(!EN.ini){EN.ini=true;m.forEach((_,id)=>EN.ids.add(id));return}
+  m.forEach((e,id)=>{if(EN.ids.has(id))return;EN.ids.add(id);if(WS==='pessoal'||!e)return;
+    const quem=(e.criadoPor||'').trim();setTimeout(()=>{if(!festaCheck.on&&!document.querySelector('#modalRoot .ov'))trofeu(e,false)},800);
+    notificar('🏆 Novo cliente: '+(e.fantasia||e.razao||''),'Parabéns, equipe! Mais uma empresa com a gente.',()=>{UI.empresaId=id;go('empresa')})})}
+function trofeu(e,meu,depois){const nm=esc(e.fantasia||e.razao||'Nova empresa');
+  festaShow(null,`<div style="font-size:72px;line-height:1;filter:drop-shadow(0 6px 18px rgba(255,190,40,.45))" aria-hidden="true">🏆</div>
+    <div class="fe-k">${meu?'Contrato fechado':'Novo cliente na Londe &amp; Rodrigues'}</div>
+    <h2>Parabéns${meu?', '+esc(ME):', equipe'}!<br><span>${nm}</span></h2>
+    <p>${esc(sorteia(MOTIVA))}</p>
+    <div class="fe-acts"><button class="btn pri" data-festa-fim>Bora trabalhar! 🚀</button></div>`);
+  if(depois){const ob=new MutationObserver(()=>{if(!document.getElementById('festa')){ob.disconnect();depois()}});ob.observe(document.body,{childList:true})}}
+function trofeuTarefa(t){if(!t)return;const el=document.createElement('div');el.className='trofeu-mini';el.innerHTML=`<span aria-hidden="true">🏆</span><div><b>${esc(sorteia(MOTIVA_T))}</b><small>${esc(t.titulo||t.categoria||'Tarefa')}</small></div>`;
+  document.body.appendChild(el);setTimeout(()=>el.classList.add('on'),20);setTimeout(()=>{el.classList.remove('on');setTimeout(()=>el.remove(),400)},3200)}
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-10-30f',data:'30/10/2026',itens:['🏆 Troféu e parabéns quando um novo cliente é cadastrado (toda a equipe vê).','🏆 Troféu com mensagem motivacional ao concluir uma tarefa.']},
  {id:'2026-10-30e',data:'30/10/2026',itens:['App para Android (.apk): menu ⋯ → Instalar no celular.']},
  {id:'2026-10-30d',data:'30/10/2026',itens:['App para celular: menu ⋯ → Instalar no celular (Android e iPhone), com avisos no telefone.']},
  {id:'2026-10-30c',data:'30/10/2026',itens:['Empresas: botão Relatório Excel com nome, CNPJ, cidade, UF, inscrições estadual e municipal e mais.','Importar planilha agora atualiza cidade, UF e inscrições de várias empresas de uma vez.']},
@@ -3039,7 +3059,7 @@ function setStatus(id,s){
   const t=D.tarefas.get(id);if(!t||t.status===s)return;const now=agora();
   const n=Object.assign({},t,{status:s,atualizadoEm:now,hist:(t.hist||[]).concat([{em:now,tipo:'status',txt:statusTxt(s),por:ME}])});
   n.concluidoEm=s==='concluida'?now:'';
-  put('tarefas',id,n);toast(ST[s].l);
+  put('tarefas',id,n);if(s==='concluida')trofeuTarefa(n);else toast(ST[s].l);
 }
 function taskView(id){
   const t=D.tarefas.get(id);if(!t)return;const i=info(t);
@@ -3182,11 +3202,11 @@ function empForm(id){
     if(govTxt&&!COFRE.key){cofreInline($('#e_govBox'),()=>{$('#e_govBox').innerHTML='';$('#ef').requestSubmit()},'Para guardar a senha, digite a senha do espaço Lucas.');return}
     const n=Object.assign({},e,{razao:val('e_rz'),fantasia:val('e_fn'),cnpj:maskCNPJ(val('e_cnpj')),responsavel:val('e_resp'),regime:val('e_reg'),telefone:val('e_tel'),whatsapp:val('e_wa'),email:val('e_em'),obs:val('e_obs'),ie:val('e_ie'),im:val('e_im'),municipio:val('e_mun'),ramo:val('e_ramo'),respInterno:val('e_ri'),grupoWa:val('e_gw'),envioGuias:val('e_eg'),guiaMensal:document.getElementById('e_das').checked,donos:[...document.querySelectorAll('.e_dono:checked')].map(c=>c.value)});
     if(document.getElementById('e_hon')){const v=parseFloat(val('e_hon').replace(/\./g,'').replace(',','.'));n.honorario=isNaN(v)?null:v;const d=parseInt(val('e_dia'),10);n.diaPagamento=d>=1&&d<=31?d:null;n.formaPagamento=val('e_forma');n.inicioCobranca=val('e_ini')||hoje().slice(0,7)}
-    if(!id)n.criadoEm=agora();
+    if(!id){n.criadoEm=agora();n.criadoPor=ME}
     if(WS==='pessoal'){if(govDel)n.govEnc=null;if(govTxt){try{n.govEnc=await cofreEnc(govTxt)}catch(x){toast('Não foi possível criptografar a senha.');return}}}else delete n.govEnc;
     const nid=id||uid();put('empresas',nid,n);closeModal();toast('Empresa salva');
     if(!id&&WS!=='pessoal')put('avisos',uid(),{tipo:'empresa',titulo:'Nova empresa: '+(n.fantasia||n.razao||''),texto:[n.razao&&n.fantasia?n.razao:'',n.cnpj?'CNPJ '+n.cnpj:'',n.regime?'Regime: '+n.regime:''].filter(Boolean).join(' · '),empresaId:nid,autor:ME,criadoEm:agora(),fixo:false,ate:addD(hoje(),15)});
-    if(!id){UI.empresaId=nid;go('empresa');if(WS!=='pessoal')setTimeout(()=>avisarEmpresaModal(nid),350)}
+    if(!id){UI.empresaId=nid;go('empresa');EN.ids.add(nid);if(WS!=='pessoal')setTimeout(()=>trofeu(n,true,()=>avisarEmpresaModal(nid)),350)}
   });
 }
 function contatoForm(empId){
