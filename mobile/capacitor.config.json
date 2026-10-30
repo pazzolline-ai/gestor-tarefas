@@ -1,0 +1,8 @@
+{
+  "appId": "br.com.londerodrigues.gestor",
+  "appName": "Gestor de Tarefas",
+  "webDir": "www",
+  "server": { "url": "https://pazzolline-ai.github.io/gestor-tarefas/", "androidScheme": "https", "allowNavigation": ["pazzolline-ai.github.io", "nhrbbsgmipkwqeqqkgjj.supabase.co"] },
+  "android": { "appendUserAgent": "GestorApp/__VER__", "backgroundColor": "#0e1014" },
+  "plugins": { "LocalNotifications": { "smallIcon": "ic_stat_icon", "iconColor": "#2c4583" } }
+}

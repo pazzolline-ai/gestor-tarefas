@@ -7,3 +7,8 @@ Os dados ficam no Supabase, protegidos por login e senha de cada pessoa. Este re
 
 ## Ao publicar uma atualização
 Adicione um item no início de `NOVIDADES` (index.html) com id novo, data e o que mudou. Os usuários veem essa lista ao abrir o sistema atualizado.
+
+## App Android
+O workflow "App para Android" gera `Gestor-de-Tarefas.apk` (página Releases, tag `app-android`).
+Precisa de dois segredos no repositório (Settings → Secrets and variables → Actions):
+`ANDROID_KEYSTORE` (chave em base64) e `ANDROID_KEY_PASS` (senha). Guarde a chave: sem ela o app não aceita atualizações.

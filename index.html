@@ -1480,6 +1480,8 @@ document.addEventListener('visibilitychange',()=>{if(!NO_PC)return;if(document.h
 
 /* ---------- Avisa quando sai versão nova (sistema e programa do PC) ---------- */
 const BUILD='__BUILD__';
+const LINK_APK='https://github.com/pazzolline-ai/gestor-tarefas/releases/download/app-android/Gestor-de-Tarefas.apk';
+const NO_APP=/GestorApp\//.test(navigator.userAgent);
 const LINK_PC='https://github.com/pazzolline-ai/gestor-tarefas/releases/latest/download/Gestor-de-Tarefas-Instalador.exe';
 const verNum=v=>String(v||'0').split('.').map(n=>+n||0).reduce((a,n)=>a*1000+n,0);
 let verUlt=0;
@@ -1490,6 +1492,7 @@ async function verAtualizacao(){if(Date.now()-verUlt<5*60e3)return;verUlt=Date.n
   const pc=(navigator.userAgent.match(/GestorPC\/([\d.]+)/)||[])[1]||null;
   if(pc&&v.programa&&verNum(pc)>=verNum(v.programa))marcar('gt.faixa.pc.'+v.programa);
   if(v.site&&BUILD!=='__BUILD__'&&v.site!==BUILD&&!visto('gt.faixa.site.'+v.site))faixa('site',v.site,'🔄 Saiu uma atualização do sistema. Nada do que foi lançado se perde.','Atualizar agora',()=>{const u=location.href.split('#')[0].split('?')[0];location.replace(u+'?v='+v.site.slice(0,7)+location.hash)});
+  else if(NO_APP&&v.android&&verNum(v.android)>verNum((navigator.userAgent.match(/GestorApp\/([\d.]+)/)||[])[1])&&!visto('gt.faixa.apk.'+v.android))faixa('apk',v.android,`⬇️ Nova versão do app (${esc(v.android)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{window.open(LINK_APK,'_blank')});
   else if(NO_PC&&v.programa&&(!pc||verNum(v.programa)>verNum(pc))&&!visto('gt.faixa.pc.'+v.programa))faixa('pc',v.programa,`⬇️ Nova versão do programa do PC (${esc(v.programa)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{window.open(LINK_PC,'_blank')})}
 function faixa(tipo,ver,txt,bt,fn){const k='gt.faixa.'+tipo+'.'+ver;let el=document.getElementById('gtFaixa');if(el&&el.dataset.k===k)return;
   if(!el){el=document.createElement('div');el.id='gtFaixa';document.body.appendChild(el)}el.dataset.k=k;
@@ -2648,9 +2651,12 @@ const TN={ini:false,ids:new Set(),snap:new Map(),eu:new Map()};
 const avisoTudo=()=>mode==='db'&&!!(window.GT&&GT.gestor&&GT.gestor())&&lsGet('gt.avisoTudo','1')!=='0';
 const ST_TXT={afazer:'A fazer',andamento:'Em andamento',aguard_cliente:'Aguardando cliente',aguard_orgao:'Aguardando órgão',concluida:'Concluída'};
 let SWREG=null;const CEL=/Android|iPhone|iPad/i.test(navigator.userAgent);
-try{if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').then(r=>{SWREG=r},()=>{})}catch(e){}
+try{const LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;if(LN)LN.requestPermissions().catch(()=>{})}catch(e){}
+try{if(!window.Capacitor&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').then(r=>{SWREG=r},()=>{})}catch(e){}
 let PEDIDO_INST=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PEDIDO_INST=e;const b=document.getElementById('btnInstalar');if(b)b.hidden=false});
+let LNID=1;
 function notificar(titulo,corpo,abrir){
+  try{const LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;if(LN){if(document.hidden||!document.hasFocus()){LN.schedule({notifications:[{id:(Date.now()%2e9)+(LNID++),title:titulo,body:corpo||''}]}).catch(()=>{})}return}}catch(e){}
   try{if(CEL&&SWREG&&'Notification' in window&&Notification.permission==='granted'){if(document.hidden||!document.hasFocus())SWREG.showNotification(titulo,{body:corpo||'',tag:titulo+'|'+(corpo||'').slice(0,40),icon:'icon-192.png',badge:'icon-192.png'});return}}catch(e){}
   try{if(!('Notification' in window))return;
     const mostrar=()=>{const n=new Notification(titulo,{body:corpo||'',tag:titulo+'|'+(corpo||'').slice(0,40),silent:false});n.onclick=()=>{try{window.focus()}catch(e){}if(abrir)abrir();n.close()}};
@@ -2925,6 +2931,7 @@ document.addEventListener('input',e=>{if(e.target.id==='obQ'){UIOB.q=e.target.va
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-10-30e',data:'30/10/2026',itens:['App para Android (.apk): menu ⋯ → Instalar no celular.']},
  {id:'2026-10-30d',data:'30/10/2026',itens:['App para celular: menu ⋯ → Instalar no celular (Android e iPhone), com avisos no telefone.']},
  {id:'2026-10-30c',data:'30/10/2026',itens:['Empresas: botão Relatório Excel com nome, CNPJ, cidade, UF, inscrições estadual e municipal e mais.','Importar planilha agora atualiza cidade, UF e inscrições de várias empresas de uma vez.']},
  {id:'2026-10-30b',data:'30/10/2026',itens:['Manual do sistema e espaço de sugestões (menu Manual e sugestões).','Cadastro de Obrigações por departamento, com edição e importação em lote.','Ao atualizar, o sistema mostra o que mudou.']},
@@ -4817,9 +4824,10 @@ $('#btnSug').addEventListener('click',()=>{fecharMenu();sugForm()});
 $('#btnInstalar').addEventListener('click',async()=>{fecharMenu();if(PEDIDO_INST){PEDIDO_INST.prompt();const r=await PEDIDO_INST.userChoice.catch(()=>null);if(r&&r.outcome==='accepted')toast('App instalado! Procure o ícone na tela inicial.');PEDIDO_INST=null;return}
   const link=GT.siteUrl||location.href.split('#')[0];
   openModal(`${mh('Instalar no celular')}<div class="mb" style="font-size:13.5px;line-height:1.6">${matchMedia('(display-mode: standalone)').matches?'<div class="banner">✅ Você já está usando o app instalado.</div>':''}
-   <div><b>Android (Chrome)</b><ol style="margin:4px 0 0;padding-left:20px"><li>No celular, abra no Chrome: <span class="mono">${esc(link)}</span></li><li>Toque nos <b>⋮</b> (canto superior direito) → <b>Instalar app</b> (ou "Adicionar à tela inicial").</li><li>Entre com seu e-mail e senha. Aceite as notificações.</li></ol></div>
+   <div><b>Android: app (recomendado)</b><ol style="margin:4px 0 0;padding-left:20px"><li>No celular, baixe: <a href="${LINK_APK}" target="_blank" rel="noopener">Gestor-de-Tarefas.apk</a></li><li>Abra o arquivo e toque em <b>Instalar</b>. Se o Android pedir, permita "instalar apps desta fonte".</li><li>Entre com seu e-mail e senha e aceite as notificações.</li></ol></div>
+   <div><b>Android sem baixar arquivo (Chrome)</b><ol style="margin:4px 0 0;padding-left:20px"><li>No celular, abra no Chrome: <span class="mono">${esc(link)}</span></li><li>Toque nos <b>⋮</b> (canto superior direito) → <b>Instalar app</b> (ou "Adicionar à tela inicial").</li><li>Entre com seu e-mail e senha. Aceite as notificações.</li></ol></div>
    <div><b>iPhone (Safari)</b><ol style="margin:4px 0 0;padding-left:20px"><li>Abra o link no <b>Safari</b>.</li><li>Toque em <b>Compartilhar</b> (quadrado com seta) → <b>Adicionar à Tela de Início</b>.</li><li>Abra pelo ícone novo e aceite as notificações.</li></ol></div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm pri" id="instCp">Copiar link</button><a class="btn sm" href="${waLink('',`Instale o Gestor de Tarefas no celular: ${link}`)}" target="_blank" rel="noopener">${svg('wa')}Mandar link no WhatsApp</a></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm pri" id="instCp">Copiar link</button><a class="btn sm" href="${waLink('',`Instale o app Gestor de Tarefas no Android: ${LINK_APK}\n\nNo iPhone, abra no Safari e adicione à Tela de Início: ${link}`)}" target="_blank" rel="noopener">${svg('wa')}Mandar link no WhatsApp</a></div>
    <div style="font-size:12px;color:var(--dim)">O app atualiza sozinho e usa o mesmo login. Os dados são os mesmos do computador.</div></div>`);
   $('#instCp').onclick=()=>{try{navigator.clipboard.writeText(link);toast('Link copiado')}catch(e){}}});
 $('#btnPerfil').addEventListener('click',()=>{fecharMenu();perfilModal(UID)});
