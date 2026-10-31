@@ -46,15 +46,19 @@ jobs:
             $BT/apksigner sign --ks /tmp/gt.jks --ks-pass env:PW --key-pass env:PW --ks-key-alias gestor --out Gestor-de-Tarefas.apk /tmp/al.apk
             rm /tmp/gt.jks
           else
-            cp /tmp/al.apk Gestor-de-Tarefas-sem-assinatura.apk
+            P=$(openssl rand -hex 12)
+            keytool -genkeypair -keystore /tmp/tmp.jks -alias gestor -keyalg RSA -keysize 2048 -validity 10000 -storepass "$P" -keypass "$P" -dname "CN=Londe e Rodrigues, O=Londe e Rodrigues, C=BR"
+            $BT/apksigner sign --ks /tmp/tmp.jks --ks-pass pass:$P --key-pass pass:$P --ks-key-alias gestor --out Gestor-de-Tarefas.apk /tmp/al.apk
+            rm /tmp/tmp.jks
           fi
+          $BT/apksigner verify Gestor-de-Tarefas.apk
       - name: Publicar na página de downloads
         uses: softprops/action-gh-release@v2
         with:
           tag_name: app-android
           name: Gestor de Tarefas para Android ${{ env.VER }}
           body: App do Gestor de Tarefas para Android. Baixe Gestor-de-Tarefas.apk no celular e instale.
-          files: Gestor-de-Tarefas*.apk
+          files: Gestor-de-Tarefas.apk
           make_latest: false
       - name: Avisar os usuários
         env: { GH_TOKEN: '${{ github.token }}' }
