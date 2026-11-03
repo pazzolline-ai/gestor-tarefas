@@ -2977,7 +2977,7 @@ function vAlvaras(){
     <button class="btn sm" data-alvimp>Importar em lote</button><button class="btn sm pri" data-alvnovo>+ Novo alvará</button></div>
     ${l.length?`<div class="tw"><table class="tlist"><thead><tr><th>Empresa</th><th>Tipo</th><th>Número</th><th>Validade</th><th>Situação</th><th>Responsável</th><th></th></tr></thead><tbody>
     ${l.map(a=>`<tr><td><b>${esc(alvNome(a))}</b>${a.obs?`<div class="sub" style="font-size:12px;color:var(--dim)">${esc(a.obs)}</div>`:''}</td><td>${esc(a.tipo||'—')}</td><td class="mono">${esc(a.numero||'—')}</td><td class="mono">${a.validade?fmt(a.validade):'—'}</td><td>${alvFlag(a)}</td><td>${esc(a.responsavel||'—')}</td>
-      <td style="white-space:nowrap">${a.arquivado?'':`<button class="btn sm ${['venc','vencendo'].includes(alvSit(a))?'pri':''}" data-alvren="${a.id}">Renovar</button> `}<button class="btn sm ghost" data-alved="${a.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:empty(tudo.length?'Nenhum alvará neste filtro.':'Nenhum alvará cadastrado ainda.',tudo.length?'':'<button class="btn pri" data-alvnovo>+ Cadastrar o primeiro</button>')}
+      <td style="white-space:nowrap">${a.arquivado?'':`<button class="btn sm ${['venc','vencendo'].includes(alvSit(a))?'pri':''}" data-alvren="${a.id}">Renovar</button> `}${(a.anexos||[]).length?`<button class="btn sm ghost" data-alvanx="${a.id}" title="Ver anexo">📎</button><button class="btn sm" data-alvenv="${a.id}">Enviar</button> `:`<button class="btn sm ghost" data-alvanx="${a.id}" title="Anexar o alvará">📎 Anexar</button> `}<button class="btn sm ghost" data-alved="${a.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:empty(tudo.length?'Nenhum alvará neste filtro.':'Nenhum alvará cadastrado ainda.',tudo.length?'':'<button class="btn pri" data-alvnovo>+ Cadastrar o primeiro</button>')}
   </section>
   <div style="font-size:12px;color:var(--dim)">O sistema avisa a partir de ${30} dias antes do vencimento (dá para mudar por alvará) e continua avisando, inclusive depois de vencido, até você clicar em <b>Renovar</b> e informar a nova validade. Ao renovar, o histórico guarda a validade anterior.</div>`;
 }
@@ -3028,16 +3028,48 @@ function alvImportar(){openModal(`${mh('Importar alvarás em lote')}<div class="
   $('#alGo').onclick=async()=>{$('#alGo').disabled=true;let ok=0;for(const p of prontas){const n=Object.assign({},p,{empresaNome:empNome(p.empresaId),aviso:30,responsavel:'',criadoEm:agora(),criadoPor:meuNome(),historico:[{data:hoje(),txt:'Importado'+(p.validade?' · validade '+fmt(p.validade):''),por:meuNome()}]});if(await alvPut(uid(),n))ok++;else break}
     closeModal();if(ok)toast(plural(ok,'alvará importado','alvarás importados'))};
 }
+function alvAnexos(id){const a=D.alvaras.get(id);if(!a)return;const ax=a.anexos||[];
+  openModal(`${mh('Anexos do alvará')}<div class="mb"><div style="font-size:13px;margin-bottom:10px"><b>${esc(alvNome(a))}</b> · ${esc(a.tipo||'')}</div>
+   ${ax.length?ax.map((x,i)=>`<div class="row" style="display:flex;gap:8px;align-items:center;padding:6px 0"><span style="flex:1">📄 ${esc(x.nome)} <small style="color:var(--dim)">${fmtTam(x.tam||0)} · ${fmt(x.em)}</small></span><button class="btn sm" data-alvabrir="${esc(x.path)}">Abrir</button><button class="btn sm ghost danger" data-alvdel="${id}" data-i="${i}">Apagar</button></div>`).join(''):'<div style="color:var(--dim);font-size:13px">Nenhum arquivo ainda.</div>'}
+   <label class="btn" style="margin-top:12px;display:inline-flex;cursor:pointer">📎 Anexar PDF ou foto<input type="file" id="alvFile" accept=".pdf,image/*" multiple hidden></label></div>
+   <div class="mf">${ax.length?`<button class="btn pri" data-alvenv="${id}">Enviar ao cliente</button>`:''}<button class="btn" data-close>Fechar</button></div>`);
+  $('#alvFile').onchange=e=>alvAnexar(id,[...e.target.files])}
+async function alvAnexar(id,files){const a=D.alvaras.get(id);if(!a||!files.length)return;const org=GT.membro&&GT.membro.org_id;if(!org){toast('Faça login para anexar.');return}
+  const novos=[];for(const f of files){if(f.size>10485760){toast(f.name+': máximo 10 MB.');continue}
+    const nome=f.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w.\-]+/g,'_').slice(-80),path=org+'/alv-'+id+'/'+Date.now().toString(36)+'-'+nome;
+    toast('Enviando '+f.name+'…');const {error}=await GT.sb.storage.from('anexos').upload(path,f,{contentType:f.type||'application/octet-stream'});
+    if(error){toast('Não foi possível enviar '+f.name+'.');continue}novos.push({nome:f.name,path,tam:f.size,tipo:f.type||'',por:meuNome(),em:agora()})}
+  if(!novos.length)return;const cur=D.alvaras.get(id)||a;
+  if(await alvPut(id,Object.assign({},cur,{anexos:(cur.anexos||[]).concat(novos),historico:(cur.historico||[]).concat([{data:hoje(),txt:'Anexou: '+novos.map(x=>x.nome).join(', '),por:meuNome()}])}))){toast(plural(novos.length,'arquivo anexado','arquivos anexados'));alvAnexos(id)}}
+function alvAnexoDel(id,i){const a=D.alvaras.get(id),x=a&&(a.anexos||[])[i];if(!x)return;confirmBox(`Apagar o anexo <b>${esc(x.nome)}</b>?`,'Apagar',async()=>{const {error}=await GT.sb.storage.from('anexos').remove([x.path]);if(error){toast('Só quem enviou ou o gestor pode apagar.');return}
+  await alvPut(id,Object.assign({},a,{anexos:a.anexos.filter((_,j)=>j!==i)}));alvAnexos(id)})}
+async function alvEnviar(id){const a=D.alvaras.get(id);if(!a||!(a.anexos||[]).length){alvAnexos(id);return}const e=empresa(a.empresaId)||{};const x=a.anexos[a.anexos.length-1];
+  const {data,error}=await GT.sb.storage.from('anexos').createSignedUrl(x.path,604800);if(error||!data){toast('Não foi possível gerar o link do arquivo.');return}const link=data.signedUrl;
+  const msg=`Olá! Segue o ${a.tipo||'alvará'} da empresa ${alvNome(a)}${a.validade?`, válido até ${fmt(a.validade)}`:''}.\n\n${link}\n\n(O link fica disponível por 7 dias.)\nLonde & Rodrigues Assessoria Contábil`;
+  const wa=(e.whatsapp||e.telefone||'').replace(/\D/g,''),em=e.email||'';
+  openModal(`${mh('Enviar ao cliente')}<div class="mb"><div style="font-size:13px;margin-bottom:8px"><b>${esc(alvNome(a))}</b> · ${esc(x.nome)}</div>
+   <div class="fd"><label for="alMsg">Mensagem</label><textarea class="inp" id="alMsg" rows="7">${esc(msg)}</textarea></div>
+   <div style="font-size:12px;color:var(--dim);margin-top:6px">${wa?'WhatsApp do cadastro: '+esc(e.whatsapp||e.telefone):'Empresa sem WhatsApp no cadastro: você escolhe o contato no WhatsApp.'}${em?' · E-mail: '+esc(em):''}</div></div>
+   <div class="mf" style="flex-wrap:wrap"><button class="btn" id="alCopia">Copiar</button>${navigator.share?'<button class="btn" id="alShare">Compartilhar arquivo</button>':''}<button class="btn" id="alMail">E-mail</button><button class="btn pri" id="alWa">${svg('wa')} WhatsApp</button></div>`);
+  const reg=como=>{const c=D.alvaras.get(id)||a;alvPut(id,Object.assign({},c,{historico:(c.historico||[]).concat([{data:hoje(),txt:'Enviado ao cliente por '+como,por:meuNome()}])}))};
+  $('#alWa').onclick=()=>{window.open(wa?waLink(wa,val('alMsg')):'https://wa.me/?text='+encodeURIComponent(val('alMsg')),'_blank');reg('WhatsApp');closeModal()};
+  $('#alMail').onclick=()=>{location.href=`mailto:${encodeURIComponent(em)}?subject=${encodeURIComponent((a.tipo||'Alvará')+' — '+alvNome(a))}&body=${encodeURIComponent(val('alMsg'))}`;reg('e-mail');closeModal()};
+  $('#alCopia').onclick=async()=>{try{await navigator.clipboard.writeText(val('alMsg'));toast('Mensagem copiada')}catch(x){toast('Não foi possível copiar.')}};
+  const sh=$('#alShare');if(sh)sh.onclick=async()=>{try{const r=await fetch(link);const b=await r.blob();const f=new File([b],x.nome,{type:b.type||x.tipo});
+    if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:val('alMsg').split('\n\n')[0]});else await navigator.share({text:val('alMsg')});reg('compartilhamento');closeModal()}catch(err){if(err&&err.name!=='AbortError')toast('Não foi possível compartilhar.')}};
+}
 function alvAvisos(){if(WS==='pessoal'||!loaded.alvaras)return;const al=alvAlerta();if(!al.length)return;const k='gt.alvav.'+hoje();if(lsGet(k,false))return;lsSet(k,true);
   const v=al.filter(a=>alvSit(a)==='venc').length;
   notificar('📄 '+plural(al.length,'alvará vencendo','alvarás vencendo')+(v?' · '+v+' vencido(s)':''),al.slice(0,3).map(a=>alvNome(a)+' — '+(a.tipo||'')+' ('+fmt(a.validade)+')').join('\n')+(al.length>3?'\n+ '+(al.length-3)+' outro(s)':''),()=>{UIALV.f=v?'venc':'vencendo';go('alvaras')})}
 setInterval(alvAvisos,60*60e3);
-document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-alvf],[data-alvnovo],[data-alved],[data-alvren],[data-alvimp]');if(!t)return;
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-alvf],[data-alvnovo],[data-alved],[data-alvren],[data-alvimp],[data-alvanx],[data-alvenv],[data-alvabrir],[data-alvdel]');if(!t)return;
+  if(t.hasAttribute('data-alvanx')){alvAnexos(t.dataset.alvanx);return}if(t.hasAttribute('data-alvenv')){alvEnviar(t.dataset.alvenv);return}if(t.hasAttribute('data-alvabrir')){anexoAbrir(t.dataset.alvabrir);return}if(t.hasAttribute('data-alvdel')){alvAnexoDel(t.dataset.alvdel,+t.dataset.i);return}
   if(t.hasAttribute('data-alvf')){UIALV.f=t.dataset.alvf;render()}else if(t.hasAttribute('data-alvnovo'))alvForm();else if(t.hasAttribute('data-alved'))alvForm(t.dataset.alved);else if(t.hasAttribute('data-alvren'))alvRenovar(t.dataset.alvren);else alvImportar()});
 document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.value;clearTimeout(UIALV.t);UIALV.t=setTimeout(()=>{render();const i=document.getElementById('alvQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}});
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-03b',data:'03/11/2026',itens:['📎 Alvarás: anexe o PDF ou a foto do alvará.','Botão Enviar: manda o alvará ao cliente pelo WhatsApp, e-mail ou compartilhamento do arquivo.']},
  {id:'2026-11-03a',data:'03/11/2026',itens:['📄 Controle de Alvarás (menu Alvarás, área Societário): cadastre os alvarás de cada empresa com a validade.','Faltando 30 dias para vencer, o sistema avisa (painel, menu e notificação diária) até a renovação ser registrada.','Importação de alvarás em lote, colando da planilha.']},
  {id:'2026-10-30f',data:'30/10/2026',itens:['🏆 Troféu e parabéns quando um novo cliente é cadastrado (toda a equipe vê).','🏆 Troféu com mensagem motivacional ao concluir uma tarefa.']},
  {id:'2026-10-30e',data:'30/10/2026',itens:['App para Android (.apk): menu ⋯ → Instalar no celular.']},
