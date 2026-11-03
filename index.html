@@ -1673,6 +1673,7 @@ function categorias(mod){if(mod===undefined)mod=UI.mod;let lista=mod?MOD_CATS[mo
 const OLHO_A='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',OLHO_F='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.5M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></svg>';
 const IC={
   perf:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
+  shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
   up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',
   pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   msg:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/>',
@@ -1697,7 +1698,7 @@ const IC={
   moto:'<circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-6h5l4 6M14.5 10l-1.8-4H10M9.5 10H6.5"/>'
 };
 const svg=(k,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
+const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -1721,7 +1722,7 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 
 /* ---------- Estado ---------- */
 let TALL=new Map();
-const D={tarefas:new Map(),empresas:new Map(),contatos:new Map(),equipe:new Map(),pagamentos:new Map(),das:new Map(),avisos:new Map(),rendimento:new Map(),chat:new Map()};
+const D={tarefas:new Map(),empresas:new Map(),contatos:new Map(),equipe:new Map(),pagamentos:new Map(),das:new Map(),avisos:new Map(),rendimento:new Map(),chat:new Map(),alvaras:new Map()};
 const UI={
   view:'dashboard', empresaId:null,
   resp:lsGet('cs.resp',''), mod:(m=>MODL[m]?m:'')(lsGet('cs.mod','')), modo:lsGet('cs.modo','lista'),
@@ -1731,7 +1732,7 @@ const UI={
 };
 let MEFULL='', ME_AV='', ME_COR='', UROOM=null, UAPI=null;
 let db=null, UID=null, WS='escritorio', UNSUB=[], mode='loading', ME='Gestor', canWrite=true, mcp=null, isOwner=false;
-const loaded={tarefas:false,empresas:false,contatos:false,equipe:false,pagamentos:false,das:false,avisos:false,rendimento:false,chat:false};
+const loaded={tarefas:false,empresas:false,contatos:false,equipe:false,pagamentos:false,das:false,avisos:false,rendimento:false,chat:false,alvaras:false};
 
 /* ---------- Persistência ---------- */
 async function boot(){
@@ -1752,7 +1753,7 @@ async function boot(){
   }else{
     mode='local';
     const s=lsGet('cs.local',{tarefas:{},empresas:{},contatos:{},equipe:{},pagamentos:{},das:{}});
-    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
+    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
     rbAssinar();
     render();
   }
@@ -1760,9 +1761,9 @@ async function boot(){
 function C(name){return WS==='pessoal'&&UID?db.doc('data/users/'+UID+'/pessoal').collection(name):db.collection(name)}
 function assinar(){
   UNSUB.forEach(f=>{try{f()}catch(e){}});UNSUB=[];
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat'].forEach(col=>{D[col]=new Map();loaded[col]=false});
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(col=>{D[col]=new Map();loaded[col]=false});
   const ws=WS;
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat'].forEach(col=>{
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(col=>{
     UNSUB.push(C(col).onSnapshot(snap=>{
       if(ws!==WS)return;
       const m=new Map();snap.docs.forEach(d=>{if(d.exists)m.set(d.id,d.data())});
@@ -1842,7 +1843,7 @@ function trocarWS(ws,liberado){
   assinar.semeado=false;assinar();if(ws==='pessoal')carregarPix();go('dashboard');
   toast(ws==='pessoal'?'Espaço do Lucas':'Escritório');
 }
-function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
+function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
 async function put(col,id,data){
   const clean=JSON.parse(JSON.stringify(data));if(col==='tarefas')TN.eu.set(id,Date.now());
   if(col==='tarefas'&&!TALL.has(id)&&!D.tarefas.has(id)&&!clean.criadoPor){clean.criadoPor=meuNome();if(UID)clean.criadoUid=UID}
@@ -2076,6 +2077,7 @@ function vDashboard(){
   ${WS==='pessoal'?(()=>{const a=finAtrasados(),hj=finLinhas(hoje().slice(0,7)).filter(x=>x.hoje);return a.length||hj.length?`<div class="reminder" style="${a.length?'background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)':''}">${svg('money')}<div style="flex:1;min-width:200px">${a.length?`<b style="color:var(--red)">${plural(a.length,'pagamento atrasado','pagamentos atrasados')}</b> · ${brlF(a.reduce((s,x)=>s+x.valor,0))}`:''}${a.length&&hj.length?' · ':''}${hj.length?`<b>${plural(hj.length,'vence','vencem')} hoje</b> · ${brlF(hj.reduce((s,x)=>s+x.valor,0))}`:''}</div><button class="btn sm" data-go="financeiro">Ver financeiro</button></div>`:''})():''}
   ${UI.mod?'':(()=>{const ts=[...D.tarefas.values()].filter(t=>!UI.resp||respHit(t,UI.resp));return `<div class="mod-strip">${MODS.map(([k,l,c])=>{const m=ts.filter(t=>modDe(t)===k&&t.status!=='concluida');const at=m.filter(t=>t.prazo&&t.prazo<h).length;return `<button class="mod-card" data-mod="${k}" style="--c:${c}"><span class="mc-l"><i></i>${l}</span><span class="mc-n">${m.length}<small>abertas</small></span><span class="mc-s ${at?'late':''}">${at?plural(at,'atrasada','atrasadas'):'Em dia'}</span></button>`}).join('')}</div>`})()}
   ${WS!=='pessoal'?(()=>{const e=equipeLista().find(p=>souEu(p.nome));const d=e&&rdDoc(e.nome);return e&&rdVeAlerta(e.nome,d)?`<div class="reminder" style="background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)">${svg('perf')}<div style="flex:1;min-width:200px"><b style="color:var(--red)">Seu rendimento precisa de atenção</b> · ${esc((d.motivos||[]).join(' · '))}</div><button class="btn sm" data-go="rendimento">Ver</button></div>`:''})():''}
+  ${WS!=='pessoal'?(()=>{const al=alvAlerta();if(!al.length)return '';const v=al.filter(a=>alvSit(a)==='venc').length;return `<div class="reminder" style="${v?'background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)':'background:var(--amb-soft);border-color:color-mix(in srgb,var(--amb) 40%,transparent)'}">${svg('shield')}<div style="flex:1;min-width:200px"><b style="color:${v?'var(--red)':'var(--amb)'}">${plural(al.length,'alvará vencendo','alvarás vencendo')}${v?' · '+v+' vencido(s)':''}</b> · ${al.slice(0,3).map(a=>esc(alvNome(a))+' ('+fmtC(a.validade)+')').join(' · ')}${al.length>3?' · +'+(al.length-3):''}</div><button class="btn sm" data-go="alvaras">Ver alvarás</button></div>`})():''}
   ${(()=>{const n=rdMeusAlertas();return n&&!equipeLista().some(p=>souEu(p.nome)&&rdVeAlerta(p.nome,rdDoc(p.nome)))?`<div class="reminder">${svg('perf')}<div style="flex:1;min-width:200px"><b>${plural(n,'pessoa precisa','pessoas precisam')} de feedback</b> sobre o rendimento</div><button class="btn sm" data-go="rendimento">Ver rendimento</button></div>`:''})()}
   ${WS!=='pessoal'?(()=>{const hj=aniversariantes().filter(p=>p.a.dias===0),nv=muralNovos(),fx=avisosLista().filter(a=>a.fixo).length;return (hj.length?`<div class="reminder bdr">${svg('bolo')}<div style="flex:1;min-width:200px"><b>Aniversário hoje:</b> ${hj.map(p=>esc(p.nome)).join(', ')} 🎉</div><button class="btn sm" data-festa>🎉 Comemorar</button><button class="btn sm" data-go="mural">Ver mural</button></div>`:'')+(nv||fx?`<div class="reminder">${svg('mural')}<div style="flex:1;min-width:200px">${nv?`<b>${plural(nv,'aviso novo','avisos novos')}</b> no mural`:''}${nv&&fx?' · ':''}${fx?plural(fx,'aviso fixado','avisos fixados'):''}</div><button class="btn sm" data-go="mural">Abrir mural</button></div>`:'')})():''}
   ${(()=>{const n=rbPendN();return n?`<div class="reminder">${svg('car')}<div style="flex:1;min-width:200px"><b>${plural(n,'viagem','viagens')}</b> de reembolso de km esperando a sua aprovação</div><button class="btn sm" data-go="reembolso">Ver viagens</button></div>`:''})()}
@@ -2599,7 +2601,7 @@ function chatPos(fq){const b=document.getElementById('chatMsgs');if(b)b.scrollTo
 }
 
 /* ---------- Backup ---------- */
-const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat'];
+const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'];
 function backupDados(){const o={app:'gestor-de-tarefas',versao:2,geradoEm:new Date().toISOString(),por:meuNome(),colecoes:{}};
   BK_COLS.forEach(c=>{o.colecoes[c]=Object.fromEntries(c==='tarefas'?TALL:D[c])});
   try{o.colecoes.viagens=Object.fromEntries(RB.viagens||new Map());o.colecoes.veiculos=Object.fromEntries(RB.veiculos||new Map());o.reembolsoCfg=RB.cfg||null}catch(e){}
@@ -2697,7 +2699,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   const n=cobrarList().filter(t=>!t._i.cobradoHoje).length;
   const nFin=WS==='pessoal'?finAtrasados().length:0;const nRb=rbPendN();
   const NGRP={dashboard:'Visão geral',tarefas:'Trabalho',empresas:'Clientes',equipe:'Gestão'};
-  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
+  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
   $('#nav').innerHTML=navHtml;$('#mobNav').innerHTML=navHtml;
   const d=new Date();
   $('#sideFoot').innerHTML=`${WS==='pessoal'?'<button class="btn sm" data-bloquear style="align-self:flex-start">Bloquear espaço Lucas</button>':''}<span id="gDot">${gDotTxt()}</span>${mode==='db'&&ME?`<div class="side-me">${aviHtml(ME_AV,meuNome(),'')}<span>${esc(meuNome())}</span></div>`:''}${onlineHtml()}<span>${mode==='db'?'Dados compartilhados':'Modo local'}</span>`;
@@ -2708,13 +2710,13 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
   $('#respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+rs.map(r=>`<option ${UI.resp===r?'selected':''}>${esc(r)}</option>`).join('');
-  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
+  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
   const tt=titles[UI.view]||titles.dashboard;
   $('#pageTitle').innerHTML=`${tt[0]}${UI.mod&&!['empresas','empresa','crm','equipe','financeiro','reembolso','mural','rendimento'].includes(UI.view)?`<span class="mod-tag" style="--c:${MODC[UI.mod]}">${MODL[UI.mod]}</span>`:''}<span class="ws-tag">Lucas · privado</span>${MESTRE.ok?'<button class="mk-tag" id="btnMestre" title="Clique para desligar">🔑 Chave mestre</button>':''}${tt[1]?`<small>${WS==='pessoal'&&UI.view==='dashboard'?'Espaço do Lucas · protegido por senha · ':''}${tt[1]}</small>`:''}`;
   const fq=document.activeElement&&document.activeElement.id;const pos=fq&&document.activeElement.selectionStart;
-  setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);rdSync();
+  setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);rdSync();
   const v=$('#view');
-  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso}[UI.view]||vDashboard)();
+  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras}[UI.view]||vDashboard)();
   if(UI.view==='chat')chatPos(fq);
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
@@ -2948,8 +2950,95 @@ function trofeu(e,meu,depois){const nm=esc(e.fantasia||e.razao||'Nova empresa');
   if(depois){const ob=new MutationObserver(()=>{if(!document.getElementById('festa')){ob.disconnect();depois()}});ob.observe(document.body,{childList:true})}}
 function trofeuTarefa(t){if(!t)return;const el=document.createElement('div');el.className='trofeu-mini';el.innerHTML=`<span aria-hidden="true">🏆</span><div><b>${esc(sorteia(MOTIVA_T))}</b><small>${esc(t.titulo||t.categoria||'Tarefa')}</small></div>`;
   document.body.appendChild(el);setTimeout(()=>el.classList.add('on'),20);setTimeout(()=>{el.classList.remove('on');setTimeout(()=>el.remove(),400)},3200)}
+/* ---------- Alvarás (Societário) ---------- */
+const ALV_TIPOS=['Alvará de funcionamento (prefeitura)','Bombeiros (CERCON)','Vigilância sanitária','Licença ambiental','Alvará de publicidade','Uso do solo','Outro'];
+const UIALV={f:'',q:''};
+const alvAviso=a=>a&&a.aviso!=null&&a.aviso!==''?+a.aviso:30;
+function alvSit(a){if(!a)return 'ok';if(a.arquivado)return 'arq';if(!a.validade)return 'sem';const d=dias(hoje(),a.validade);if(d<0)return 'venc';if(d<=alvAviso(a))return 'vencendo';return 'ok'}
+function alvLista(){return [...D.alvaras.entries()].map(([id,a])=>Object.assign({id},a))}
+function alvAlerta(){return alvLista().filter(a=>{const s=alvSit(a);return s==='venc'||s==='vencendo'}).sort((a,b)=>a.validade.localeCompare(b.validade))}
+function alvFlag(a){const s=alvSit(a);if(s==='arq')return '<span class="flag">arquivado</span>';if(s==='sem')return '<span class="flag">sem vencimento</span>';
+  const d=dias(hoje(),a.validade);const ren=a.renovando?' <span class="flag blu">em renovação</span>':'';
+  if(s==='venc')return `<span class="flag red">Vencido há ${plural(-d,'dia','dias')}</span>${ren}`;
+  if(s==='vencendo')return `<span class="flag amb">${d===0?'Vence hoje':'Vence em '+plural(d,'dia','dias')}</span>${ren}`;
+  return '<span class="flag grn">Em dia</span>'}
+function alvNome(a){return a.empresaId&&empresa(a.empresaId)?empNome(a.empresaId):(a.empresaNome||'Sem empresa')}
+function vAlvaras(){
+  const tudo=alvLista(),q=norm(UIALV.q);
+  const cnt={'':tudo.filter(a=>!a.arquivado).length,venc:0,vencendo:0,ok:0,arq:0};tudo.forEach(a=>{const s=alvSit(a);if(s==='sem')cnt.ok++;else cnt[s]++});
+  const l=tudo.filter(a=>{const s=alvSit(a);if(UIALV.f==='arq'?s!=='arq':(s==='arq'||(UIALV.f&&(UIALV.f==='ok'?!(s==='ok'||s==='sem'):s!==UIALV.f))))return false;
+    return !q||norm(alvNome(a)+' '+(a.tipo||'')+' '+(a.numero||'')+' '+(a.responsavel||'')).includes(q)})
+    .sort((a,b)=>(a.validade||'9999').localeCompare(b.validade||'9999')||alvNome(a).localeCompare(alvNome(b),'pt'));
+  const ch=(k,t,c)=>`<button class="btn sm ${UIALV.f===k?'pri':'ghost'}" data-alvf="${k}">${t} <small ${c&&cnt[k]?`style="color:${c};font-weight:700"`:''}>${cnt[k]}</small></button>`;
+  const al=alvAlerta();
+  return `${al.length?`<div class="reminder" style="background:var(--amb-soft);border-color:color-mix(in srgb,var(--amb) 40%,transparent)">${svg('shield')}<div style="flex:1;min-width:200px"><b>${plural(al.length,'alvará precisa','alvarás precisam')} de renovação</b> · ${al.filter(a=>alvSit(a)==='venc').length} vencido(s) · o aviso fica aqui até registrar a renovação.</div></div>`:''}
+  <section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><div style="display:flex;gap:4px;flex-wrap:wrap">${ch('','Todos')}${ch('venc','Vencidos','var(--red)')}${ch('vencendo','Vencendo','var(--amb)')}${ch('ok','Em dia')}${ch('arq','Arquivados')}</div><span class="sp"></span>
+    <input class="inp" id="alvQ" placeholder="Buscar empresa, tipo ou número" value="${esc(UIALV.q)}" style="max-width:220px">
+    <button class="btn sm" data-alvimp>Importar em lote</button><button class="btn sm pri" data-alvnovo>+ Novo alvará</button></div>
+    ${l.length?`<div class="tw"><table class="tlist"><thead><tr><th>Empresa</th><th>Tipo</th><th>Número</th><th>Validade</th><th>Situação</th><th>Responsável</th><th></th></tr></thead><tbody>
+    ${l.map(a=>`<tr><td><b>${esc(alvNome(a))}</b>${a.obs?`<div class="sub" style="font-size:12px;color:var(--dim)">${esc(a.obs)}</div>`:''}</td><td>${esc(a.tipo||'—')}</td><td class="mono">${esc(a.numero||'—')}</td><td class="mono">${a.validade?fmt(a.validade):'—'}</td><td>${alvFlag(a)}</td><td>${esc(a.responsavel||'—')}</td>
+      <td style="white-space:nowrap">${a.arquivado?'':`<button class="btn sm ${['venc','vencendo'].includes(alvSit(a))?'pri':''}" data-alvren="${a.id}">Renovar</button> `}<button class="btn sm ghost" data-alved="${a.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:empty(tudo.length?'Nenhum alvará neste filtro.':'Nenhum alvará cadastrado ainda.',tudo.length?'':'<button class="btn pri" data-alvnovo>+ Cadastrar o primeiro</button>')}
+  </section>
+  <div style="font-size:12px;color:var(--dim)">O sistema avisa a partir de ${30} dias antes do vencimento (dá para mudar por alvará) e continua avisando, inclusive depois de vencido, até você clicar em <b>Renovar</b> e informar a nova validade. Ao renovar, o histórico guarda a validade anterior.</div>`;
+}
+function alvErro(e){toast(/permission|42501|row-level|acesso/i.test(String(e&&e.message||e))?'Seu acesso ainda não permite cadastrar alvarás. Fale com a diretoria.':'Não foi possível salvar o alvará.')}
+async function alvPut(id,data){D.alvaras.set(id,data);if(mode==='db'){try{await C('alvaras').doc(id).set(JSON.parse(JSON.stringify(data)))}catch(e){D.alvaras.delete(id);render();alvErro(e);return false}}else persistLocal();render();return true}
+function alvForm(id){const a=id?D.alvaras.get(id):{aviso:30,responsavel:ME!=='Gestor'?ME:''};if(!a)return;
+  openModal(`${mh(id?'Editar alvará':'Novo alvará')}<form id="alvF"><div class="mb"><div class="fg">
+   <div class="fd full"><label for="al_e">Empresa</label><select class="sel" id="al_e" required>${empOptsAtivas(a.empresaId||'')}</select></div>
+   <div class="fd"><label for="al_t">Tipo</label><input class="inp" id="al_t" list="alTipos" value="${esc(a.tipo||'')}" placeholder="Escolha ou digite" required><datalist id="alTipos">${ALV_TIPOS.map(t=>`<option value="${esc(t)}">`).join('')}</datalist></div>
+   <div class="fd"><label for="al_n">Número / protocolo</label><input class="inp" id="al_n" value="${esc(a.numero||'')}"></div>
+   <div class="fd"><label for="al_em">Emissão</label><input class="inp" id="al_em" type="date" value="${esc(a.emissao||'')}"></div>
+   <div class="fd"><label for="al_v">Validade</label><input class="inp" id="al_v" type="date" value="${esc(a.validade||'')}"><small style="color:var(--dim)">Em branco = sem vencimento</small></div>
+   <div class="fd"><label for="al_a">Avisar quantos dias antes</label><input class="inp" id="al_a" type="number" min="1" max="180" value="${alvAviso(a)}"></div>
+   <div class="fd"><label for="al_r">Responsável</label><select class="sel" id="al_r"><option value="">—</option>${responsaveis().map(r=>`<option ${norm(r)===norm(a.responsavel||'')?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+   <label class="chk fd full"><input type="checkbox" id="al_ren" ${a.renovando?'checked':''}> Renovação já pedida (aguardando o órgão)</label>
+   ${id?`<label class="chk fd full"><input type="checkbox" id="al_arq" ${a.arquivado?'checked':''}> Arquivar (empresa saiu ou alvará não é mais necessário — para de avisar)</label>`:''}
+   <div class="fd full"><label for="al_o">Observações</label><textarea class="inp" id="al_o" rows="2">${esc(a.obs||'')}</textarea></div>
+   ${id&&(a.historico||[]).length?`<div class="fd full"><label>Histórico</label><div style="font-size:12.5px;color:var(--mut);max-height:140px;overflow:auto">${a.historico.slice().reverse().map(h=>`<div>${fmt(h.data)} — ${esc(h.txt)}${h.por?` <span style="color:var(--dim)">(${esc(h.por)})</span>`:''}</div>`).join('')}</div></div>`:''}
+  </div></div><div class="mf">${id?`<button type="button" class="btn ghost danger" id="alDel" style="margin-right:auto">Excluir</button>`:''}<button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`);
+  if(id)$('#alDel').onclick=()=>confirmBox(`Excluir o alvará <b>${esc(a.tipo||'')}</b> de <b>${esc(alvNome(a))}</b>?`,'Excluir',async()=>{D.alvaras.delete(id);if(mode==='db'){try{await C('alvaras').doc(id).delete()}catch(e){toast('Não foi possível excluir.')}}else persistLocal();closeModal();render();toast('Alvará excluído')});
+  $('#alvF').addEventListener('submit',async ev=>{ev.preventDefault();const emp=val('al_e'),tipo=val('al_t');if(!emp||!tipo){toast('Informe a empresa e o tipo.');return}
+    const n=Object.assign({},a,{empresaId:emp,empresaNome:empNome(emp),tipo,numero:val('al_n'),emissao:val('al_em'),validade:val('al_v'),aviso:Math.max(1,+val('al_a')||30),responsavel:val('al_r'),obs:val('al_o'),renovando:$('#al_ren').checked,arquivado:id?$('#al_arq').checked:false,atualizadoEm:agora(),atualizadoPor:meuNome()});
+    const hist=(a.historico||[]).slice();if(!id){n.criadoEm=agora();n.criadoPor=meuNome();hist.push({data:hoje(),txt:'Cadastrado'+(n.validade?' · validade '+fmt(n.validade):''),por:meuNome()})}
+    else{if((a.validade||'')!==n.validade)hist.push({data:hoje(),txt:'Validade alterada: '+fmt(a.validade)+' → '+fmt(n.validade),por:meuNome()});if(!a.renovando&&n.renovando)hist.push({data:hoje(),txt:'Renovação pedida',por:meuNome()});if(!a.arquivado&&n.arquivado)hist.push({data:hoje(),txt:'Arquivado',por:meuNome()})}
+    n.historico=hist;if(await alvPut(id||uid(),n)){closeModal();toast('Alvará salvo')}});
+}
+function alvRenovar(id){const a=D.alvaras.get(id);if(!a)return;
+  openModal(`${mh('Renovar alvará')}<form id="alvR"><div class="mb"><div style="font-size:13px;margin-bottom:10px"><b>${esc(alvNome(a))}</b> · ${esc(a.tipo||'')}<br><span style="color:var(--mut)">Validade atual: ${fmt(a.validade)}</span></div><div class="fg">
+   <div class="fd"><label for="ar_v">Nova validade</label><input class="inp" id="ar_v" type="date" required value="${a.validade?addD(a.validade,365):''}"></div>
+   <div class="fd"><label for="ar_n">Novo número / protocolo</label><input class="inp" id="ar_n" value="${esc(a.numero||'')}"></div>
+   <div class="fd"><label for="ar_em">Emissão</label><input class="inp" id="ar_em" type="date" value="${hoje()}"></div>
+   <div class="fd full"><label for="ar_o">Observação</label><input class="inp" id="ar_o" placeholder="Ex.: taxa paga, vistoria feita"></div>
+  </div></div><div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Registrar renovação</button></div></form>`);
+  $('#alvR').addEventListener('submit',async ev=>{ev.preventDefault();const v=val('ar_v');if(!v)return;if(a.validade&&v<=a.validade){toast('A nova validade precisa ser depois da atual.');return}
+    const hist=(a.historico||[]).concat([{data:hoje(),txt:'Renovado: '+fmt(a.validade)+' → '+fmt(v)+(val('ar_o')?' · '+val('ar_o'):''),por:meuNome()}]);
+    const n=Object.assign({},a,{validade:v,numero:val('ar_n'),emissao:val('ar_em'),renovando:false,historico:hist,renovadoEm:agora(),atualizadoEm:agora(),atualizadoPor:meuNome()});
+    if(await alvPut(id,n)){closeModal();toast('Renovação registrada · novo vencimento '+fmt(v))}});
+}
+function alvImportar(){openModal(`${mh('Importar alvarás em lote')}<div class="mb"><div style="font-size:12.5px;color:var(--mut)">Cole um alvará por linha (pode copiar de uma planilha). Separe com <b>;</b> ou TAB:<br><span class="mono" style="font-size:12px">CNPJ ou nome da empresa ; Tipo ; Número ; Validade</span><br>Exemplo:<br><span class="mono" style="font-size:12px">12.345.678/0001-90 ; Bombeiros (CERCON) ; 2025-0001 ; 15/03/2027<br>Padaria Bom Pão ; Vigilância sanitária ; ; 30/11/2026</span></div>
+  <textarea class="inp" id="alTxt" rows="9"></textarea><div id="alPrev" style="font-size:12.5px"></div></div><div class="mf"><button class="btn" data-close>Cancelar</button><button class="btn" id="alVer">Conferir</button><button class="btn pri" id="alGo" disabled>Importar</button></div>`,true);
+  let prontas=[];const dig=s=>String(s||'').replace(/\D/g,'');
+  const achaEmp=x=>{const d=dig(x);const es=[...D.empresas.entries()];if(d.length>=11){const f=es.find(([,e])=>dig(e.cnpj)===d);if(f)return f[0]}const n=norm(x).trim();if(!n)return '';const f=es.find(([,e])=>norm(e.fantasia)===n||norm(e.razao)===n)||es.filter(([,e])=>norm(e.fantasia||'').includes(n)||norm(e.razao||'').includes(n)).find((_,i,arr)=>arr.length===1);return f?f[0]:''};
+  const dataDe=x=>{const m=String(x||'').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];return y+'-'+pad(+m[2])+'-'+pad(+m[1])}if(/^\d{4}-\d{2}-\d{2}$/.test(String(x||'').trim()))return String(x).trim();return String(x||'').trim()?null:''};
+  $('#alVer').onclick=()=>{prontas=[];const erros=[];val('alTxt').split('\n').map(x=>x.trim()).filter(Boolean).forEach((ln,i)=>{const c=ln.split(/\t|;/).map(x=>x.trim());const emp=achaEmp(c[0]),v=dataDe(c[3]);
+      if(!emp||!c[1]||v===null){erros.push('Linha '+(i+1)+(emp?'':' (empresa não encontrada)')+(v===null?' (data inválida)':'')+': '+esc(ln));return}
+      prontas.push({empresaId:emp,tipo:c[1],numero:c[2]||'',validade:v})});
+    $('#alPrev').innerHTML=`<b>${prontas.length}</b> linha(s) certa(s).${erros.length?`<div style="color:var(--red);margin-top:6px">${erros.length} com problema:<br>${erros.slice(0,8).join('<br>')}</div>`:''}`;$('#alGo').disabled=!prontas.length};
+  $('#alGo').onclick=async()=>{$('#alGo').disabled=true;let ok=0;for(const p of prontas){const n=Object.assign({},p,{empresaNome:empNome(p.empresaId),aviso:30,responsavel:'',criadoEm:agora(),criadoPor:meuNome(),historico:[{data:hoje(),txt:'Importado'+(p.validade?' · validade '+fmt(p.validade):''),por:meuNome()}]});if(await alvPut(uid(),n))ok++;else break}
+    closeModal();if(ok)toast(plural(ok,'alvará importado','alvarás importados'))};
+}
+function alvAvisos(){if(WS==='pessoal'||!loaded.alvaras)return;const al=alvAlerta();if(!al.length)return;const k='gt.alvav.'+hoje();if(lsGet(k,false))return;lsSet(k,true);
+  const v=al.filter(a=>alvSit(a)==='venc').length;
+  notificar('📄 '+plural(al.length,'alvará vencendo','alvarás vencendo')+(v?' · '+v+' vencido(s)':''),al.slice(0,3).map(a=>alvNome(a)+' — '+(a.tipo||'')+' ('+fmt(a.validade)+')').join('\n')+(al.length>3?'\n+ '+(al.length-3)+' outro(s)':''),()=>{UIALV.f=v?'venc':'vencendo';go('alvaras')})}
+setInterval(alvAvisos,60*60e3);
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-alvf],[data-alvnovo],[data-alved],[data-alvren],[data-alvimp]');if(!t)return;
+  if(t.hasAttribute('data-alvf')){UIALV.f=t.dataset.alvf;render()}else if(t.hasAttribute('data-alvnovo'))alvForm();else if(t.hasAttribute('data-alved'))alvForm(t.dataset.alved);else if(t.hasAttribute('data-alvren'))alvRenovar(t.dataset.alvren);else alvImportar()});
+document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.value;clearTimeout(UIALV.t);UIALV.t=setTimeout(()=>{render();const i=document.getElementById('alvQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}});
+
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-03a',data:'03/11/2026',itens:['📄 Controle de Alvarás (menu Alvarás, área Societário): cadastre os alvarás de cada empresa com a validade.','Faltando 30 dias para vencer, o sistema avisa (painel, menu e notificação diária) até a renovação ser registrada.','Importação de alvarás em lote, colando da planilha.']},
  {id:'2026-10-30f',data:'30/10/2026',itens:['🏆 Troféu e parabéns quando um novo cliente é cadastrado (toda a equipe vê).','🏆 Troféu com mensagem motivacional ao concluir uma tarefa.']},
  {id:'2026-10-30e',data:'30/10/2026',itens:['App para Android (.apk): menu ⋯ → Instalar no celular.']},
  {id:'2026-10-30d',data:'30/10/2026',itens:['App para celular: menu ⋯ → Instalar no celular (Android e iPhone), com avisos no telefone.']},
