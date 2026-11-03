@@ -1847,6 +1847,10 @@ function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pa
 async function put(col,id,data){
   const clean=JSON.parse(JSON.stringify(data));if(col==='tarefas')TN.eu.set(id,Date.now());
   if(col==='tarefas'&&!TALL.has(id)&&!D.tarefas.has(id)&&!clean.criadoPor){clean.criadoPor=meuNome();if(UID)clean.criadoUid=UID}
+  if(col==='tarefas'){const old=TALL.get(id)||D.tarefas.get(id);
+    if(pausaT(clean)&&!(old&&pausaT(old)))clean.pausaDesde=hoje();
+    if(old&&pausaT(old)&&!pausaT(clean)){const ini=old.pausaDesde||(old.atualizadoEm||'').slice(0,10);const d=ini?Math.max(0,dias(ini,hoje())):0;delete clean.pausaDesde;
+      if(d>0&&clean.prazo){const ant=clean.prazo;clean.prazo=addD(ant,d);clean.hist=(clean.hist||[]).concat([{em:agora(),tipo:'nota',txt:'Prazo prorrogado '+plural(d,'dia','dias')+' (tempo aguardando '+(old.status==='aguard_orgao'?'órgão público':'cliente')+'): '+fmt(ant)+' → '+fmt(clean.prazo),por:'Sistema'}])}}}
   if(col==='tarefas')TALL.set(id,clean);
   if(col==='tarefas'&&!MODL[clean.modulo])clean.modulo=D.tarefas.has(id)?'societario':(UI.mod||modDaCat(clean.categoria));
   D[col].set(id,clean);
@@ -1938,16 +1942,20 @@ function gDotTxt(){return gcalOn()?(G.err?'Google Agenda: erro':G.auto?'Google A
 /* ---------- Derivados ---------- */
 const empresa=id=>D.empresas.get(id);
 const empNome=id=>{const e=empresa(id);return e?(e.fantasia||e.razao):'Sem empresa'};
+const PAUSA_ST=['aguard_cliente','aguard_orgao'];
+const pausaT=t=>!!t&&PAUSA_ST.includes(t.status);
+const atrT=(t,h)=>!!t&&t.status!=='concluida'&&!pausaT(t)&&!!t.prazo&&t.prazo<(h||hoje());
 function info(t){
   const h=hoje(),aberta=t.status!=='concluida';
-  const atraso=aberta&&t.prazo&&t.prazo<h?dias(t.prazo,h):0;
+  const pausa=pausaT(t);
+  const atraso=aberta&&!pausa&&atrT(t,h)?dias(t.prazo,h):0;
   const ate=aberta&&t.prazo?dias(h,t.prazo):null;
   const upd=(t.atualizadoEm||t.criadoEm||h).slice(0,10);
   const semUpd=aberta?dias(upd,h):0;
   const cobs=(t.hist||[]).filter(x=>x.tipo==='cobranca');
   const lastCob=cobs.length?cobs.map(x=>x.em).sort().pop():null;
-  const parado=aberta&&semUpd>=SEM_UPD;
-  return {aberta,atraso,ate,semUpd,parado,upd,
+  const parado=aberta&&!pausa&&semUpd>=SEM_UPD;
+  return {aberta,pausa,atraso,ate,semUpd,parado,upd,
     cobrar:aberta&&(atraso>0||parado),
     cobradoHoje:!!lastCob&&lastCob.slice(0,10)===h,lastCob,nCob:cobs.length,
     emAberto:dias((t.criadoEm||h).slice(0,10),aberta?h:(t.concluidoEm||h).slice(0,10))};
@@ -2031,11 +2039,11 @@ function graficos(all){
   const s0=seg(h);const sem=[];for(let i=7;i>=0;i--)sem.push(addD(s0,-7*i));
   const dados=sem.map(w=>{const fim=addD(w,6);
     const conc=all.filter(t=>t.status==='concluida'&&t.concluidoEm&&t.concluidoEm.slice(0,10)>=w&&t.concluidoEm.slice(0,10)<=fim).length;
-    const atr=all.filter(t=>t.prazo&&t.prazo>=w&&t.prazo<=fim&&t.prazo<h&&(t.status!=='concluida'||(t.concluidoEm||'').slice(0,10)>t.prazo)).length;
+    const atr=all.filter(t=>t.prazo&&t.prazo>=w&&t.prazo<=fim&&t.prazo<h&&((t.status!=='concluida'&&!pausaT(t))||(t.concluidoEm||'').slice(0,10)>t.prazo)).length;
     return {w,conc,atr}});
   const mx=Math.max(1,...dados.map(d=>Math.max(d.conc,d.atr)));
   const barras=dados.map(d=>`<div class="gc-col" title="Semana de ${fmtC(d.w)}: ${d.conc} concluída(s), ${d.atr} atrasada(s)"><div class="gc-bars"><i style="height:${d.conc/mx*100}%;background:${VERD}"><b>${d.conc||''}</b></i><i style="height:${d.atr/mx*100}%;background:${VERM}"><b>${d.atr||''}</b></i></div><span>${fmtC(d.w)}</span></div>`).join('');
-  const ab=all.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo<h);
+  const ab=all.filter(t=>t.status!=='concluida'&&atrT(t,h));
   const porR={};ab.forEach(t=>{const k=t.responsavel||'Sem responsável';porR[k]=(porR[k]||0)+1});
   const rr=Object.entries(porR).sort((a,b)=>b[1]-a[1]).slice(0,8);const mr=Math.max(1,...rr.map(x=>x[1]));
   const hbar=(l,n,m,c)=>`<div class="gh-row"><span class="gh-l">${esc(l)}</span><div class="gh-t"><i style="width:${n/m*100}%;background:${c}"></i></div><b class="mono">${n}</b></div>`;
@@ -2056,7 +2064,7 @@ function vDashboard(){
   const all=tarefas(),h=hoje();
   const ab=all.filter(t=>t.status!=='concluida');
   const cHoje=ab.filter(t=>t.prazo===h);
-  const cAtr=ab.filter(t=>t.prazo&&t.prazo<h);
+  const cAtr=ab.filter(t=>atrT(t,h));
   const cProx=ab.filter(t=>t.prazo&&t.prazo>h&&dias(h,t.prazo)<=PROX);
   const cAnd=ab.filter(t=>t.status==='andamento');
   const cAg=ab.filter(t=>t.status==='aguard_cliente');
@@ -2075,7 +2083,7 @@ function vDashboard(){
   ${mode==='local'?'<div class="banner">Modo local: os dados ficam salvos apenas neste navegador.</div>':''}
   ${mode==='db'&&!canWrite?'<div class="banner" style="background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent);color:var(--fg)"><b>Seu acesso é só de visualização.</b> Você não consegue criar tarefas nem avisos. Fale com a diretoria.</div>':''}
   ${WS==='pessoal'?(()=>{const a=finAtrasados(),hj=finLinhas(hoje().slice(0,7)).filter(x=>x.hoje);return a.length||hj.length?`<div class="reminder" style="${a.length?'background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)':''}">${svg('money')}<div style="flex:1;min-width:200px">${a.length?`<b style="color:var(--red)">${plural(a.length,'pagamento atrasado','pagamentos atrasados')}</b> · ${brlF(a.reduce((s,x)=>s+x.valor,0))}`:''}${a.length&&hj.length?' · ':''}${hj.length?`<b>${plural(hj.length,'vence','vencem')} hoje</b> · ${brlF(hj.reduce((s,x)=>s+x.valor,0))}`:''}</div><button class="btn sm" data-go="financeiro">Ver financeiro</button></div>`:''})():''}
-  ${UI.mod?'':(()=>{const ts=[...D.tarefas.values()].filter(t=>!UI.resp||respHit(t,UI.resp));return `<div class="mod-strip">${MODS.map(([k,l,c])=>{const m=ts.filter(t=>modDe(t)===k&&t.status!=='concluida');const at=m.filter(t=>t.prazo&&t.prazo<h).length;return `<button class="mod-card" data-mod="${k}" style="--c:${c}"><span class="mc-l"><i></i>${l}</span><span class="mc-n">${m.length}<small>abertas</small></span><span class="mc-s ${at?'late':''}">${at?plural(at,'atrasada','atrasadas'):'Em dia'}</span></button>`}).join('')}</div>`})()}
+  ${UI.mod?'':(()=>{const ts=[...D.tarefas.values()].filter(t=>!UI.resp||respHit(t,UI.resp));return `<div class="mod-strip">${MODS.map(([k,l,c])=>{const m=ts.filter(t=>modDe(t)===k&&t.status!=='concluida');const at=m.filter(t=>atrT(t,h)).length;return `<button class="mod-card" data-mod="${k}" style="--c:${c}"><span class="mc-l"><i></i>${l}</span><span class="mc-n">${m.length}<small>abertas</small></span><span class="mc-s ${at?'late':''}">${at?plural(at,'atrasada','atrasadas'):'Em dia'}</span></button>`}).join('')}</div>`})()}
   ${WS!=='pessoal'?(()=>{const e=equipeLista().find(p=>souEu(p.nome));const d=e&&rdDoc(e.nome);return e&&rdVeAlerta(e.nome,d)?`<div class="reminder" style="background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)">${svg('perf')}<div style="flex:1;min-width:200px"><b style="color:var(--red)">Seu rendimento precisa de atenção</b> · ${esc((d.motivos||[]).join(' · '))}</div><button class="btn sm" data-go="rendimento">Ver</button></div>`:''})():''}
   ${WS!=='pessoal'?(()=>{const al=alvAlerta();if(!al.length)return '';const v=al.filter(a=>alvSit(a)==='venc').length;return `<div class="reminder" style="${v?'background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 40%,transparent)':'background:var(--amb-soft);border-color:color-mix(in srgb,var(--amb) 40%,transparent)'}">${svg('shield')}<div style="flex:1;min-width:200px"><b style="color:${v?'var(--red)':'var(--amb)'}">${plural(al.length,'alvará vencendo','alvarás vencendo')}${v?' · '+v+' vencido(s)':''}</b> · ${al.slice(0,3).map(a=>esc(alvNome(a))+' ('+fmtC(a.validade)+')').join(' · ')}${al.length>3?' · +'+(al.length-3):''}</div><button class="btn sm" data-go="alvaras">Ver alvarás</button></div>`})():''}
   ${(()=>{const n=rdMeusAlertas();return n&&!equipeLista().some(p=>souEu(p.nome)&&rdVeAlerta(p.nome,rdDoc(p.nome)))?`<div class="reminder">${svg('perf')}<div style="flex:1;min-width:200px"><b>${plural(n,'pessoa precisa','pessoas precisam')} de feedback</b> sobre o rendimento</div><button class="btn sm" data-go="rendimento">Ver rendimento</button></div>`:''})()}
@@ -2121,7 +2129,7 @@ function filtrar(list){
   if(UI.fPri)a=a.filter(t=>t.prioridade===UI.fPri);
   if(UI.fDep)a=a.filter(t=>t.departamento===UI.fDep);
   if(UI.fPrazo==='hoje')a=a.filter(t=>t.status!=='concluida'&&t.prazo===h);
-  if(UI.fPrazo==='atrasadas')a=a.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo<h);
+  if(UI.fPrazo==='atrasadas')a=a.filter(t=>t.status!=='concluida'&&atrT(t,h));
   if(UI.fPrazo==='proximas')a=a.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo>h&&dias(h,t.prazo)<=PROX);
   if(UI.fPrazo==='mes')a=a.filter(t=>t.status==='concluida'&&(t.concluidoEm||'').slice(0,7)===h.slice(0,7));
   if(!UI.concl&&!UI.fStatus&&UI.fPrazo!=='mes'&&UI.modo!=='kanban')a=a.filter(t=>t.status!=='concluida');
@@ -2281,7 +2289,7 @@ function calendar(tasks,withContacts){
 function vEquipe(){
   const l=equipeLista(),ts=[...D.tarefas.values()],h=hoje();
   const grupos={};l.forEach(p=>{(grupos[p.departamento||'Sem departamento']=grupos[p.departamento||'Sem departamento']||[]).push(p)});
-  const card=p=>{const exe=ts.filter(t=>norm(t.responsavel)===norm(p.nome)&&t.status!=='concluida');const atr=exe.filter(t=>t.prazo&&t.prazo<h).length;const sol=ts.filter(t=>norm(t.solicitante)===norm(p.nome)&&t.status!=='concluida').length;
+  const card=p=>{const exe=ts.filter(t=>norm(t.responsavel)===norm(p.nome)&&t.status!=='concluida');const atr=exe.filter(t=>atrT(t,h)).length;const sol=ts.filter(t=>norm(t.solicitante)===norm(p.nome)&&t.status!=='concluida').length;
     return `<div class="row" style="cursor:default"><span class="av" aria-hidden="true">${esc((p.nome||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase())}</span><div class="main-t"><div>${esc(p.nome)}${p.vinculo==='Associado'?' <span class="flag assoc">Associado</span>':''}${p.cargo?` <span style="font-weight:400;color:var(--mut);font-size:12px">· ${esc(p.cargo)}</span>`:''}</div>${p.obsEq?`<div class="sub" style="color:var(--fg)">${esc(p.obsEq)}</div>`:''}${p.nomeCompleto||p.admissao?`<div class="sub">${esc(p.nomeCompleto||'')}${p.admissao?` · desde ${fmt(p.admissao)}`:''}${p.vinculo?` · ${esc(p.vinculo)}`:''}</div>`:''}<div class="sub">${plural(exe.length,'tarefa','tarefas')} executando${atr?` · <span class="late">${atr} atrasada${atr>1?'s':''}</span>`:''} · ${sol} pedida${sol===1?'':'s'} em aberto${aniv(p)?` · 🎂 ${aniv(p).dm}`:''}${p.gestor?' · <b style="color:var(--acc)">Gestor</b>':''}</div></div>${p.whatsapp?`<a class="btn ghost sm" href="${waLink(p.whatsapp,msgResumo(p.nome))}" target="_blank" rel="noopener" title="Enviar resumo das tarefas no WhatsApp">${svg('wa')}Resumo</a>`:''}<button class="btn ghost sm" data-eq-edit="${p.id}" aria-label="Editar ${esc(p.nome)}">${svg('edit')}</button><button class="xbtn" data-eq-desl="${p.id}" title="Desligar (marcar como desligado)" aria-label="Desligar ${esc(p.nome)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5M16 9h6"/></svg></button><button class="xbtn" data-eq-del="${p.id}" aria-label="Remover ${esc(p.nome)}">${svg('x',2.2)}</button></div>`};
   const pc=podeCadastro();
   return `<div class="bar">${pc?'':'<span style="font-size:12.5px;color:var(--mut)">Somente a diretoria cadastra e altera a equipe.</span>'}<span style="flex:1"></span>${pc?`<button class="btn pri" data-eq-nova>${svg('plus',2.2)}Nova pessoa</button>`:''}</div>
@@ -2447,7 +2455,7 @@ function rdCalc(nome){
   const concAnt=ts.filter(t=>t.status==='concluida'&&t.concluidoEm&&t.concluidoEm.slice(0,10)>iniAnt&&t.concluidoEm.slice(0,10)<=ini);
   const comPz=conc.filter(t=>t.prazo);const noPz=comPz.filter(t=>t.concluidoEm.slice(0,10)<=t.prazo).length;
   const pct=comPz.length?Math.round(noPz/comPz.length*100):null;
-  const ab=ts.filter(t=>t.status!=='concluida');const atr=ab.filter(t=>t.prazo&&t.prazo<h);
+  const ab=ts.filter(t=>t.status!=='concluida');const atr=ab.filter(t=>atrT(t,h));
   const parad=ab.filter(t=>{const i=info(t);return i.parado}).length;
   const med=conc.length?Math.round(conc.reduce((s,t)=>s+dias((t.criadoEm||t.concluidoEm).slice(0,10),t.concluidoEm.slice(0,10)),0)/conc.length):null;
   const sem=[];for(let i=7;i>=0;i--){const a=addD(h,-7*(i+1)),b=addD(h,-7*i);sem.push(ts.filter(t=>t.status==='concluida'&&t.concluidoEm&&t.concluidoEm.slice(0,10)>a&&t.concluidoEm.slice(0,10)<=b).length)}
@@ -3069,6 +3077,7 @@ document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-03c',data:'03/11/2026',itens:['⏸️ Tarefa em "Aguardando cliente" ou "Aguardando órgão público" não fica atrasada, não entra em Cobranças e não pesa no rendimento.','Quando sai do aguardando, o prazo é prorrogado sozinho pelos dias de espera (fica registrado no histórico).']},
  {id:'2026-11-03b',data:'03/11/2026',itens:['📎 Alvarás: anexe o PDF ou a foto do alvará.','Botão Enviar: manda o alvará ao cliente pelo WhatsApp, e-mail ou compartilhamento do arquivo.']},
  {id:'2026-11-03a',data:'03/11/2026',itens:['📄 Controle de Alvarás (menu Alvarás, área Societário): cadastre os alvarás de cada empresa com a validade.','Faltando 30 dias para vencer, o sistema avisa (painel, menu e notificação diária) até a renovação ser registrada.','Importação de alvarás em lote, colando da planilha.']},
  {id:'2026-10-30f',data:'30/10/2026',itens:['🏆 Troféu e parabéns quando um novo cliente é cadastrado (toda a equipe vê).','🏆 Troféu com mensagem motivacional ao concluir uma tarefa.']},
@@ -4266,7 +4275,7 @@ function listaTexto(o){
   const linha=t=>{const i=info(t);const pz=t.status==='concluida'?'concluída '+fmtC(t.concluidoEm):t.prazo?(i.atraso?`prazo ${fmtC(t.prazo)} (${i.atraso} dia${i.atraso>1?'s':''} de atraso)`:t.prazo===h?'vence hoje':'prazo '+fmtC(t.prazo)):'sem prazo';
     const ex=[o.emp&&empNome(t.empresaId),o.resp&&t.responsavel,pz,o.status&&(ST[t.status]?ST[t.status].l:t.status),o.prot&&protTxt(t).replace(/\n/g,', ')].filter(Boolean).join(' · ');
     return `• *${t.titulo}*${t.prioridade&&t.prioridade!=='normal'?' _'+PRI[t.prioridade].toUpperCase()+'_':''}${ex?'\n   '+ex:''}${o.desc&&t.descricao?'\n   '+t.descricao.replace(/\s+/g,' ').slice(0,160):''}`};
-  const g=[['🔴 *Atrasadas*',list.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo<h)],['🟠 *Vencem hoje*',list.filter(t=>t.status!=='concluida'&&t.prazo===h)],['🔵 *Próximas*',list.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo>h)],['⚪ *Sem prazo*',list.filter(t=>t.status!=='concluida'&&!t.prazo)],['✅ *Concluídas*',list.filter(t=>t.status==='concluida')]].filter(x=>x[1].length);
+  const g=[['🔴 *Atrasadas*',list.filter(t=>t.status!=='concluida'&&atrT(t,h))],['🟠 *Vencem hoje*',list.filter(t=>t.status!=='concluida'&&t.prazo===h)],['🔵 *Próximas*',list.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo>h)],['⚪ *Sem prazo*',list.filter(t=>t.status!=='concluida'&&!t.prazo)],['✅ *Concluídas*',list.filter(t=>t.status==='concluida')]].filter(x=>x[1].length);
   return `*Tarefas${UI.resp?' — '+UI.resp:''}* · ${fmt(h)}${fil?'\n'+fil:''}\n${plural(list.length,'tarefa','tarefas')}\n\n`+(g.length?g.map(([tt,a])=>`${tt} (${a.length})\n${a.map(linha).join('\n')}`).join('\n\n'):'Nenhuma tarefa nesta lista.')+(o.ass?'\n\n_Gestor de Tarefas · Londe & Rodrigues_':'');
 }
 function txtListaModal(){
@@ -4674,7 +4683,7 @@ function msgCliente(t){const e=empresa(t.empresaId)||{};return `Olá${e.responsa
 function telDe(nome){const p=equipeLista().find(x=>norm(x.nome)===norm(nome));return p&&p.whatsapp||''}
 function msgTarefa(t){const i=info(t);return `*Tarefa: ${t.titulo}*\nEmpresa: ${empNome(t.empresaId)}\nPrazo: ${fmt(t.prazo)}${i.atraso?` (atrasada ${i.atraso} dia${i.atraso>1?'s':''})`:''}\nStatus: ${ST[t.status].l}${t.prioridade&&t.prioridade!=='normal'?`\nPrioridade: ${PRI[t.prioridade]}`:''}${t.descricao?`\n\n${t.descricao}`:''}\n\n_Gestor de Tarefas_`}
 function msgResumo(nome){const h=hoje();const ts=tarefas().filter(t=>norm(t.responsavel)===norm(nome)&&t.status!=='concluida').sort(byPrazo);
-  const atr=ts.filter(t=>t.prazo&&t.prazo<h),hj=ts.filter(t=>t.prazo===h),prox=ts.filter(t=>!t.prazo||t.prazo>h);
+  const atr=ts.filter(t=>atrT(t,h)),hj=ts.filter(t=>t.prazo===h),prox=ts.filter(t=>!t.prazo||t.prazo>h);
   const l=t=>`• ${t.titulo} — ${empNome(t.empresaId)}${t.prazo?` (${fmtC(t.prazo)})`:''}`;
   return `*Resumo de tarefas — ${fmt(h)}*\nOlá ${nome.split(' ')[0]}!\n${atr.length?`\n🔴 *Atrasadas (${atr.length})*\n${atr.map(l).join('\n')}\n`:''}${hj.length?`\n🟡 *Vencem hoje (${hj.length})*\n${hj.map(l).join('\n')}\n`:''}${prox.length?`\n⚪ *Próximas (${prox.length})*\n${prox.slice(0,15).map(l).join('\n')}\n`:''}${ts.length?'':'\nNenhuma tarefa em aberto. 👍\n'}\n_Gestor de Tarefas_`}
 
@@ -4862,7 +4871,7 @@ function relSemana(){
   const ts=[...TALL.values()];
   const pess=equipeLista().filter(p=>p.vinculo!=='Associado'&&p.vinculo!=='Sócio');
   const txtDe=p=>{const mt=ts.filter(t=>norm(t.responsavel)===norm(p.nome));const c=mt.filter(t=>t.status==='concluida'&&(t.concluidoEm||'').slice(0,10)>=ini&&(t.concluidoEm||'').slice(0,10)<=fim);
-    const atr=mt.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo<hj),vem=mt.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo>=hj&&t.prazo<=ate7);
+    const atr=mt.filter(t=>t.status!=='concluida'&&atrT(t,hj)),vem=mt.filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo>=hj&&t.prazo<=ate7);
     const ln=t=>'• '+(t.titulo||t.categoria)+(t.empresaId?' ('+empNome(t.empresaId)+')':'')+(t.prazo?' — '+fmt(t.prazo):'');
     return {n:c.length,a:atr.length,v:vem.length,txt:`*Resumo da semana ${fmt(ini).slice(0,5)} a ${fmt(fim).slice(0,5)}* — ${p.nome.split(' ')[0]}\n\n✅ Concluídas: ${c.length}\n${c.map(ln).join('\n')}\n\n⚠️ Atrasadas: ${atr.length}\n${atr.map(ln).join('\n')}\n\n📅 Vencem nos próximos 7 dias: ${vem.length}\n${vem.map(ln).join('\n')}`.replace(/\n{3,}/g,'\n\n').trim()}};
   const rs=pess.map(p=>Object.assign({p},txtDe(p))).filter(r=>r.n||r.a||r.v);
@@ -4880,9 +4889,9 @@ function bomDiaCheck(){
   const k='gt.bomdia.'+(UID||'')+'.'+hoje();if(lsGet(k,false))return;lsSet(k,true);
   const h=new Date().getHours(),sd=h<12?'Bom dia':h<18?'Boa tarde':'Boa noite',ic=h<12?'☀️':h<18?'🌤️':'🌙';const hj=hoje(),em3=isoD(new Date(Date.now()+3*864e5));
   const meus=[...D.tarefas.values()].filter(t=>t.status!=='concluida'&&ehMinha(t));
-  const vh=meus.filter(t=>t.prazo===hj).length,at=meus.filter(t=>t.prazo&&t.prazo<hj).length,pr=meus.filter(t=>t.prazo>hj&&t.prazo<=em3).length;
+  const vh=meus.filter(t=>t.prazo===hj).length,at=meus.filter(t=>atrT(t,hj)).length,pr=meus.filter(t=>t.prazo>hj&&t.prazo<=em3).length;
   const niver=aniversariantes().filter(p=>p.a.dias===0).map(p=>p.nome.split(' ')[0]);
-  const ges=GT.gestor();const eqAtr=ges?[...TALL.values()].filter(t=>t.status!=='concluida'&&t.prazo&&t.prazo<hj).length:0;
+  const ges=GT.gestor();const eqAtr=ges?[...TALL.values()].filter(t=>t.status!=='concluida'&&atrT(t,hj)).length:0;
   openModal(`<div id="bomDia"><div class="mb" style="gap:14px"><div style="font-size:30px">${ic}</div><div><h3 style="margin:0;font-size:20px">${sd}, ${esc(ME)}!</h3><div style="color:var(--mut);font-size:13px;margin-top:4px">${FRASES[new Date().getDate()%FRASES.length]}</div></div>
     <div class="bd-k"><div><b style="${vh?'color:var(--amb)':''}">${vh}</b><span>vencem hoje</span></div><div><b style="${at?'color:var(--red)':''}">${at}</b><span>atrasadas</span></div><div><b>${pr}</b><span>nos próximos 3 dias</span></div></div>
     ${niver.length?`<div class="banner">🎂 Hoje é aniversário de <b>${esc(niver.join(', '))}</b>. Não esqueça de dar os parabéns!</div>`:''}
@@ -4898,7 +4907,7 @@ function vCarga(){
   const semIni=k=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-d.getDay()-7*k);return isoD(d)};
   const S=[];for(let k=7;k>=0;k--){const a=semIni(k),b=k?semIni(k-1):'9999';S.push({rot:fmt(a).slice(0,5),ent:ts.filter(t=>(t.criadoEm||'')>=a&&(t.criadoEm||'')<b).length,sai:ts.filter(t=>t.status==='concluida'&&(t.concluidoEm||'')>=a&&(t.concluidoEm||'')<b).length})}
   const ab=ts.filter(t=>t.status!=='concluida'),mao=ab.filter(t=>t.status==='afazer'||t.status==='andamento'||!t.status),agu=ab.length-mao.length;
-  const atr=mao.filter(t=>t.prazo&&t.prazo<hj).length;
+  const atr=mao.filter(t=>atrT(t,hj)).length;
   const ult4=S.slice(-5,-1);const ent4=ult4.reduce((a,x)=>a+x.ent,0)/4,sai4=ult4.reduce((a,x)=>a+x.sai,0)/4;
   const dur=ts.filter(t=>t.status==='concluida'&&t.criadoEm&&t.concluidoEm).map(t=>Math.max(0,(dia(t.concluidoEm)-dia(t.criadoEm))/864e5));
   const durM=dur.length?dur.reduce((a,b)=>a+b,0)/dur.length:null;
@@ -4908,7 +4917,7 @@ function vCarga(){
   const porP=pess.map(p=>{const mt=ts.filter(t=>norm(t.responsavel)===norm(p.nome));const a=mt.filter(t=>t.status==='afazer'||t.status==='andamento');
     const c30=mt.filter(t=>t.status==='concluida'&&(t.concluidoEm||'')>=isoD(new Date(Date.now()-30*864e5))).length;
     const h30=mt.reduce((s,t)=>s+((t.atualizadoEm||t.criadoEm||'')>=isoD(new Date(Date.now()-30*864e5))?tempoAtual(t):0),0);
-    return {nome:p.nome,dep:p.departamento||'',ab:a.length,atr:a.filter(t=>t.prazo&&t.prazo<hj).length,c30,h30}}).filter(x=>x.ab||x.c30).sort((a,b)=>b.ab-a.ab);
+    return {nome:p.nome,dep:p.departamento||'',ab:a.length,atr:a.filter(t=>atrT(t,hj)).length,c30,h30}}).filter(x=>x.ab||x.c30).sort((a,b)=>b.ab-a.ab);
   const mediaAb=porP.length?porP.reduce((a,b)=>a+b.ab,0)/porP.length:0;
   const sinais=[];
   if(fila!==null&&fila>3)sinais.push(`a fila de serviço daria <b>${fila.toFixed(1).replace('.',',')} semanas</b> para zerar no ritmo atual (o saudável é até 3)`);
