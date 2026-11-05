@@ -1194,7 +1194,7 @@ tr.click:hover td{background:var(--acc-soft)}
 .mail-prev{margin:0;white-space:pre-wrap;font-family:var(--f-ui);font-size:12.5px;line-height:1.5;color:var(--mut);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;max-height:220px;overflow:auto}
 .av-f a svg{width:13px;height:13px;vertical-align:-2px;margin-right:3px}
 .flag.assoc{background:rgba(155,124,242,.14);color:#9b7cf2;border-color:transparent;font-size:10.5px;vertical-align:1px;margin-left:4px}
-html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-cad='0'] [data-eq-del],html[data-cad='0'] [data-eq-reat],html[data-cad='0'] [data-eq-nova]{display:none!important}
+html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-cad='0'] [data-eq-del],html[data-cad='0'] [data-eq-reat],html[data-cad='0'] [data-eq-pass],html[data-cad='0'] [data-eq-nova]{display:none!important}
 #btnAs,.as-panel{display:none!important}
 
 /* Usuário, online, chat */
@@ -1332,6 +1332,35 @@ html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-ca
 .dono svg{width:12px;height:12px}
 .hero h2 .dono{font-size:12px;vertical-align:4px}
 .dono-ops{display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+/* ===== Visual leve (05/11/2026) ===== */
+:root:not([data-theme="light"]){--bg:#15171b;--panel:#1b1e23;--panel2:#22252b;--line:rgba(255,255,255,.06);--line2:rgba(255,255,255,.10);--fg:#e6e7ea;--mut:#a3a7b0;--dim:#757a84;--sh-1:none;--sh-2:0 6px 18px -10px rgba(0,0,0,.45);--shadow:0 0 0 1px rgba(255,255,255,.05),0 18px 40px -16px rgba(0,0,0,.6)}
+:root[data-theme="light"]{--bg:#f7f7f8;--line:rgba(9,9,11,.06);--sh-1:none;--sh-2:0 6px 18px -10px rgba(0,0,0,.08)}
+.panel,.tile{box-shadow:none;border-radius:14px}
+.btn{box-shadow:none;font-weight:500}
+.btn:not(.pri):not(.warn){background:transparent}
+.btn:not(.pri):not(.warn):hover{background:var(--panel2)}
+.row{border-top-color:transparent;border-radius:10px;margin:0 6px}
+.rows .row+.row{border-top:1px solid var(--line)}
+.ph h2{font-weight:500;color:var(--mut)}
+.tile .n{font-weight:400}
+.ov{backdrop-filter:none;-webkit-backdrop-filter:none}
+.top{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+.btn:hover,.tile:hover,.mod-card:hover,.ec:hover,.kc:hover{transform:none!important;box-shadow:none!important}
+.btn:hover svg,.nav button:hover svg,#btnNova:hover svg{transform:none!important}
+.mods button:hover,.nav button:hover{transform:none!important}
+.btn.pri{background-image:none!important}
+#btnIA svg,.tile.hot,.tile.hot::before,.mod-card .mc-l i,.mods button.on i,.mod-card .mc-s.late,.nav .ct,.mob-nav .ct,.btn.warn{animation:none!important}
+.dial{filter:none}
+/* Passagem de tarefas */
+.dl-box{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:6px 0 12px}
+.dl-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.dl-det{margin:4px 0 12px}.dl-det summary{cursor:pointer;font-size:12.5px;color:var(--mut);padding:4px 0}
+.dl-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;margin-top:6px}
+.dl-it{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--panel2)}
+.dl-t{flex:1;min-width:0}.dl-t>div:first-child{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-it .sel{max-width:46%}
+.dl-chk{display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0}
+@media (max-width:560px){.dl-it{flex-wrap:wrap}.dl-it .sel{max-width:none;width:100%}}
 </style>
 
 <div class="app">
@@ -2295,22 +2324,52 @@ function vEquipe(){
   const pc=podeCadastro();
   return `<div class="bar">${pc?'':'<span style="font-size:12.5px;color:var(--mut)">Somente a diretoria cadastra e altera a equipe.</span>'}<span style="flex:1"></span>${pc?`<button class="btn pri" data-eq-nova>${svg('plus',2.2)}Nova pessoa</button>`:''}</div>
   ${l.length?`<div class="emp-grid">${Object.keys(grupos).map(g=>`<section class="panel"><div class="ph"><h2>${esc(g)}</h2><span class="flag">${grupos[g].length}</span></div><div class="rows">${grupos[g].map(card).join('')}</div></section>`).join('')}</div>`:`<section class="panel">${empty('Nenhuma pessoa cadastrada.','<button class="btn pri sm" data-eq-nova>Nova pessoa</button>')}</section>`}
-  ${(()=>{const dl=[...D.equipe.entries()].map(([id,p])=>Object.assign({id},p)).filter(p=>p.ativo===false).sort((a,b)=>(b.desligadoEm||'').localeCompare(a.desligadoEm||''));return dl.length?`<section class="panel"><div class="ph"><h2>Desligados</h2><span class="flag">${dl.length}</span><span class="sp"></span><button class="btn ghost sm" data-eq-vdl>${UI.eqVerDl?'Ocultar':'Mostrar'}</button></div>${UI.eqVerDl?`<div class="rows">${dl.map(p=>`<div class="row" style="cursor:default;opacity:.8"><span class="av" aria-hidden="true" style="filter:grayscale(1)">${esc((p.nome||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase())}</span><div class="main-t"><div>${esc(p.nome)}${p.cargo?` <span style="font-weight:400;color:var(--mut);font-size:12px">· ${esc(p.cargo)}</span>`:''}</div><div class="sub">${esc(p.departamento||'')}${p.desligadoEm?` · desligado(a) em ${fmt(p.desligadoEm)}`:''}${p.motivoDesl?` · ${esc(p.motivoDesl)}`:''}</div></div><button class="btn ghost sm" data-eq-reat="${p.id}">Reativar</button></div>`).join('')}</div>`:''}</section>`:''})()}`;
+  ${(()=>{const dl=[...D.equipe.entries()].map(([id,p])=>Object.assign({id},p)).filter(p=>p.ativo===false).sort((a,b)=>(b.desligadoEm||'').localeCompare(a.desligadoEm||''));return dl.length?`<section class="panel"><div class="ph"><h2>Desligados</h2><span class="flag">${dl.length}</span><span class="sp"></span><button class="btn ghost sm" data-eq-vdl>${UI.eqVerDl?'Ocultar':'Mostrar'}</button></div>${UI.eqVerDl?`<div class="rows">${dl.map(p=>`<div class="row" style="cursor:default;opacity:.8"><span class="av" aria-hidden="true" style="filter:grayscale(1)">${esc((p.nome||'?').split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase())}</span><div class="main-t"><div>${esc(p.nome)}${p.cargo?` <span style="font-weight:400;color:var(--mut);font-size:12px">· ${esc(p.cargo)}</span>`:''}</div><div class="sub">${esc(p.departamento||'')}${p.desligadoEm?` · desligado(a) em ${fmt(p.desligadoEm)}`:''}${p.motivoDesl?` · ${esc(p.motivoDesl)}`:''}</div></div>${(()=>{const k=[...D.tarefas.values()].filter(t=>t.status!=='concluida'&&(norm(t.responsavel)===norm(p.nome)||norm(t.solicitante)===norm(p.nome))).length;return k?`<button class="btn sm" data-eq-pass="${p.id}">Passar ${plural(k,'tarefa','tarefas')}</button>`:''})()}<button class="btn ghost sm" data-eq-reat="${p.id}">Reativar</button></div>`).join('')}</div>`:''}</section>`:''})()}`;
 }
-function eqDesligar(id){
+function eqDesligar(id,soPassar){
   if(!podeCadastro())return;
   const p=D.equipe.get(id);if(!p)return;
-  const ab=[...D.tarefas.values()].filter(t=>norm(t.responsavel)===norm(p.nome)&&t.status!=='concluida').length;
-  openModal(`${mh('Desligar '+esc(p.nome))}<form id="dlf"><div class="mb">
-    <div class="fd"><label for="dl_d">Data do desligamento</label><input class="inp" type="date" id="dl_d" value="${hoje()}" style="max-width:200px"></div>
-    <div class="fd"><label for="dl_m">Motivo (opcional)</label><input class="inp" id="dl_m" list="dlML" placeholder="Ex.: Pedido de demissão"><datalist id="dlML">${['Pedido de demissão','Dispensa sem justa causa','Dispensa com justa causa','Término de contrato','Acordo','Fim do contrato PJ'].map(m=>`<option value="${m}">`).join('')}</datalist></div>
-    ${ab?`<div class="fd"><label for="dl_n">${plural(ab,'tarefa em aberto','tarefas em aberto')} — passar para</label><select class="sel" id="dl_n"><option value="">Deixar como está</option>${equipeLista().filter(x=>x.id!==id).map(x=>`<option>${esc(x.nome)}</option>`).join('')}</select></div>`:''}
-    <div style="font-size:12px;color:var(--mut)">A pessoa sai das listas de responsáveis, do mural e do rendimento. O histórico continua guardado e dá para reativar depois.</div></div>
-    <div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn warn" type="submit">Desligar</button></div></form>`);
-  $('#dlf').addEventListener('submit',async ev=>{ev.preventDefault();const now=agora(),novo=document.getElementById('dl_n')?val('dl_n'):'';
-    await put('equipe',id,Object.assign({},p,{ativo:false,gestor:false,desligadoEm:val('dl_d')||hoje(),motivoDesl:val('dl_m'),desligadoPor:ME}));
-    let n=0;if(novo){for(const [tid,t] of [...D.tarefas.entries()]){if(norm(t.responsavel)===norm(p.nome)&&t.status!=='concluida'){await put('tarefas',tid,Object.assign({},t,{responsavel:novo,atualizadoEm:now,hist:(t.hist||[]).concat([{em:now,tipo:'resp',txt:'Responsável: '+novo+' (desligamento de '+p.nome+')',por:ME}])}));n++}}}
-    closeModal();toast(p.nome+' desligado(a)'+(n?` · ${plural(n,'tarefa passada','tarefas passadas')} para ${novo}`:''))});
+  const ab=[...D.tarefas.entries()].map(([tid,t])=>Object.assign({id:tid},t)).filter(t=>norm(t.responsavel)===norm(p.nome)&&t.status!=='concluida').sort(byPrazo);
+  const pd=[...D.tarefas.entries()].filter(([,t])=>norm(t.solicitante)===norm(p.nome)&&t.status!=='concluida'&&norm(t.responsavel)!==norm(p.nome));
+  const outros=equipeLista().filter(x=>x.id!==id&&norm(x.nome)!==norm(p.nome));
+  if(soPassar&&!ab.length&&!pd.length){toast('Não há tarefas em aberto de '+p.nome);return}
+  const ops=(sel)=>`<option value="">${sel===null?'— Escolha —':'Igual ao de cima'}</option>`+outros.map(x=>`<option>${esc(x.nome)}</option>`).join('');
+  const h=hoje();
+  openModal(`${mh((soPassar?'Passar tarefas de ':'Desligar ')+esc(p.nome))}<form id="dlf"><div class="mb">
+    ${soPassar?'':`<div class="fg"><div class="fd"><label for="dl_d">Data do desligamento</label><input class="inp" type="date" id="dl_d" value="${h}"></div>
+    <div class="fd"><label for="dl_m">Motivo (opcional)</label><input class="inp" id="dl_m" list="dlML" placeholder="Ex.: Pedido de demissão"><datalist id="dlML">${['Pedido de demissão','Dispensa sem justa causa','Dispensa com justa causa','Término de contrato','Acordo','Fim do contrato PJ'].map(m=>`<option value="${m}">`).join('')}</datalist></div></div>`}
+    ${ab.length?`<div class="dl-box"><div class="dl-h"><b>${plural(ab.length,'tarefa em aberto','tarefas em aberto')}</b><span>${ab.filter(t=>atrT(t,h)).length?`<span class="late">${ab.filter(t=>atrT(t,h)).length} atrasada(s)</span>`:''}</span></div>
+      <div class="fd"><label for="dl_n">Passar todas para</label><select class="sel" id="dl_n">${ops(null)}</select></div>
+      <details class="dl-det"><summary>Dividir entre pessoas (escolher por tarefa)</summary><div class="dl-list">${ab.map(t=>`<div class="dl-it"><div class="dl-t"><div>${esc(t.titulo)}</div><div class="sub">${esc(empNome(t.empresaId))}${t.prazo?' · prazo '+fmt(t.prazo):''}${atrT(t,h)?' · <span class="late">atrasada</span>':''}</div></div><select class="sel" data-dlt="${t.id}" aria-label="Novo responsável">${ops('')}</select></div>`).join('')}</div></details>
+      <div class="fd"><label for="dl_r">Recado para quem assume <span style="font-weight:400;color:var(--dim)">(vai no histórico de cada tarefa)</span></label><textarea class="inp" id="dl_r" rows="3" placeholder="Ex.: onde parou, com quem falar no cliente, documentos que faltam…"></textarea></div></div>`:''}
+    ${pd.length?`<label class="dl-chk"><input type="checkbox" id="dl_s" checked> Também passar ${plural(pd.length,'pedido que ele(a) fez','pedidos que ele(a) fez')} (fica como solicitante quem assumir)</label>`:''}
+    ${!ab.length&&!pd.length?'<div class="sub" style="margin-bottom:8px">Nenhuma tarefa em aberto com essa pessoa.</div>':''}
+    ${soPassar?'':'<div style="font-size:12px;color:var(--mut);margin-top:10px">A pessoa sai das listas de responsáveis, do mural e do rendimento. O histórico continua guardado e dá para reativar depois.</div>'}</div>
+    <div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn ${soPassar?'pri':'warn'}" type="submit">${soPassar?'Passar tarefas':'Desligar'}</button></div></form>`);
+  $('#dlf').addEventListener('submit',async ev=>{ev.preventDefault();const now=agora(),todos=document.getElementById('dl_n')?val('dl_n'):'',rec=document.getElementById('dl_r')?val('dl_r'):'';
+    const porT={};document.querySelectorAll('[data-dlt]').forEach(s=>{porT[s.dataset.dlt]=s.value||todos});
+    const semDono=ab.filter(t=>!(porT[t.id]||todos)).length;
+    const btn=$('#dlf button[type=submit]');
+    if(ab.length&&semDono&&!btn.dataset.avisado){btn.dataset.avisado='1';btn.textContent='Continuar assim mesmo';let w=$('#dlAviso');if(!w){w=document.createElement('div');w.id='dlAviso';w.className='banner';w.style.cssText='margin-top:10px;padding:10px 12px;background:var(--amb-soft);color:var(--amb);font-size:12.5px';$('#dlf .mb').appendChild(w)}w.textContent=plural(semDono,'tarefa vai ficar','tarefas vão ficar')+' sem novo responsável, ainda no nome de '+p.nome+'. Escolha alguém acima ou clique de novo para continuar.';return}
+    const dD=document.getElementById('dl_d')?val('dl_d'):'',dM=document.getElementById('dl_m')?val('dl_m'):'',passaSol=!!(document.getElementById('dl_s')&&document.getElementById('dl_s').checked);
+    btn.disabled=true;btn.textContent='Salvando…';
+    if(!soPassar)await put('equipe',id,Object.assign({},p,{ativo:false,gestor:false,desligadoEm:dD||hoje(),motivoDesl:dM,desligadoPor:ME}));
+    const cont={};let n=0;
+    for(const t of ab){const novo=porT[t.id]||todos;if(!novo)continue;const o=D.tarefas.get(t.id);if(!o)continue;
+      await put('tarefas',t.id,Object.assign({},o,{responsavel:novo,atualizadoEm:now,hist:(o.hist||[]).concat([{em:now,tipo:'resp',txt:'Responsável: '+novo+' (passada de '+p.nome+(soPassar?'':', desligamento')+')'+(rec?'\nRecado: '+rec:''),por:ME}])}));
+      cont[novo]=(cont[novo]||[]).concat([t]);n++}
+    let ns=0;const paraSol=todos||Object.keys(cont)[0]||'';
+    if(pd.length&&paraSol&&passaSol){for(const [tid,o] of pd){const nn=cont[o.responsavel]?o.responsavel:paraSol;await put('tarefas',tid,Object.assign({},o,{solicitante:nn,atualizadoEm:now,hist:(o.hist||[]).concat([{em:now,tipo:'resp',txt:'Solicitante: '+nn+' (antes '+p.nome+')',por:ME}])}));ns++}}
+    closeModal();
+    const ppl=Object.keys(cont);
+    if(!ppl.length){toast(soPassar?'Nada foi passado':p.nome+' desligado(a)');return}
+    const zap=nome=>{const x=equipeLista().find(e=>norm(e.nome)===norm(nome));if(!x||!x.whatsapp)return '';const l=cont[nome];
+      const txt=`Olá, ${nome.split(' ')[0]}! Você assumiu ${plural(l.length,'tarefa','tarefas')} que estava${l.length>1?'m':''} com ${p.nome}:\n`+l.map(t=>`• ${t.titulo}${t.empresaId?' — '+empNome(t.empresaId):''}${t.prazo?' (prazo '+fmt(t.prazo)+')':''}`).join('\n')+(rec?`\n\nRecado: ${rec}`:'')+'\n\nEstão no Gestor de Tarefas, no seu nome.';
+      return `<a class="btn ghost sm" href="${waLink(x.whatsapp,txt)}" target="_blank" rel="noopener">${svg('wa')}Avisar</a>`};
+    openModal(`${mh('Passagem concluída')}<div class="mb"><div class="sub" style="margin-bottom:12px">${soPassar?'':esc(p.nome)+' foi desligado(a). '}${plural(n,'tarefa passada','tarefas passadas')}${ns?` e ${plural(ns,'pedido','pedidos')} como solicitante`:''}.</div>
+      <div class="dl-list">${ppl.map(nm=>`<div class="dl-it"><div class="dl-t"><div>${esc(nm)}</div><div class="sub">${plural(cont[nm].length,'tarefa','tarefas')}</div></div>${zap(nm)}</div>`).join('')}</div></div>
+      <div class="mf"><button type="button" class="btn pri" data-close>Pronto</button></div>`);
+  });
 }
 function pessoaForm(id,cb,preNome){
   if(!podeCadastro()){toast('Só a diretoria pode cadastrar ou alterar pessoas da equipe.');return}
@@ -3078,6 +3137,7 @@ document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-05',data:'05/11/2026',itens:['🔁 Desligamento: passe as tarefas para uma pessoa só ou divida tarefa por tarefa, com recado para quem assume (fica no histórico).','Os pedidos que a pessoa fez também passam, e dá para avisar quem assumiu pelo WhatsApp.','Na lista de Desligados aparece o botão "Passar tarefas" se ainda sobrou alguma.','🪶 Visual mais leve: cores mais suaves, menos sombras e menos animações piscando.']},
  {id:'2026-11-03d',data:'03/11/2026',itens:['💼 Novo módulo BPO Financeiro, com categorias próprias (contas a pagar e receber, conciliação, fluxo de caixa, relatórios).']},
  {id:'2026-11-03c',data:'03/11/2026',itens:['⏸️ Tarefa em "Aguardando cliente" ou "Aguardando órgão público" não fica atrasada, não entra em Cobranças e não pesa no rendimento.','Quando sai do aguardando, o prazo é prorrogado sozinho pelos dias de espera (fica registrado no histórico).']},
  {id:'2026-11-03b',data:'03/11/2026',itens:['📎 Alvarás: anexe o PDF ou a foto do alvará.','Botão Enviar: manda o alvará ao cliente pelo WhatsApp, e-mail ou compartilhamento do arquivo.']},
@@ -4692,11 +4752,12 @@ function msgResumo(nome){const h=hoje();const ts=tarefas().filter(t=>norm(t.resp
 /* ---------- Eventos ---------- */
 document.addEventListener('click',ev=>{
   if(ev.target.closest('[data-stop]'))return;
-  const a=ev.target.closest('[data-chat-del],[data-chat-sel],[data-go],[data-go-list],[data-open],[data-cobrar],[data-emp],[data-modo],[data-cal],[data-day],[data-close],[data-ov],[data-nova],[data-nova-emp],[data-edit-emp],[data-edit-task],[data-contato],[data-prox],[data-feito],[data-nova-emp-task],[data-concluir],[data-del-task],[data-del-emp],[data-clear-prazo],[data-limpar-ex],[data-importar],[data-del-ct],[data-pdf],[data-ws],[data-gov],[data-das],[data-copy],[data-fin],[data-fin-pago],[data-fin-desf],[data-pix],[data-bloquear],[data-eq-nova],[data-eq-edit],[data-eq-del],[data-selmode],[data-selall],[data-pick],[data-del-sel],[data-mod],[data-rd],[data-eq-desl],[data-eq-reat],[data-eq-vdl],[data-inativar],[data-emp-inat],[data-av-novo],[data-av-edit],[data-av-del],[data-av-fix],[data-av-todos],[data-festa]');
+  const a=ev.target.closest('[data-chat-del],[data-chat-sel],[data-go],[data-go-list],[data-open],[data-cobrar],[data-emp],[data-modo],[data-cal],[data-day],[data-close],[data-ov],[data-nova],[data-nova-emp],[data-edit-emp],[data-edit-task],[data-contato],[data-prox],[data-feito],[data-nova-emp-task],[data-concluir],[data-del-task],[data-del-emp],[data-clear-prazo],[data-limpar-ex],[data-importar],[data-del-ct],[data-pdf],[data-ws],[data-gov],[data-das],[data-copy],[data-fin],[data-fin-pago],[data-fin-desf],[data-pix],[data-bloquear],[data-eq-nova],[data-eq-edit],[data-eq-del],[data-selmode],[data-selall],[data-pick],[data-del-sel],[data-mod],[data-rd],[data-eq-desl],[data-eq-pass],[data-eq-reat],[data-eq-vdl],[data-inativar],[data-emp-inat],[data-av-novo],[data-av-edit],[data-av-del],[data-av-fix],[data-av-todos],[data-festa]');
   if(!a)return;const ds=a.dataset;
   if('ov' in ds){if(ev.target===a)closeModal();return}
-  if((ds.eqDesl||ds.eqEdit||ds.eqDel||ds.eqReat||'eqNova' in ds)&&!podeCadastro()){toast('Só a diretoria pode alterar a equipe.');return}
+  if((ds.eqDesl||ds.eqPass||ds.eqEdit||ds.eqDel||ds.eqReat||'eqNova' in ds)&&!podeCadastro()){toast('Só a diretoria pode alterar a equipe.');return}
   if(ds.eqDesl){eqDesligar(ds.eqDesl);return}
+  if(ds.eqPass){eqDesligar(ds.eqPass,true);return}
   if(ds.eqReat){const p=D.equipe.get(ds.eqReat);if(p){put('equipe',ds.eqReat,Object.assign({},p,{ativo:true,reativadoEm:agora()}));toast(p.nome+' reativado(a)')}return}
   if('eqVdl' in ds){UI.eqVerDl=!UI.eqVerDl;render();return}
   if(a.hasAttribute('data-chat-del')){const id=a.dataset.chatDel;confirmBox('Apagar esta mensagem para todos?','Apagar',()=>{CHAT.ids.add(id);del('chat',id)});return}
