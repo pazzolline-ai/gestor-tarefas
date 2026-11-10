@@ -1361,6 +1361,30 @@ html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-ca
 .dl-it .sel{max-width:46%}
 .dl-chk{display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0}
 @media (max-width:560px){.dl-it{flex-wrap:wrap}.dl-it .sel{max-width:none;width:100%}}
+/* Relatórios e velocidade */
+.rl-k{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.rl-k .tile .n.late{color:var(--red)}
+.rl-s{font-size:11.5px;color:var(--dim);margin-top:4px}
+.rl-bar .sub{font-size:12.5px;color:var(--mut)}
+.rl-bar input[type=date]{width:auto;max-width:150px}
+.rl-ch{display:flex;align-items:flex-end;gap:6px;height:170px;padding:8px 18px 14px;overflow-x:auto}
+.rl-c{flex:1;min-width:26px;height:100%;display:flex;flex-direction:column;align-items:center;gap:6px}
+.rl-bs{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px}
+.rl-bs span{width:42%;max-width:16px;min-height:2px;border-radius:4px 4px 1px 1px;opacity:.85}
+.rl-c small{font-size:10.5px;color:var(--dim);font-family:var(--f-mono,monospace)}
+.rl-lg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}.rl-lg i{width:9px;height:9px;border-radius:3px;display:inline-block;margin-left:8px}
+.rl-t th.n,.rl-t td.n{text-align:right;white-space:nowrap}.rl-t td.late{color:var(--red);font-weight:600}
+.rl-p{padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}.rl-p.ok{background:var(--grn-soft);color:var(--grn)}.rl-p.mid{background:var(--amb-soft);color:var(--amb)}.rl-p.bad{background:var(--red-soft);color:var(--red)}
+.qa{position:relative;margin-bottom:12px}.qa .inp{width:100%;max-width:none;padding-left:38px;height:44px;font-size:14px;border-radius:12px}
+.qa-i{position:absolute;left:13px;top:13px;color:var(--dim);display:flex}.qa-i svg{width:18px;height:18px}
+.qa-p{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;margin-top:6px;min-height:0}.qa-p:empty{display:none}
+.qa-k{margin-left:auto;color:var(--dim);font-size:11.5px}
+.qd{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line2);background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:transparent;flex:none;transition:all .15s}
+.qd:hover{border-color:var(--grn);color:var(--grn);background:var(--grn-soft)}.qd svg{width:14px;height:14px}
+.row>.qd{margin-right:10px}.tt .qd{width:22px;height:22px;vertical-align:-6px;margin-right:6px}
+.kbd-l{display:grid;gap:8px}.kbd-l div{display:flex;gap:12px;align-items:center}.kbd-l kbd{min-width:120px;font-family:var(--f-mono,monospace);font-size:12px;padding:3px 8px;border:1px solid var(--line2);border-radius:6px;background:var(--panel2)}
+@media (max-width:1100px){.rl-k{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.rl-k{grid-template-columns:repeat(2,minmax(0,1fr))}.qa-k{display:none}.rl-bar .sub{width:100%}}
 </style>
 
 <div class="app">
@@ -1702,6 +1726,7 @@ function categorias(mod){if(mod===undefined)mod=UI.mod;let lista=mod?MOD_CATS[mo
 
 const OLHO_A='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',OLHO_F='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.5M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></svg>';
 const IC={
+ok:'<path d="M5 12.5l4.5 4.5L19 7"/>',rel:'<path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/>',
   perf:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
   shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
   up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',
@@ -1728,7 +1753,7 @@ const IC={
   moto:'<circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-6h5l4 6M14.5 10l-1.8-4H10M9.5 10H6.5"/>'
 };
 const svg=(k,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
+const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -2032,7 +2057,7 @@ function cbItem(t){
 }
 function rowTask(t){
   const i=info(t);
-  return `<div class="row" data-open="${t.id}"><div class="main-t"><div>${esc(t.titulo)}</div><div class="sub">${UI.mod?'':MODL[modDe(t)]+' · '}${esc(empNome(t.empresaId))} · ${esc(t.responsavel||'—')}</div></div>${prazoTxt(t,i)}</div>`;
+  return `<div class="row" data-open="${t.id}">${t.status!=='concluida'?`<button class="qd" data-qdone="${t.id}" title="Concluir" aria-label="Concluir tarefa">${svg('ok',2.6)}</button>`:''}<div class="main-t"><div>${esc(t.titulo)}</div><div class="sub">${UI.mod?'':MODL[modDe(t)]+' · '}${esc(empNome(t.empresaId))} · ${esc(t.responsavel||'—')}</div></div>${prazoTxt(t,i)}</div>`;
 }
 function empty(txt,btn){return `<div class="empty">${txt}${btn?`<div style="margin-top:10px">${btn}</div>`:''}</div>`}
 
@@ -2173,7 +2198,7 @@ function vTarefas(){
   if(UI.modo==='lista'){
     const rows=list.sort((a,b)=>{const ia=info(a),ib=info(b);return (ib.atraso-ia.atraso)||byPrazo(a,b)});
     body=`<section class="panel"><div class="tw"><table class="tlist"><thead><tr><th>Tarefa</th><th>Empresa</th><th class="hide-m">Responsável / Solicitante</th><th>Prazo</th><th>Status</th><th class="hide-m">Atualizada</th><th></th></tr></thead><tbody>
-      ${rows.map(t=>{const i=info(t);return `<tr class="click" data-open="${t.id}"><td><div class="tt">${esc(t.titulo)} ${prio(t.prioridade)}${UI.mod?'':' '+modTag(t)}</div>${t.categoria&&norm(t.categoria)!==norm(t.titulo)?`<div class="cat">${esc(t.categoria)}</div>`:''}${protAbertos(t).map(p=>`<div class="pmini" style="color:${protCor(p)}">${esc(orgCurto(p.orgao))}${p.numero?' '+esc(p.numero):''} · ${protDias(p)}d</div>`).join('')}</td><td>${esc(empNome(t.empresaId))}${donoTagId(t.empresaId)?'<div>'+donoTagId(t.empresaId)+'</div>':''}</td><td class="hide-m">${esc(t.responsavel||'—')}${solTxt(t)?`<div class="cat">Solic.: ${esc(solTxt(t))}</div>`:''}</td><td>${prazoTxt(t,i)}</td><td>${pill(t.status)}</td><td class="num hide-m" style="${i.parado?'color:var(--amb)':''}">${i.aberta?(i.semUpd===0?'hoje':plural(i.semUpd,'dia','dias')):'—'}</td><td style="width:70px;white-space:nowrap">${waBtn(t)} <button class="xbtn" data-del-task="${t.id}" aria-label="Excluir tarefa" title="Excluir tarefa">${svg('x',2.2)}</button></td></tr>`}).join('')}
+      ${rows.map(t=>{const i=info(t);return `<tr class="click" data-open="${t.id}"><td><div class="tt">${t.status!=='concluida'?`<button class="qd" data-qdone="${t.id}" title="Concluir" aria-label="Concluir tarefa">${svg('ok',2.6)}</button> `:''}${esc(t.titulo)} ${prio(t.prioridade)}${UI.mod?'':' '+modTag(t)}</div>${t.categoria&&norm(t.categoria)!==norm(t.titulo)?`<div class="cat">${esc(t.categoria)}</div>`:''}${protAbertos(t).map(p=>`<div class="pmini" style="color:${protCor(p)}">${esc(orgCurto(p.orgao))}${p.numero?' '+esc(p.numero):''} · ${protDias(p)}d</div>`).join('')}</td><td>${esc(empNome(t.empresaId))}${donoTagId(t.empresaId)?'<div>'+donoTagId(t.empresaId)+'</div>':''}</td><td class="hide-m">${esc(t.responsavel||'—')}${solTxt(t)?`<div class="cat">Solic.: ${esc(solTxt(t))}</div>`:''}</td><td>${prazoTxt(t,i)}</td><td>${pill(t.status)}</td><td class="num hide-m" style="${i.parado?'color:var(--amb)':''}">${i.aberta?(i.semUpd===0?'hoje':plural(i.semUpd,'dia','dias')):'—'}</td><td style="width:70px;white-space:nowrap">${waBtn(t)} <button class="xbtn" data-del-task="${t.id}" aria-label="Excluir tarefa" title="Excluir tarefa">${svg('x',2.2)}</button></td></tr>`}).join('')}
       </tbody></table></div>${rows.length?'':empty('Nenhuma tarefa com esses filtros.','<button class="btn pri sm" data-nova>Nova tarefa</button>')}</section>`;
   }else if(UI.modo==='kanban'){
     const h=hoje(),mes=h.slice(0,7);
@@ -2183,7 +2208,7 @@ function vTarefas(){
   }else{
     body=calendar(list.filter(t=>t.prazo),false);
   }
-  return `<div class="bar">
+  return `${qaBar()}<div class="bar">
     <div class="seg">${['lista','kanban','calendario'].map(m=>`<button class="${UI.modo===m?'on':''}" data-modo="${m}">${{lista:'Lista',kanban:'Kanban',calendario:'Calendário'}[m]}</button>`).join('')}</div>
     <div class="search">${svg('search')}<input class="inp" id="fq" placeholder="Buscar tarefa, empresa ou CNPJ" value="${esc(UI.q)}"></div>
     ${UI.modo!=='kanban'?`<select class="sel" id="fStatus">${opt(STK.map(k=>[k,ST[k].l]),UI.fStatus,'Todos os status')}</select>`:''}
@@ -2371,6 +2396,117 @@ function eqDesligar(id,soPassar){
       <div class="mf"><button type="button" class="btn pri" data-close>Pronto</button></div>`);
   });
 }
+/* ---------- Relatórios e indicadores (10/11/2026) ---------- */
+function relRange(){const h=hoje(),y=+h.slice(0,4),m=+h.slice(5,7);const ld=(Y,M)=>new Date(Y,M,0).getDate();
+  const p=UI.relP||'mes';
+  if(p==='mesant'){const Y=m===1?y-1:y,M=m===1?12:m-1;return [`${Y}-${pad(M)}-01`,`${Y}-${pad(M)}-${ld(Y,M)}`,'Mês passado']}
+  if(p==='90'){const d=new Date(h+'T12:00');d.setDate(d.getDate()-89);return [isoD(d),h,'Últimos 90 dias']}
+  if(p==='ano')return [`${y}-01-01`,h,'Ano de '+y];
+  if(p==='custom'&&UI.relA&&UI.relB)return [UI.relA<=UI.relB?UI.relA:UI.relB,UI.relA<=UI.relB?UI.relB:UI.relA,'Período'];
+  return [`${y}-${pad(m)}-01`,h,'Este mês'];
+}
+function relCalc(){
+  const [a,b,lbl]=relRange(),ts=tarefas(),hj=hoje();const inP=d=>!!d&&d.slice(0,10)>=a&&d.slice(0,10)<=b;
+  const dd=(x,y)=>Math.max(0,dias(x.slice(0,10),y.slice(0,10)));
+  const conc=ts.filter(t=>t.status==='concluida'&&inP(t.concluidoEm)),cri=ts.filter(t=>inP(t.criadoEm)),ab=ts.filter(t=>t.status!=='concluida');
+  const okP=t=>!t.prazo||t.concluidoEm.slice(0,10)<=t.prazo;
+  const st=l=>{const cp=l.filter(t=>t.prazo),dur=l.filter(t=>t.criadoEm).map(t=>dd(t.criadoEm,t.concluidoEm));return {n:l.length,pct:cp.length?Math.round(cp.filter(okP).length*100/cp.length):null,med:dur.length?Math.round(dur.reduce((s,x)=>s+x,0)/dur.length*10)/10:null}};
+  const g=(key,lista)=>{const m=new Map();lista.forEach(([t,k])=>{const kk=k||'—';if(!m.has(kk))m.set(kk,{nome:kk,conc:[],ab:0,atr:0,par:0,cri:0});const o=m.get(kk);if(t._c)o.conc.push(t);if(t._a){o.ab++;const i=info(t);if(i.atraso)o.atr++;if(i.parado)o.par++}if(t._r)o.cri++});return [...m.values()].map(o=>Object.assign(o,st(o.conc)))};
+  const marca=[...conc.map(t=>Object.assign({},t,{_c:1})),...ab.map(t=>Object.assign({},t,{_a:1})),...cri.map(t=>Object.assign({},t,{_r:1}))];
+  const pResp=g('r',marca.map(t=>[t,t.responsavel])).sort((x,y)=>y.n-x.n||y.ab-x.ab);
+  const pCat=g('c',marca.map(t=>[t,t.categoria||(MODL[modDe(t)]||'Sem categoria')])).sort((x,y)=>y.n-x.n||y.ab-x.ab);
+  const pEmp=g('e',marca.map(t=>[t,t.empresaId?empNome(t.empresaId):'Sem empresa'])).sort((x,y)=>(y.n+y.cri+y.atr)-(x.n+x.cri+x.atr)).slice(0,12);
+  const dias_=dias(a,b)+1,mensal=dias_>120,S=[];
+  if(mensal){let d=new Date(a.slice(0,7)+'-01T12:00');while(isoD(d).slice(0,7)<=b.slice(0,7)){const k=isoD(d).slice(0,7);S.push({rot:k.slice(5,7)+'/'+k.slice(2,4),c:cri.filter(t=>t.criadoEm.slice(0,7)===k).length,f:conc.filter(t=>t.concluidoEm.slice(0,7)===k).length});d.setMonth(d.getMonth()+1)}}
+  else{let d=new Date(a+'T12:00');while(isoD(d)<=b){const i=isoD(d),e=new Date(d);e.setDate(e.getDate()+6);const j=isoD(e)>b?b:isoD(e);S.push({rot:fmt(i).slice(0,5),c:cri.filter(t=>t.criadoEm.slice(0,10)>=i&&t.criadoEm.slice(0,10)<=j).length,f:conc.filter(t=>t.concluidoEm.slice(0,10)>=i&&t.concluidoEm.slice(0,10)<=j).length});d.setDate(d.getDate()+7)}}
+  return {a,b,lbl,ts,conc,cri,ab,tot:st(conc),atr:ab.filter(t=>info(t).atraso).length,par:ab.filter(t=>info(t).parado).length,pResp,pCat,pEmp,S,okP,dd};
+}
+function vRelatorios(){
+  const R=relCalc(),p=UI.relP||'mes';const pc=v=>v===null?'—':v+'%',md=v=>v===null?'—':String(v).replace('.',',')+' d';
+  const cor=v=>v===null?'':v>=90?'ok':v>=70?'mid':'bad';
+  const mx=Math.max(1,...R.S.map(s=>Math.max(s.c,s.f)));
+  const tab=(tit,l,col)=>`<section class="panel"><div class="ph"><h2>${tit}</h2><span class="flag">${l.length}</span></div><div class="tw"><table class="tlist rl-t"><thead><tr><th>${col}</th><th class="n">Concluídas</th><th class="n">No prazo</th><th class="n">Tempo médio</th><th class="n">Em aberto</th><th class="n">Atrasadas</th><th class="n hide-m">Paradas</th></tr></thead><tbody>
+    ${l.map(o=>`<tr><td>${esc(o.nome)}</td><td class="n"><b>${o.n}</b></td><td class="n"><span class="rl-p ${cor(o.pct)}">${pc(o.pct)}</span></td><td class="n">${md(o.med)}</td><td class="n">${o.ab}</td><td class="n ${o.atr?'late':''}">${o.atr}</td><td class="n hide-m">${o.par}</td></tr>`).join('')||`<tr><td colspan="7">${empty('Sem dados no período.')}</td></tr>`}</tbody></table></div></section>`;
+  return `<div class="bar rl-bar"><div class="seg">${[['mes','Este mês'],['mesant','Mês passado'],['90','90 dias'],['ano','Ano'],['custom','Período']].map(([k,l])=>`<button class="${p===k?'on':''}" data-rel-p="${k}">${l}</button>`).join('')}</div>
+    ${p==='custom'?`<input type="date" class="inp" id="relA" value="${UI.relA||R.a}" aria-label="De"><input type="date" class="inp" id="relB" value="${UI.relB||R.b}" aria-label="Até">`:''}
+    <span class="sub">${fmt(R.a)} a ${fmt(R.b)}${UI.resp?' · '+esc(UI.resp):''}${UI.mod?' · '+MODL[UI.mod]:''}</span><span style="flex:1"></span>
+    <button class="btn sm" data-rel-xls>${svg('dl')}Excel</button><button class="btn sm" data-rel-pdf>${svg('pdf')}PDF</button></div>
+  <div class="rl-k">
+    <div class="tile"><div class="l">Concluídas</div><div class="n">${R.tot.n}</div><div class="rl-s">${R.cri.length} criadas no período</div></div>
+    <div class="tile"><div class="l">Entregues no prazo</div><div class="n">${pc(R.tot.pct)}</div><div class="rl-s">das concluídas com prazo</div></div>
+    <div class="tile"><div class="l">Tempo médio</div><div class="n">${md(R.tot.med)}</div><div class="rl-s">da criação à conclusão</div></div>
+    <div class="tile"><div class="l">Saldo do período</div><div class="n ${R.tot.n-R.cri.length<0?'late':''}">${R.tot.n-R.cri.length>0?'+':''}${R.tot.n-R.cri.length}</div><div class="rl-s">${R.tot.n>=R.cri.length?'saiu mais do que entrou':'entrou mais do que saiu'}</div></div>
+    <div class="tile"><div class="l">Atrasadas agora</div><div class="n ${R.atr?'late':''}">${R.atr}</div><div class="rl-s">de ${R.ab.length} em aberto</div></div>
+    <div class="tile"><div class="l">Paradas</div><div class="n">${R.par}</div><div class="rl-s">sem atualização há ${SEM_UPD}+ dias</div></div>
+  </div>
+  <section class="panel"><div class="ph"><h2>Entrada × saída</h2><span class="rl-lg"><i style="background:var(--dim)"></i>Criadas<i style="background:var(--grn)"></i>Concluídas</span></div>
+    <div class="rl-ch">${R.S.map(s=>`<div class="rl-c" title="${s.rot}: ${s.c} criadas, ${s.f} concluídas"><div class="rl-bs"><span style="height:${s.c/mx*100}%;background:var(--dim)"></span><span style="height:${s.f/mx*100}%;background:var(--grn)"></span></div><small>${s.rot}</small></div>`).join('')}</div></section>
+  ${tab('Por responsável',R.pResp,'Responsável')}${tab('Por categoria',R.pCat,'Categoria')}${tab('Empresas com mais movimento',R.pEmp,'Empresa')}
+  <div style="font-size:12px;color:var(--dim)">Concluídas, no prazo e tempo médio contam as tarefas concluídas no período. Em aberto, atrasadas e paradas mostram a situação de hoje. Use os filtros de módulo e responsável do topo para recortar.</div>`;
+}
+function relLinhas(l){return l.map(o=>[o.nome,o.n,o.pct===null?'—':o.pct+'%',o.med===null?'—':String(o.med).replace('.',','),o.ab,o.atr,o.par])}
+async function relSalvar(nome,data,tipo){
+  try{const dl=await window.claude.use('downloads');if(!dl)throw 0;await dl.save({filename:nome,data:new Blob([data],{type:tipo})});toast('Arquivo pronto')}
+  catch(e){if(e&&e.code==='cancelled')return;try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:tipo}));a.download=nome;document.body.appendChild(a);a.click();a.remove()}catch(x){toast('Download indisponível nesta visualização.')}}
+}
+async function relExcel(){
+  if(!window.XLSX){toast('Não consegui carregar o Excel. Verifique a internet e tente de novo.');return}
+  const R=relCalc(),H=['Nome','Concluídas','No prazo','Tempo médio (dias)','Em aberto','Atrasadas','Paradas'];
+  const wb=XLSX.utils.book_new(),add=(n,rows,w)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,n)};
+  add('Resumo',[['Relatório de indicadores'],['Período',fmt(R.a)+' a '+fmt(R.b)],['Módulo',UI.mod?MODL[UI.mod]:'Todos'],['Responsável',UI.resp||'Todos'],[],['Criadas',R.cri.length],['Concluídas',R.tot.n],['No prazo',R.tot.pct===null?'—':R.tot.pct+'%'],['Tempo médio (dias)',R.tot.med===null?'—':R.tot.med],['Em aberto hoje',R.ab.length],['Atrasadas hoje',R.atr],['Paradas hoje',R.par]],[26,24]);
+  add('Por responsável',[H].concat(relLinhas(R.pResp)),[26,12,10,18,10,10,10]);
+  add('Por categoria',[H].concat(relLinhas(R.pCat)),[34,12,10,18,10,10,10]);
+  add('Empresas',[H].concat(relLinhas(R.pEmp)),[34,12,10,18,10,10,10]);
+  const vis=new Map();[...R.conc,...R.cri,...R.ab].forEach(t=>vis.set(t.id,t));
+  add('Tarefas',[['Tarefa','Empresa','Módulo','Categoria','Responsável','Solicitante','Criada','Prazo','Concluída','Status','Dias','No prazo']].concat([...vis.values()].sort(byPrazo).map(t=>{const c=t.status==='concluida'&&t.concluidoEm;return [t.titulo||'',t.empresaId?empNome(t.empresaId):'',MODL[modDe(t)]||'',t.categoria||'',t.responsavel||'',t.solicitante||'',t.criadoEm?fmt(t.criadoEm.slice(0,10)):'',t.prazo?fmt(t.prazo):'',c?fmt(t.concluidoEm.slice(0,10)):'',stTxt(t),t.criadoEm?R.dd(t.criadoEm,c?t.concluidoEm:hoje()):'',c&&t.prazo?(R.okP(t)?'Sim':'Não'):'']})),[40,28,14,26,16,16,11,11,11,18,6,9]);
+  await relSalvar('relatorio-'+R.a+'-a-'+R.b+'.xlsx',XLSX.write(wb,{bookType:'xlsx',type:'array'}),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+async function relPDF(){
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('Gerador de PDF não carregou. Recarregue a página.');return}
+  const R=relCalc();let c;try{
+  c=pdfNovo('Relatório de indicadores',`${fmt(R.a)} a ${fmt(R.b)} · ${UI.mod?MODL[UI.mod]:'Todos os módulos'} · ${UI.resp||'Todos os responsáveis'}`);
+  pdfStats(c,[[R.cri.length,'Criadas'],[R.tot.n,'Concluídas'],[R.tot.pct===null?'—':R.tot.pct+'%','No prazo'],[R.tot.med===null?'—':String(R.tot.med).replace('.',',')+' d','Tempo médio'],[R.atr,'Atrasadas hoje'],[R.par,'Paradas hoje']]);
+  const H=['Nome','Concl.','No prazo','Tempo médio','Abertas','Atrasadas','Paradas'];
+  pdfSec(c,'Por responsável');pdfTab(c,H,relLinhas(R.pResp).map(r=>r.map(String)));
+  pdfSec(c,'Por categoria');pdfTab(c,H,relLinhas(R.pCat).map(r=>r.map(String)));
+  pdfSec(c,'Empresas com mais movimento');pdfTab(c,H,relLinhas(R.pEmp).map(r=>r.map(String)));
+  pdfRodape(c.doc)}catch(e){toast('Não foi possível montar o PDF.');return}
+  await relSalvar('relatorio-'+R.a+'-a-'+R.b+'.pdf',c.doc.output('arraybuffer'),'application/pdf');
+}
+/* ---------- Velocidade: adicionar rápido, concluir com 1 clique, atalhos ---------- */
+function qaParse(txt){
+  let s=' '+txt.trim()+' ',resp='',emp='',prazo='',pri='normal';const h=new Date(hoje()+'T12:00'),iso=d=>isoD(d);
+  s=s.replace(/\s!(urgente|alta)\b/i,(m,p)=>{pri=p.toLowerCase();return ' '});
+  const DS=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
+  s=s.replace(/\s(hoje|amanh[aã]|depois de amanh[aã]|(?:(?:na|no|até|ate)\s)?(?:segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo)(?:-feira)?|(?:em\s)?\+?(\d{1,3})\s?d(?:ias?)?|(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?)(?=\s)/i,(m,w,nd,dd,mm,yy)=>{const d=new Date(h);const k=norm(w);
+    if(k==='hoje');else if(k.startsWith('depois'))d.setDate(d.getDate()+2);else if(k.startsWith('amanh'))d.setDate(d.getDate()+1);
+    else if(nd)d.setDate(d.getDate()+ +nd);
+    else if(dd){const Y=yy?(yy.length===2?2000+ +yy:+yy):d.getFullYear();const x=new Date(Y,+mm-1,+dd,12);if(!yy&&x<h)x.setFullYear(Y+1);prazo=iso(x);return ' '}
+    else{const i=DS.findIndex(n=>k.includes(n));let add=(i-d.getDay()+7)%7||7;d.setDate(d.getDate()+add)}
+    prazo=iso(d);return ' '});
+  s=s.replace(/\s@([^\s@#]+)/,(m,n)=>{const p=equipeLista().find(x=>norm(x.nome).startsWith(norm(n)))||equipeLista().find(x=>norm(x.nome).includes(norm(n)));if(p){resp=p.nome;return ' '}return m});
+  s=s.replace(/\s#("[^"]+"|[^\s@#!]+(?:\s(?![@#!])[^\s@#!]+)?)/,(m,q)=>{const k=norm(q.replace(/"/g,''));const all=[...D.empresas.entries()];const f=all.find(([,e])=>norm(e.fantasia||'')===k||norm(e.razao||'')===k)||all.find(([,e])=>norm(e.fantasia||'').startsWith(k)||norm(e.razao||'').startsWith(k))||all.find(([,e])=>norm((e.fantasia||'')+' '+(e.razao||'')).includes(k))||(k.includes(' ')?(()=>{const k1=k.split(' ')[0];return all.find(([,e])=>norm(e.fantasia||'').startsWith(k1)||norm(e.razao||'').startsWith(k1))})():null);if(f){emp=f[0];return ' '}return m});
+  return {titulo:s.replace(/\s+/g,' ').trim(),responsavel:resp,empresaId:emp,prazo,prioridade:pri};
+}
+function qaBar(){return `<div class="qa"><span class="qa-i">${svg('plus',2.2)}</span><input class="inp" id="qaIn" autocomplete="off" placeholder="Adicionar rápido: Alteração contratual #Clínica Vida @Thais sexta !urgente" aria-label="Adicionar tarefa rápida"><div class="qa-p" id="qaPrev"></div></div>`}
+function qaPreview(){const i=document.getElementById('qaIn'),pv=document.getElementById('qaPrev');if(!i||!pv)return;if(!i.value.trim()){pv.innerHTML='';return}
+  const r=qaParse(i.value);pv.innerHTML=[r.titulo?`<b>${esc(r.titulo)}</b>`:'<span class="late">falta o título</span>',r.empresaId?`<span class="pill">${esc(empNome(r.empresaId))}</span>`:'',`<span class="pill">${esc(r.responsavel||UI.resp||respPadrao(UI.mod||'societario')||'sem responsável')}</span>`,r.prazo?`<span class="pill">prazo ${fmt(r.prazo)}</span>`:'',r.prioridade!=='normal'?`<span class="pill">${PRI[r.prioridade]}</span>`:'','<span class="qa-k">Enter cria · Shift+Enter abre o formulário</span>'].join('')}
+async function qaCriar(abrir){const i=document.getElementById('qaIn');if(!i||!i.value.trim())return;const r=qaParse(i.value);if(!r.titulo){toast('Escreva o título da tarefa');return}
+  const mod=UI.mod||'societario';const pre={titulo:r.titulo,empresaId:r.empresaId,prazo:r.prazo,prioridade:r.prioridade,modulo:mod,responsavel:r.responsavel||UI.resp||respPadrao(mod)};
+  if(abrir){i.value='';taskForm(null,pre);return}
+  const now=agora(),n=Object.assign({status:'afazer',categoria:'',solicitante:ME,departamento:'',descricao:'',obs:''},pre,{criadoEm:now,atualizadoEm:now,concluidoEm:'',hist:[{em:now,tipo:'criada',txt:'Tarefa criada (adicionar rápido)',por:ME}]});
+  i.value='';await put('tarefas',uid(),n);toast('Tarefa criada: '+r.titulo);setTimeout(()=>{const x=document.getElementById('qaIn');if(x)x.focus()},60)}
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='qaIn')qaPreview()});
+document.addEventListener('keydown',ev=>{if(ev.target&&ev.target.id==='qaIn'&&ev.key==='Enter'){ev.preventDefault();ev.stopPropagation();qaCriar(ev.shiftKey)}},true);
+document.addEventListener('change',ev=>{const t=ev.target;if(t&&(t.id==='relA'||t.id==='relB')){UI.relA=val('relA');UI.relB=val('relB');render()}});
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-qdone],[data-rel-p],[data-rel-xls],[data-rel-pdf]');if(!b)return;ev.preventDefault();ev.stopPropagation();
+  if(b.dataset.relP){UI.relP=b.dataset.relP;render();return}if(b.hasAttribute('data-rel-xls')){relExcel();return}if(b.hasAttribute('data-rel-pdf')){relPDF();return}
+  if(b.dataset.qdone){const id=b.dataset.qdone;const t=D.tarefas.get(id);if(!t||t.status==='concluida')return;b.disabled=true;setStatus(id,'concluida')}},true);
+document.addEventListener('keydown',ev=>{if(ev.ctrlKey||ev.metaKey||ev.altKey)return;const a=document.activeElement;if(a&&(/INPUT|TEXTAREA|SELECT/.test(a.tagName)||a.isContentEditable))return;if($('#modalRoot')&&$('#modalRoot').innerHTML)return;
+  const k=ev.key.toLowerCase();const go=v=>{UI.view=v;render();window.scrollTo(0,0)};
+  if(k==='n'){ev.preventDefault();taskForm()}else if(k==='a'){ev.preventDefault();if(UI.view!=='tarefas')go('tarefas');setTimeout(()=>{const i=document.getElementById('qaIn');if(i)i.focus()},50)}
+  else if(k==='g'){UI._g=Date.now()}else if(UI._g&&Date.now()-UI._g<900){UI._g=0;const m={d:'dashboard',t:'tarefas',c:'cobrancas',e:'empresas',r:'relatorios',a:'agenda'}[k];if(m){ev.preventDefault();go(m)}}
+  else if(k==='?'){openModal(`${mh('Atalhos do teclado')}<div class="mb"><div class="kbd-l">${[['N','Nova tarefa (formulário)'],['A','Adicionar rápido'],['/  ou  Ctrl+K','Buscar'],['G depois D','Dashboard'],['G depois T','Tarefas'],['G depois C','Cobranças'],['G depois E','Empresas'],['G depois R','Relatórios'],['Esc','Fechar janela']].map(([a,b])=>`<div><kbd>${a}</kbd><span>${b}</span></div>`).join('')}</div><div class="sub" style="margin-top:12px">No adicionar rápido: <b>#empresa</b>, <b>@pessoa</b>, <b>hoje / amanhã / sexta / 15/11 / 3d</b> e <b>!urgente</b> ou <b>!alta</b>.</div></div>`)}});
 function pessoaForm(id,cb,preNome){
   if(!podeCadastro()){toast('Só a diretoria pode cadastrar ou alterar pessoas da equipe.');return}
   const p=id?D.equipe.get(id):{nome:preNome||'',departamento:''};
@@ -2778,13 +2914,13 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
   $('#respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+rs.map(r=>`<option ${UI.resp===r?'selected':''}>${esc(r)}</option>`).join('');
-  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
+  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
   const tt=titles[UI.view]||titles.dashboard;
   $('#pageTitle').innerHTML=`${tt[0]}${UI.mod&&!['empresas','empresa','crm','equipe','financeiro','reembolso','mural','rendimento'].includes(UI.view)?`<span class="mod-tag" style="--c:${MODC[UI.mod]}">${MODL[UI.mod]}</span>`:''}<span class="ws-tag">Lucas · privado</span>${MESTRE.ok?'<button class="mk-tag" id="btnMestre" title="Clique para desligar">🔑 Chave mestre</button>':''}${tt[1]?`<small>${WS==='pessoal'&&UI.view==='dashboard'?'Espaço do Lucas · protegido por senha · ':''}${tt[1]}</small>`:''}`;
   const fq=document.activeElement&&document.activeElement.id;const pos=fq&&document.activeElement.selectionStart;
   setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);rdSync();
   const v=$('#view');
-  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras}[UI.view]||vDashboard)();
+  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras}[UI.view]||vDashboard)();
   if(UI.view==='chat')chatPos(fq);
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
@@ -3137,6 +3273,7 @@ document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-10',data:'10/11/2026',itens:['📊 Nova tela Relatórios: concluídas, % no prazo, tempo médio e entrada × saída por período, com tabelas por responsável, categoria e empresa. Exporta Excel e PDF.','⚡ Adicionar rápido na tela Tarefas: escreva "Alteração contratual #Clínica Vida @Thais sexta !urgente" e tecle Enter.','✓ Botão de concluir com um clique nas listas.','⌨️ Atalhos: N nova tarefa, A adicionar rápido, G+T tarefas, G+R relatórios. Tecle ? para ver todos.']},
  {id:'2026-11-05',data:'05/11/2026',itens:['🔁 Desligamento: passe as tarefas para uma pessoa só ou divida tarefa por tarefa, com recado para quem assume (fica no histórico).','Os pedidos que a pessoa fez também passam, e dá para avisar quem assumiu pelo WhatsApp.','Na lista de Desligados aparece o botão "Passar tarefas" se ainda sobrou alguma.','🪶 Visual mais leve: cores mais suaves, menos sombras e menos animações piscando.']},
  {id:'2026-11-03d',data:'03/11/2026',itens:['💼 Novo módulo BPO Financeiro, com categorias próprias (contas a pagar e receber, conciliação, fluxo de caixa, relatórios).']},
  {id:'2026-11-03c',data:'03/11/2026',itens:['⏸️ Tarefa em "Aguardando cliente" ou "Aguardando órgão público" não fica atrasada, não entra em Cobranças e não pesa no rendimento.','Quando sai do aguardando, o prazo é prorrogado sozinho pelos dias de espera (fica registrado no histórico).']},
