@@ -1753,7 +1753,7 @@ ok:'<path d="M5 12.5l4.5 4.5L19 7"/>',rel:'<path d="M4 20h16M7 16v-5M12 16V6M17 
   moto:'<circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-6h5l4 6M14.5 10l-1.8-4H10M9.5 10H6.5"/>'
 };
 const svg=(k,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
+const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['buzz','Buzz','chat'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -2805,6 +2805,202 @@ function chatPos(fq){const b=document.getElementById('chatMsgs');if(b)b.scrollTo
 }
 
 /* ---------- Backup ---------- */
+/* ---------- Buzz (mensageiro da equipe) ---------- */
+const BZ_SPOTIFY_ID='';
+const BZ={on:false,falhou:false,n:0,uid:null,eu:null,perf:{},sel:null,nl:{},msgs:{},root:null,ch:null,ult:0,
+ ST:{online:['on','Disponível'],ocupado:['oc','Ocupado'],ausente:['au','Ausente'],offline:['of','Offline']},
+ EMO:['😀','😂','😍','😎','😢','😡','👍','👎','🙏','🎉','❤️','☕']};
+const bzEf=p=>!p?'offline':p.status==='offline'?'offline':(Date.now()-new Date(p.visto_em).getTime()>180000?'offline':p.status);
+const bzEl=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e};
+const bzQ=s=>BZ.root.querySelector(s);
+const bzFoto=m=>m.foto||avatar(m.nome,corDe(m.user_id));
+function bzCss(){if(document.getElementById('bzCss'))return;const s=document.createElement('style');s.id='bzCss';s.textContent=`
+.bzw{display:grid;grid-template-columns:300px minmax(0,1fr);height:calc(100dvh - 200px);min-height:460px;border:1px solid #6aa56e;border-radius:10px;overflow:hidden;background:#fff;color:#1f4a26;font-family:Tahoma,Verdana,sans-serif;font-size:14px}
+.bzw *{box-sizing:border-box}
+.bzw button,.bzw input,.bzw select{font:inherit}
+.bzw button{cursor:pointer;background:#e8f6e5;color:#1f4a26;border:1px solid #6aa56e;border-radius:4px;padding:6px 12px}
+.bzw button:active{background:#d3ead0}
+.bzw input,.bzw select{color:#1f4a26;background:#fff;border:1px solid #8cc590;border-radius:4px;padding:8px;min-width:0}
+.bzw .l{display:flex;flex-direction:column;min-height:0;border-right:1px solid #bfe0ba;background:#fff}
+.bzw .c{display:flex;flex-direction:column;min-height:0;min-width:0}
+.bzw .top{background:#e3f3e0;padding:10px 12px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #bfe0ba}
+.bzw .av{width:44px;height:44px;border:2px solid #6aa56e;border-radius:6px;object-fit:cover;flex:none;background:#fff}
+.bzw .av.sm{width:36px;height:36px;border-width:1px;border-radius:8px}
+.bzw .col{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bzw .col select,.bzw .col input{padding:2px 4px;font-size:13px;border:1px solid transparent;background:transparent}
+.bzw .col select:focus,.bzw .col input:focus{border-color:#8cc590;background:#fff}
+.bzw .mus{font-size:11px;color:#2e7d32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bzw .gr{background:#eaf6e7;padding:6px 12px;font-size:12px;color:#2e6b36;font-weight:bold;border-top:1px solid #d3ead0;border-bottom:1px solid #d3ead0}
+.bzw .ct{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer}
+.bzw .ct:hover,.bzw .ct.on2{background:#eaf6e7}
+.bzw .dot{width:11px;height:11px;border-radius:50%;flex:none}
+.bzw .dot.on{background:#4caf50}.bzw .dot.oc{background:#e53935}.bzw .dot.au{background:#f5a524}.bzw .dot.of{background:#9aa7b6}
+.bzw .nm{flex:1;min-width:0}
+.bzw .nm small{color:#7a8e7c}
+.bzw .nl{background:#2e8b3d;color:#fff;border-radius:10px;font-size:11px;padding:1px 7px}
+.bzw .rod{padding:8px 12px;border-top:1px solid #d3ead0;background:#eaf6e7;display:flex;gap:8px;align-items:center;font-size:12px}
+.bzw .rod span{flex:1}
+.bzw .rod button{padding:4px 10px;font-size:12px}
+.bzw .hd{background:#2e8b3d;color:#fff;padding:9px 12px;display:flex;align-items:center;gap:8px}
+.bzw .hd b{flex:1}
+.bzw .hd button{display:none;padding:3px 10px}
+.bzw .sub{background:#e3f3e0;padding:6px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #bfe0ba;font-size:12px;color:#4d7a54}
+.bzw .ms{flex:1;overflow:auto;padding:12px;line-height:1.5;background:#fff}
+.bzw .ln{margin-bottom:8px;word-break:break-word;white-space:pre-wrap}
+.bzw .eu{color:#a33}.bzw .ele{color:#2e6b36}
+.bzw .bzs{font-size:12px;color:#8a6a1f;border-top:1px solid #eee;padding-top:6px}
+.bzw .vz{color:#7a8e7c;text-align:center;padding:30px 10px}
+.bzw .tb{background:#eaf6e7;border-top:1px solid #d3ead0;padding:6px 10px;display:flex;gap:8px;flex-wrap:wrap}
+.bzw .tb .al{background:#fff3d6;color:#6b4a00;border-color:#e0b34a}
+.bzw .emo{display:flex;flex-wrap:wrap;gap:4px;padding:6px 10px;border-top:1px solid #d3ead0;background:#fff}
+.bzw .emo button{font-size:20px;padding:2px 6px;border:0;background:none}
+.bzw .env{padding:8px 10px;display:flex;gap:8px;border-top:1px solid #d3ead0}
+.bzw .env input{flex:1}
+.bzw .off .tb,.bzw .off .env{opacity:.45;pointer-events:none}
+@keyframes bzTrem{0%,100%{transform:translate(0,0)}10%{transform:translate(-12px,-5px)}20%{transform:translate(12px,6px)}30%{transform:translate(-10px,8px)}40%{transform:translate(10px,-6px)}50%{transform:translate(-9px,-4px)}60%{transform:translate(9px,5px)}70%{transform:translate(-6px,4px)}80%{transform:translate(6px,-4px)}90%{transform:translate(-3px,2px)}}
+body.bz-trem{animation:bzTrem .8s}
+@media(max-width:760px){.bzw{grid-template-columns:minmax(0,1fr)}.bzw .c{display:none}.bzw.abre .l{display:none}.bzw.abre .c{display:flex}.bzw .hd button{display:inline-block}}
+`;document.head.appendChild(s)}
+function vBuzz(){return '<div id="bz"></div>'}
+function bzMontar(){
+  bzCss();const h=document.getElementById('bz');if(!h)return;
+  if(!BZ.root){const d=document.createElement('div');d.innerHTML=`<div class="bzw"><div class="l"><div class="top"><img class="av" id="bzAv" alt=""><div class="col"><select id="bzSt"><option value="online">Disponível</option><option value="ocupado">Ocupado</option><option value="ausente">Ausente</option><option value="offline">Aparecer offline</option></select><input id="bzRec" maxlength="80" placeholder="Digite seu recado"><div class="mus" id="bzMus"></div></div></div><div id="bzCts" style="flex:1;overflow:auto"></div><div class="rod"><span id="bzSpSt"></span><button id="bzSp">Conectar Spotify</button></div></div><div class="c off" id="bzC"><div class="hd"><button id="bzVolta" aria-label="Voltar">&larr;</button><b id="bzNome">Buzz</b></div><div class="sub"><span class="dot of" id="bzDot"></span><div class="col"><div id="bzRecC"></div><div class="mus" id="bzMusC"></div></div></div><div class="ms" id="bzMs"></div><div class="emo" id="bzEmo" hidden></div><div class="tb"><button id="bzBE" aria-label="Emoticons">🙂</button><button class="al" id="bzBz">🔔 Chamar a atenção</button></div><div class="env"><input id="bzTxt" placeholder="Digite sua mensagem" autocomplete="off"><button id="bzEnv">Enviar</button></div></div></div>`;BZ.root=d.firstElementChild;bzLigar()}
+  if(BZ.root.parentNode!==h){h.textContent='';h.appendChild(BZ.root)}
+  bzPintar();
+}
+function bzLigar(){
+  bzQ('#bzSt').onchange=async e=>{if(!BZ.eu)return;BZ.eu.status=e.target.value;BZ.eu.visto_em=new Date().toISOString();await sb.from('buzz_perfis').update({status:BZ.eu.status,visto_em:BZ.eu.visto_em}).eq('id',BZ.uid)};
+  bzQ('#bzRec').onchange=async e=>{if(!BZ.eu)return;BZ.eu.recado=e.target.value;await sb.from('buzz_perfis').update({recado:BZ.eu.recado}).eq('id',BZ.uid)};
+  bzQ('#bzCts').onclick=e=>{const r=e.target.closest('[data-id]');if(r)bzAbrir(r.dataset.id)};
+  bzQ('#bzVolta').onclick=()=>{BZ.sel=null;bzPintar()};
+  bzQ('#bzBE').onclick=()=>{const p=bzQ('#bzEmo');p.hidden=!p.hidden};
+  const em=bzQ('#bzEmo');BZ.EMO.forEach(x=>{const b=bzEl('button','',x);b.onclick=()=>{const t=bzQ('#bzTxt');t.value+=x;t.focus()};em.appendChild(b)});
+  const env=()=>{const t=bzQ('#bzTxt'),v=t.value.trim();if(!v)return;t.value='';bzEnviar('msg',v)};
+  bzQ('#bzEnv').onclick=env;bzQ('#bzTxt').onkeydown=e=>{if(e.key==='Enter')env()};
+  bzQ('#bzBz').onclick=()=>{if(Date.now()-BZ.ult<5000)return;BZ.ult=Date.now();bzTremer();bzEnviar('buzz')};
+  bzQ('#bzSp').onclick=()=>{if(localStorage.getItem('gt.bz.spt')){localStorage.removeItem('gt.bz.spt');if(BZ.eu){BZ.eu.musica='';sb.from('buzz_perfis').update({musica:''}).eq('id',BZ.uid).then(()=>{})}bzPintar()}else bzSpConectar()};
+}
+function bzPintar(){
+  if(!BZ.root)return;
+  const eu=BZ.eu;
+  if(BZ.falhou){bzQ('#bzCts').textContent='Não foi possível abrir o Buzz. Atualize a página.';return}
+  if(!eu){bzQ('#bzCts').textContent='Carregando…';return}
+  const av=bzQ('#bzAv');const mm=GT.membro||{};av.src=bzFoto({nome:eu.nome,user_id:BZ.uid,foto:mm.foto});
+  bzQ('#bzSt').value=eu.status;const rec=bzQ('#bzRec');if(document.activeElement!==rec)rec.value=eu.recado||'';
+  bzQ('#bzMus').textContent=eu.musica?'♫ '+eu.musica:'';
+  const sp=!!localStorage.getItem('gt.bz.spt');bzQ('#bzSp').textContent=sp?'Desconectar':'Conectar Spotify';bzQ('#bzSpSt').textContent=sp?'Spotify conectado':'Mostre sua música';
+  const c=bzQ('#bzCts');c.textContent='';
+  const g={online:[],ausente:[],offline:[]};
+  (GT.membros||[]).filter(m=>m.ativo!==false&&m.user_id!==BZ.uid).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).forEach(m=>{const p=BZ.perf[m.user_id];const s=bzEf(p);(s==='offline'?g.offline:s==='ausente'?g.ausente:g.online).push([m,p,s])});
+  [['online','Disponível'],['ausente','Ausente'],['offline','Offline']].forEach(([k,t])=>{
+    c.appendChild(bzEl('div','gr',t+' ('+g[k].length+')'));
+    g[k].forEach(([m,p,s])=>{
+      const r=bzEl('div','ct'+(BZ.sel===m.user_id?' on2':''));r.dataset.id=m.user_id;if(s==='offline')r.style.opacity='.65';
+      const im=bzEl('img','av sm');im.src=bzFoto(m);im.alt='';r.appendChild(im);r.appendChild(bzEl('span','dot '+BZ.ST[s][0]));
+      const n=bzEl('div','nm');const l=bzEl('div','',m.nome);if(s==='ocupado'||s==='ausente')l.appendChild(bzEl('small','',' ('+BZ.ST[s][1]+')'));n.appendChild(l);
+      if(!p)n.appendChild(bzEl('div','mus','Ainda não entrou no Buzz'));else if(s!=='offline'&&p.musica)n.appendChild(bzEl('div','mus','♫ '+p.musica));else if(p.recado)n.appendChild(bzEl('div','mus',p.recado));
+      r.appendChild(n);if(BZ.nl[m.user_id])r.appendChild(bzEl('span','nl',BZ.nl[m.user_id]));c.appendChild(r)});
+  });
+  BZ.root.classList.toggle('abre',!!BZ.sel);
+  const cc=bzQ('#bzC');cc.classList.toggle('off',!BZ.sel);
+  const m=BZ.sel&&(GT.membros||[]).find(x=>x.user_id===BZ.sel);const p=BZ.sel&&BZ.perf[BZ.sel];const s=bzEf(p);
+  bzQ('#bzNome').textContent=m?m.nome+(s==='ocupado'||s==='ausente'?' ('+BZ.ST[s][1]+')':''):'Buzz';
+  bzQ('#bzDot').className='dot '+(m?BZ.ST[s][0]:'of');
+  bzQ('#bzRecC').textContent=m&&p?(p.recado||''):'';
+  bzQ('#bzMusC').textContent=m&&p&&s!=='offline'&&p.musica?'♫ '+m.nome.split(' ')[0]+' está ouvindo: '+p.musica:'';
+  bzPintarMsgs();
+}
+function bzLinha(m){
+  const d=bzEl('div','ln'),meu=m.de===BZ.uid;
+  const nome=x=>{const mm=(GT.membros||[]).find(y=>y.user_id===x);return mm?mm.nome.split(' ')[0]:'Alguém'};
+  if(m.tipo==='buzz'){d.className+=' bzs';d.textContent=meu?'Você chamou a atenção de '+nome(m.para)+'.':nome(m.de)+' chamou sua atenção!';return d}
+  d.appendChild(bzEl('b',meu?'eu':'ele',(meu?'Você':nome(m.de))+' diz:'));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode(m.texto||''));return d;
+}
+function bzPintarMsgs(){
+  const b=bzQ('#bzMs');b.textContent='';
+  if(!BZ.sel){b.appendChild(bzEl('div','vz','Escolha alguém na lista para conversar.'));return}
+  const l=BZ.msgs[BZ.sel];if(!l){b.appendChild(bzEl('div','vz','Carregando…'));return}
+  if(!l.length)b.appendChild(bzEl('div','vz','Nenhuma mensagem ainda. Diga oi!'));
+  l.forEach(m=>b.appendChild(bzLinha(m)));b.scrollTop=b.scrollHeight;
+}
+async function bzAbrir(id){
+  if(!BZ.perf[id]){alert('Essa pessoa ainda não abriu o Buzz. Peça para ela abrir a aba Buzz uma vez.');return}
+  BZ.sel=id;bzPintar();
+  const{data}=await sb.from('buzz_mensagens').select('*').or(`and(de.eq.${BZ.uid},para.eq.${id}),and(de.eq.${id},para.eq.${BZ.uid})`).order('criado_em',{ascending:false}).limit(200);
+  BZ.msgs[id]=(data||[]).reverse();
+  if(BZ.nl[id]){delete BZ.nl[id];bzConta();await sb.from('buzz_mensagens').update({lida:true}).eq('de',id).eq('para',BZ.uid).eq('lida',false)}
+  if(BZ.sel===id)bzPintar();
+}
+async function bzEnviar(tipo,texto){
+  const id=BZ.sel;if(!id)return;
+  const{data,error}=await sb.from('buzz_mensagens').insert({de:BZ.uid,para:id,tipo,texto:texto||''}).select().single();
+  if(error){alert('Não foi possível enviar. Tente de novo.');return}
+  (BZ.msgs[id]=BZ.msgs[id]||[]).push(data);if(BZ.sel===id)bzPintarMsgs();
+}
+function bzConta(){
+  BZ.n=Object.values(BZ.nl).reduce((a,b)=>a+b,0);
+  document.querySelectorAll('[data-go="buzz"]').forEach(b=>{let c=b.querySelector('.ct');if(BZ.n){if(!c){c=document.createElement('span');c.className='ct';b.appendChild(c)}c.textContent=BZ.n}else if(c)c.remove()});
+}
+function bzSom(f){try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.type=f<300?'square':'sine';o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+(f<300?.4:.15))}catch(e){}}
+function bzTremer(){const b=document.body;b.classList.remove('bz-trem');void b.offsetWidth;b.classList.add('bz-trem');bzSom(180);if(navigator.vibrate)navigator.vibrate([200,80,200]);setTimeout(()=>b.classList.remove('bz-trem'),900)}
+function bzRecebida(m){
+  if(!BZ.perf[m.de])return;
+  const ja=BZ.msgs[m.de];if(ja&&!ja.some(x=>x.id===m.id))ja.push(m);
+  if(m.tipo==='buzz')bzTremer();else bzSom(660);
+  const vendo=BZ.sel===m.de&&UI.view==='buzz'&&!document.hidden;
+  if(vendo)sb.from('buzz_mensagens').update({lida:true}).eq('id',m.id).then(()=>{});else{BZ.nl[m.de]=(BZ.nl[m.de]||0)+1;bzConta()}
+  if(document.hidden&&typeof notificar==='function'){const mm=(GT.membros||[]).find(x=>x.user_id===m.de);try{notificar('Buzz: '+(mm?mm.nome:'mensagem'),m.tipo==='buzz'?'chamou sua atenção!':m.texto)}catch(e){}}
+  bzPintar();
+}
+async function bzIniciar(){
+  if(BZ.on)return;BZ.on=true;bzCss();
+  try{
+    const m=GT.membro;if(!m)throw 0;BZ.uid=m.user_id;
+    let{data:p}=await sb.from('buzz_perfis').select('*').eq('id',BZ.uid).maybeSingle();
+    const agora=new Date().toISOString();
+    if(!p){const r=await sb.from('buzz_perfis').insert({id:BZ.uid,nome:m.nome}).select().single();p=r.data}
+    if(!p)throw 0;
+    const up={visto_em:agora};if(p.nome!==m.nome)up.nome=m.nome;
+    await sb.from('buzz_perfis').update(up).eq('id',BZ.uid);Object.assign(p,up);BZ.eu=p;
+    const{data:todos}=await sb.from('buzz_perfis').select('*');BZ.perf={};(todos||[]).forEach(x=>BZ.perf[x.id]=x);BZ.perf[BZ.uid]=p;
+    const{data:nl}=await sb.from('buzz_mensagens').select('de').eq('para',BZ.uid).eq('lida',false);BZ.nl={};(nl||[]).forEach(x=>BZ.nl[x.de]=(BZ.nl[x.de]||0)+1);bzConta();
+    BZ.ch=sb.channel('buzz-'+BZ.uid).on('postgres_changes',{event:'INSERT',schema:'public',table:'buzz_mensagens',filter:'para=eq.'+BZ.uid},x=>bzRecebida(x.new))
+      .on('postgres_changes',{event:'*',schema:'public',table:'buzz_perfis'},x=>{const r=x.new;if(r&&r.id){BZ.perf[r.id]=r;if(r.id===BZ.uid)BZ.eu=r;bzPintar()}}).subscribe();
+    setInterval(()=>{if(BZ.eu){BZ.eu.visto_em=new Date().toISOString();sb.from('buzz_perfis').update({visto_em:BZ.eu.visto_em}).eq('id',BZ.uid).then(()=>{});bzPintar()}},60000);
+    bzSpInit();bzPintar();
+  }catch(e){BZ.falhou=true;bzPintar()}
+}
+const bzSpId=()=>BZ_SPOTIFY_ID||localStorage.getItem('gt.bz.spid')||'';
+const bzSpRed=()=>location.origin+location.pathname;
+const bzB64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function bzSpConectar(){
+  let id=bzSpId();
+  if(!id){id=(prompt('Cole o Client ID do app criado no Spotify for Developers.\nRedirect URI a cadastrar:\n'+bzSpRed())||'').trim();if(!id)return;localStorage.setItem('gt.bz.spid',id)}
+  const v=bzB64(crypto.getRandomValues(new Uint8Array(48)));localStorage.setItem('gt.bz.spv',v);
+  const ch=bzB64(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
+  location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({client_id:id,response_type:'code',redirect_uri:bzSpRed(),scope:'user-read-currently-playing',code_challenge_method:'S256',code_challenge:ch,state:'bzsp'});
+}
+async function bzSpTroca(body){
+  const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:bzSpId(),...body})});
+  if(!r.ok)return null;const j=await r.json();let o={};try{o=JSON.parse(localStorage.getItem('gt.bz.spt')||'{}')}catch(e){}
+  const t={a:j.access_token,r:j.refresh_token||o.r,e:Date.now()+j.expires_in*1000-60000};localStorage.setItem('gt.bz.spt',JSON.stringify(t));return t;
+}
+async function bzSpToken(){let t=null;try{t=JSON.parse(localStorage.getItem('gt.bz.spt')||'null')}catch(e){}if(!t)return null;if(Date.now()>t.e)t=await bzSpTroca({grant_type:'refresh_token',refresh_token:t.r});return t?t.a:null}
+async function bzSpTick(){
+  const a=await bzSpToken();if(!a||!BZ.eu)return;
+  let txt='';
+  try{const r=await fetch('https://api.spotify.com/v1/me/player/currently-playing',{headers:{Authorization:'Bearer '+a}});
+    if(r.status===200){const j=await r.json();if(j.is_playing&&j.item&&j.currently_playing_type==='track')txt=j.item.artists.map(x=>x.name).join(', ')+' - '+j.item.name}
+    else if(r.status===401){localStorage.removeItem('gt.bz.spt');bzPintar();return}}catch(e){return}
+  if(txt!==(BZ.eu.musica||'')){BZ.eu.musica=txt;bzPintar();await sb.from('buzz_perfis').update({musica:txt}).eq('id',BZ.uid)}
+}
+async function bzSpInit(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('state')==='bzsp'&&q.get('code')){await bzSpTroca({grant_type:'authorization_code',code:q.get('code'),redirect_uri:bzSpRed(),code_verifier:localStorage.getItem('gt.bz.spv')||''});try{history.replaceState(null,'',location.pathname+'#buzz')}catch(e){}setTimeout(()=>go('buzz'),300)}
+  bzSpTick();setInterval(bzSpTick,15000);
+}
+window.BZ=BZ;BZ.iniciar=bzIniciar;BZ.montar=bzMontar;
+
 const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'];
 function backupDados(){const o={app:'gestor-de-tarefas',versao:2,geradoEm:new Date().toISOString(),por:meuNome(),colecoes:{}};
   BK_COLS.forEach(c=>{o.colecoes[c]=Object.fromEntries(c==='tarefas'?TALL:D[c])});
@@ -2903,7 +3099,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   const n=cobrarList().filter(t=>!t._i.cobradoHoje).length;
   const nFin=WS==='pessoal'?finAtrasados().length:0;const nRb=rbPendN();
   const NGRP={dashboard:'Visão geral',tarefas:'Trabalho',empresas:'Clientes',equipe:'Gestão'};
-  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
+  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='buzz'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='buzz'&&BZ.n?`<span class="ct">${BZ.n}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
   $('#nav').innerHTML=navHtml;$('#mobNav').innerHTML=navHtml;
   const d=new Date();
   $('#sideFoot').innerHTML=`${WS==='pessoal'?'<button class="btn sm" data-bloquear style="align-self:flex-start">Bloquear espaço Lucas</button>':''}<span id="gDot">${gDotTxt()}</span>${mode==='db'&&ME?`<div class="side-me">${aviHtml(ME_AV,meuNome(),'')}<span>${esc(meuNome())}</span></div>`:''}${onlineHtml()}<span>${mode==='db'?'Dados compartilhados':'Modo local'}</span>`;
@@ -2914,13 +3110,14 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
   $('#respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+rs.map(r=>`<option ${UI.resp===r?'selected':''}>${esc(r)}</option>`).join('');
-  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
+  const titles={buzz:['Buzz','Converse com a equipe e chame a atenção'],dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
   const tt=titles[UI.view]||titles.dashboard;
   $('#pageTitle').innerHTML=`${tt[0]}${UI.mod&&!['empresas','empresa','crm','equipe','financeiro','reembolso','mural','rendimento'].includes(UI.view)?`<span class="mod-tag" style="--c:${MODC[UI.mod]}">${MODL[UI.mod]}</span>`:''}<span class="ws-tag">Lucas · privado</span>${MESTRE.ok?'<button class="mk-tag" id="btnMestre" title="Clique para desligar">🔑 Chave mestre</button>':''}${tt[1]?`<small>${WS==='pessoal'&&UI.view==='dashboard'?'Espaço do Lucas · protegido por senha · ':''}${tt[1]}</small>`:''}`;
   const fq=document.activeElement&&document.activeElement.id;const pos=fq&&document.activeElement.selectionStart;
-  setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);rdSync();
+  setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();if(mode==='db'&&GT.membro&&!BZ.on)BZ.iniciar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);rdSync();
   const v=$('#view');
-  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras}[UI.view]||vDashboard)();
+  if(!(UI.view==='buzz'&&BZ.root&&v.contains(BZ.root)))v.innerHTML=({buzz:vBuzz,dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras}[UI.view]||vDashboard)();
+  if(UI.view==='buzz')BZ.montar();
   if(UI.view==='chat')chatPos(fq);
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
@@ -3273,6 +3470,7 @@ document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-11',data:'11/11/2026',itens:['💬 Novo Buzz: mensageiro da equipe no estilo clássico, com status (disponível, ocupado, ausente), recado, conversa em tempo real e o botão Chamar a atenção, que chacoalha a tela de quem recebe.','🎵 No Buzz dá para mostrar a música que você está ouvindo no Spotify.']},
  {id:'2026-11-10',data:'10/11/2026',itens:['📊 Nova tela Relatórios: concluídas, % no prazo, tempo médio e entrada × saída por período, com tabelas por responsável, categoria e empresa. Exporta Excel e PDF.','⚡ Adicionar rápido na tela Tarefas: escreva "Alteração contratual #Clínica Vida @Thais sexta !urgente" e tecle Enter.','✓ Botão de concluir com um clique nas listas.','⌨️ Atalhos: N nova tarefa, A adicionar rápido, G+T tarefas, G+R relatórios. Tecle ? para ver todos.']},
  {id:'2026-11-05',data:'05/11/2026',itens:['🔁 Desligamento: passe as tarefas para uma pessoa só ou divida tarefa por tarefa, com recado para quem assume (fica no histórico).','Os pedidos que a pessoa fez também passam, e dá para avisar quem assumiu pelo WhatsApp.','Na lista de Desligados aparece o botão "Passar tarefas" se ainda sobrou alguma.','🪶 Visual mais leve: cores mais suaves, menos sombras e menos animações piscando.']},
  {id:'2026-11-03d',data:'03/11/2026',itens:['💼 Novo módulo BPO Financeiro, com categorias próprias (contas a pagar e receber, conciliação, fluxo de caixa, relatórios).']},
