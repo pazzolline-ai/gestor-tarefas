@@ -2870,6 +2870,7 @@ function bzCss(){if(document.getElementById('bzCss'))return;const s=document.cre
 .bzw .ct{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer}
 .bzw .ct:hover,.bzw .ct.on2{background:#eaf6e7}
 .bzw .dot{width:11px;height:11px;border-radius:50%;flex:none}
+.bzw .gr .dot{display:inline-block;width:9px;height:9px;vertical-align:middle}.bzw #bzSt{font-weight:600;border-left:6px solid #4caf50}.bzw #bzSt.st-ocupado{border-left-color:#e53935;color:#b71c1c}.bzw #bzSt.st-ausente{border-left-color:#f5a524;color:#8a5a00}.bzw #bzSt.st-offline{border-left-color:#9aa7b6;color:#5b6775}.bzw #bzSt.st-online{color:#1b6b24}
 .bzw .dot.on{background:#4caf50}.bzw .dot.oc{background:#e53935}.bzw .dot.au{background:#f5a524}.bzw .dot.of{background:#9aa7b6}
 .bzw .nm{flex:1;min-width:0}
 .bzw .nm small{color:#7a8e7c}
@@ -2899,7 +2900,7 @@ body.bz-trem{animation:bzTrem .8s}
 `;document.head.appendChild(s)}
 function vBuzz(){return '<div id="bz"></div>'}
 function bzMontar(){
-  bzCss();const h=document.getElementById('bz');if(!h)return;
+  bzCss();const h=document.getElementById('bz');if(!h)return;if(!BZ.on&&!BZ.falhou&&GT.membro)bzIniciar();
   if(!BZ.root){const d=document.createElement('div');d.innerHTML=`<div class="bzw"><div class="l"><div class="top"><img class="av" id="bzAv" alt=""><div class="col"><select id="bzSt"><option value="online">Disponível</option><option value="ocupado">Ocupado</option><option value="ausente">Ausente</option><option value="offline">Aparecer offline</option></select><input id="bzRec" maxlength="80" placeholder="Digite seu recado"><div class="mus" id="bzMus"></div></div></div><div id="bzCts" style="flex:1;overflow:auto"></div><div class="rod"><span id="bzSpSt"></span><button id="bzSp">Conectar Spotify</button></div></div><div class="c off" id="bzC"><div class="hd"><button id="bzVolta" aria-label="Voltar">&larr;</button><b id="bzNome">Buzz</b></div><div class="sub"><span class="dot of" id="bzDot"></span><div class="col"><div id="bzRecC"></div><div class="mus" id="bzMusC"></div></div></div><div class="ms" id="bzMs"></div><div class="emo" id="bzEmo" hidden></div><div class="tb"><button id="bzBE" aria-label="Emoticons">🙂</button><button class="al" id="bzBz">🔔 Chamar a atenção</button></div><div class="env"><input id="bzTxt" placeholder="Digite sua mensagem" autocomplete="off"><button id="bzEnv">Enviar</button></div></div></div>`;BZ.root=d.firstElementChild;bzLigar()}
   if(BZ.root.parentNode!==h){h.textContent='';h.appendChild(BZ.root)}
   bzPintar();
@@ -2919,17 +2920,17 @@ function bzLigar(){
 function bzPintar(){
   if(!BZ.root)return;
   const eu=BZ.eu;
-  if(BZ.falhou){bzQ('#bzCts').textContent='Não foi possível abrir o Buzz. Atualize a página.';return}
+  if(BZ.falhou){const c0=bzQ('#bzCts');c0.textContent='Não foi possível abrir o Buzz'+(BZ.erro?' ('+BZ.erro+')':'')+'. ';const b0=bzEl('button','','Tentar de novo');b0.style.cssText='margin-top:8px;padding:6px 12px';b0.onclick=()=>{BZ.tent=0;BZ.falhou=false;BZ.on=false;bzIniciar()};c0.appendChild(b0);return}
   if(!eu){bzQ('#bzCts').textContent='Carregando…';return}
   const av=bzQ('#bzAv');const mm=GT.membro||{};av.src=bzFoto({nome:eu.nome,user_id:BZ.uid,foto:mm.foto});
-  bzQ('#bzSt').value=eu.status;const rec=bzQ('#bzRec');if(document.activeElement!==rec)rec.value=eu.recado||'';
+  bzQ('#bzSt').value=eu.status;bzQ('#bzSt').className='st-'+eu.status;const rec=bzQ('#bzRec');if(document.activeElement!==rec)rec.value=eu.recado||'';
   bzQ('#bzMus').textContent=eu.musica?'♫ '+eu.musica:'';
   const sp=!!localStorage.getItem('gt.bz.spt');bzQ('#bzSp').textContent=sp?'Desconectar':'Conectar Spotify';bzQ('#bzSpSt').textContent=sp?'Spotify conectado':'Mostre sua música';
   const c=bzQ('#bzCts');c.textContent='';
-  const g={online:[],ausente:[],offline:[]};
-  (GT.membros||[]).filter(m=>m.ativo!==false&&m.user_id!==BZ.uid).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).forEach(m=>{const p=BZ.perf[m.user_id];const s=bzEf(p);(s==='offline'?g.offline:s==='ausente'?g.ausente:g.online).push([m,p,s])});
-  [['online','Disponível'],['ausente','Ausente'],['offline','Offline']].forEach(([k,t])=>{
-    c.appendChild(bzEl('div','gr',t+' ('+g[k].length+')'));
+  const g={online:[],ocupado:[],ausente:[],offline:[]};
+  (GT.membros||[]).filter(m=>m.ativo!==false&&m.user_id!==BZ.uid).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).forEach(m=>{const p=BZ.perf[m.user_id];const s=bzEf(p);g[s].push([m,p,s])});
+  [['online','Disponível'],['ocupado','Ocupado'],['ausente','Ausente'],['offline','Offline']].forEach(([k,t])=>{
+    const gh=bzEl('div','gr');gh.appendChild(bzEl('span','dot '+BZ.ST[k][0]));gh.appendChild(document.createTextNode(' '+t+' ('+g[k].length+')'));c.appendChild(gh);
     g[k].forEach(([m,p,s])=>{
       const r=bzEl('div','ct'+(BZ.sel===m.user_id?' on2':''));r.dataset.id=m.user_id;if(s==='offline')r.style.opacity='.65';
       const im=bzEl('img','av sm');im.src=bzFoto(m);im.alt='';r.appendChild(im);r.appendChild(bzEl('span','dot '+BZ.ST[s][0]));
@@ -2989,13 +2990,13 @@ function bzRecebida(m){
   bzPintar();
 }
 async function bzIniciar(){
-  if(BZ.on)return;BZ.on=true;bzCss();
+  if(BZ.on)return;BZ.on=true;bzCss();BZ.falhou=false;
   try{
-    const m=GT.membro;if(!m)throw 0;BZ.uid=m.user_id;
+    const m=GT.membro;if(!m)throw new Error('seu cadastro de equipe não foi encontrado');BZ.uid=m.user_id;
     let{data:p}=await sb.from('buzz_perfis').select('*').eq('id',BZ.uid).maybeSingle();
     const agora=new Date().toISOString();
-    if(!p){const r=await sb.from('buzz_perfis').insert({id:BZ.uid,nome:m.nome}).select().single();p=r.data}
-    if(!p)throw 0;
+    if(!p){const r=await sb.from('buzz_perfis').insert({id:BZ.uid,nome:m.nome}).select().single();if(r.error)throw r.error;p=r.data}
+    if(!p)throw new Error('perfil não criado');
     const up={visto_em:agora};if(p.nome!==m.nome)up.nome=m.nome;
     await sb.from('buzz_perfis').update(up).eq('id',BZ.uid);Object.assign(p,up);BZ.eu=p;
     const{data:todos}=await sb.from('buzz_perfis').select('*');BZ.perf={};(todos||[]).forEach(x=>BZ.perf[x.id]=x);BZ.perf[BZ.uid]=p;
@@ -3004,7 +3005,7 @@ async function bzIniciar(){
       .on('postgres_changes',{event:'*',schema:'public',table:'buzz_perfis'},x=>{const r=x.new;if(r&&r.id){BZ.perf[r.id]=r;if(r.id===BZ.uid)BZ.eu=r;bzPintar()}}).subscribe();
     setInterval(()=>{if(BZ.eu){BZ.eu.visto_em=new Date().toISOString();sb.from('buzz_perfis').update({visto_em:BZ.eu.visto_em}).eq('id',BZ.uid).then(()=>{});bzPintar()}},60000);
     bzSpInit();bzPintar();
-  }catch(e){BZ.falhou=true;bzPintar()}
+  }catch(e){console.error('Buzz',e);BZ.erro=(e&&(e.message||e.details))||'';BZ.on=false;BZ.tent=(BZ.tent||0)+1;if(BZ.tent<4)setTimeout(bzIniciar,3000*BZ.tent);else BZ.falhou=true;bzPintar()}
 }
 const bzSpId=()=>BZ_SPOTIFY_ID||localStorage.getItem('gt.bz.spid')||'';
 const bzSpRed=()=>location.origin+location.pathname;
