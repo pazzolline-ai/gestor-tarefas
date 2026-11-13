@@ -1362,6 +1362,7 @@ html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-ca
 .dl-chk{display:flex;gap:8px;align-items:center;font-size:13px;margin:4px 0}
 @media (max-width:560px){.dl-it{flex-wrap:wrap}.dl-it .sel{max-width:none;width:100%}}
 /* Relatórios e velocidade */
+.pp-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.pp-ln{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:6px;margin-bottom:6px}.pp-tot{float:right;font-weight:700;color:var(--ink,inherit);text-transform:none;letter-spacing:0}@media (max-width:760px){.pp-t td:nth-child(1){grid-column:2;grid-row:1;justify-self:end;font-size:12px;color:var(--dim)}.pp-t td:nth-child(2){grid-column:1;grid-row:1;font-size:inherit;color:inherit}.pp-t td:nth-child(3){grid-column:2;grid-row:2;justify-self:end;font-size:12px;color:var(--dim)}.pp-t td:nth-child(4){grid-column:1;grid-row:2;font-size:13px}.pp-t td:nth-child(6){grid-column:1/-1;grid-row:3}.pp-t td:nth-child(7){grid-column:1/-1;grid-row:4;white-space:normal!important;margin-top:4px}.pp-k{grid-template-columns:repeat(2,minmax(0,1fr))}.pp-ln{grid-template-columns:minmax(0,1fr) 96px auto}}
 .rl-k{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .rl-k .tile .n.late{color:var(--red)}
 .rl-s{font-size:11.5px;color:var(--dim);margin-top:4px}
@@ -1762,6 +1763,7 @@ function categorias(mod){if(mod===undefined)mod=UI.mod;let lista=mod?MOD_CATS[mo
 
 const OLHO_A='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',OLHO_F='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.5M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></svg>';
 const IC={
+prop:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h4"/>',
 ok:'<path d="M5 12.5l4.5 4.5L19 7"/>',rel:'<path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/>',
   perf:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
   shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
@@ -1789,7 +1791,7 @@ ok:'<path d="M5 12.5l4.5 4.5L19 7"/>',rel:'<path d="M4 20h16M7 16v-5M12 16V6M17 
   moto:'<circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-6h5l4 6M14.5 10l-1.8-4H10M9.5 10H6.5"/>'
 };
 const svg=(k,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
+const VIEWS=[['dashboard','Dashboard','dash'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['propostas','Propostas','prop'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -1813,7 +1815,7 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 
 /* ---------- Estado ---------- */
 let TALL=new Map();
-const D={tarefas:new Map(),empresas:new Map(),contatos:new Map(),equipe:new Map(),pagamentos:new Map(),das:new Map(),avisos:new Map(),rendimento:new Map(),chat:new Map(),alvaras:new Map()};
+const D={tarefas:new Map(),empresas:new Map(),contatos:new Map(),equipe:new Map(),pagamentos:new Map(),das:new Map(),avisos:new Map(),rendimento:new Map(),chat:new Map(),alvaras:new Map(),propostas:new Map()};
 const UI={
   view:'dashboard', empresaId:null,
   resp:lsGet('cs.resp',''), mod:(m=>MODL[m]?m:'')(lsGet('cs.mod','')), modo:lsGet('cs.modo','lista'),
@@ -1823,7 +1825,7 @@ const UI={
 };
 let MEFULL='', ME_AV='', ME_COR='', UROOM=null, UAPI=null;
 let db=null, UID=null, WS='escritorio', UNSUB=[], mode='loading', ME='Gestor', canWrite=true, mcp=null, isOwner=false;
-const loaded={tarefas:false,empresas:false,contatos:false,equipe:false,pagamentos:false,das:false,avisos:false,rendimento:false,chat:false,alvaras:false};
+const loaded={tarefas:false,empresas:false,contatos:false,equipe:false,pagamentos:false,das:false,avisos:false,rendimento:false,chat:false,alvaras:false,propostas:false};
 
 /* ---------- Persistência ---------- */
 async function boot(){
@@ -1844,7 +1846,7 @@ async function boot(){
   }else{
     mode='local';
     const s=lsGet('cs.local',{tarefas:{},empresas:{},contatos:{},equipe:{},pagamentos:{},das:{}});
-    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
+    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
     rbAssinar();
     render();
   }
@@ -1852,9 +1854,9 @@ async function boot(){
 function C(name){return WS==='pessoal'&&UID?db.doc('data/users/'+UID+'/pessoal').collection(name):db.collection(name)}
 function assinar(){
   UNSUB.forEach(f=>{try{f()}catch(e){}});UNSUB=[];
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(col=>{D[col]=new Map();loaded[col]=false});
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas'].forEach(col=>{D[col]=new Map();loaded[col]=false});
   const ws=WS;
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(col=>{
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas'].forEach(col=>{
     UNSUB.push(C(col).onSnapshot(snap=>{
       if(ws!==WS)return;
       const m=new Map();snap.docs.forEach(d=>{if(d.exists)m.set(d.id,d.data())});
@@ -1934,7 +1936,7 @@ function trocarWS(ws,liberado){
   assinar.semeado=false;assinar();if(ws==='pessoal')carregarPix();go('dashboard');
   toast(ws==='pessoal'?'Espaço do Lucas':'Escritório');
 }
-function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
+function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
 async function put(col,id,data){
   const clean=JSON.parse(JSON.stringify(data));if(col==='tarefas')TN.eu.set(id,Date.now());
   if(col==='tarefas'&&!TALL.has(id)&&!D.tarefas.has(id)&&!clean.criadoPor){clean.criadoPor=meuNome();if(UID)clean.criadoUid=UID}
@@ -2841,7 +2843,7 @@ function chatPos(fq){const b=document.getElementById('chatMsgs');if(b)b.scrollTo
 }
 
 /* ---------- Backup ---------- */
-const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras'];
+const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas'];
 function backupDados(){const o={app:'gestor-de-tarefas',versao:2,geradoEm:new Date().toISOString(),por:meuNome(),colecoes:{}};
   BK_COLS.forEach(c=>{o.colecoes[c]=Object.fromEntries(c==='tarefas'?TALL:D[c])});
   try{o.colecoes.viagens=Object.fromEntries(RB.viagens||new Map());o.colecoes.veiculos=Object.fromEntries(RB.veiculos||new Map());o.reembolsoCfg=RB.cfg||null}catch(e){}
@@ -2939,7 +2941,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   const n=cobrarList().filter(t=>!t._i.cobradoHoje).length;
   const nFin=WS==='pessoal'?finAtrasados().length:0;const nRb=rbPendN();
   const NGRP={dashboard:'Visão geral',tarefas:'Trabalho',empresas:'Clientes',equipe:'Gestão'};
-  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='buzz'&&BZ.n?`<span class="ct">${BZ.n}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
+  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
   $('#nav').innerHTML=navHtml;$('#mobNav').innerHTML=navHtml;
   const d=new Date();
   $('#sideFoot').innerHTML=`${WS==='pessoal'?'<button class="btn sm" data-bloquear style="align-self:flex-start">Bloquear espaço Lucas</button>':''}<span id="gDot">${gDotTxt()}</span>${mode==='db'&&ME?`<div class="side-me">${aviHtml(ME_AV,meuNome(),'')}<span>${esc(meuNome())}</span></div>`:''}${onlineHtml()}<span>${mode==='db'?'Dados compartilhados':'Modo local'}</span>`;
@@ -2950,13 +2952,13 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
   $('#respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+rs.map(r=>`<option ${UI.resp===r?'selected':''}>${esc(r)}</option>`).join('');
-  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
+  const titles={dashboard:['Dashboard',`${DSEM[d.getDay()]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Prazos e retornos de contato'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],propostas:['Propostas','Monte, envie e acompanhe as propostas para clientes'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
   const tt=titles[UI.view]||titles.dashboard;
   $('#pageTitle').innerHTML=`${tt[0]}${UI.mod&&!['empresas','empresa','crm','equipe','financeiro','reembolso','mural','rendimento'].includes(UI.view)?`<span class="mod-tag" style="--c:${MODC[UI.mod]}">${MODL[UI.mod]}</span>`:''}<span class="ws-tag">Lucas · privado</span>${MESTRE.ok?'<button class="mk-tag" id="btnMestre" title="Clique para desligar">🔑 Chave mestre</button>':''}${tt[1]?`<small>${WS==='pessoal'&&UI.view==='dashboard'?'Espaço do Lucas · protegido por senha · ':''}${tt[1]}</small>`:''}`;
   const fq=document.activeElement&&document.activeElement.id;const pos=fq&&document.activeElement.selectionStart;
   setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);rdSync();
   const v=$('#view');
-  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras}[UI.view]||vDashboard)();
+  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras,propostas:vPropostas}[UI.view]||vDashboard)();
   if(UI.view==='chat')chatPos(fq);
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
@@ -3306,9 +3308,211 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   if(t.hasAttribute('data-alvanx')){alvAnexos(t.dataset.alvanx);return}if(t.hasAttribute('data-alvenv')){alvEnviar(t.dataset.alvenv);return}if(t.hasAttribute('data-alvabrir')){anexoAbrir(t.dataset.alvabrir);return}if(t.hasAttribute('data-alvdel')){alvAnexoDel(t.dataset.alvdel,+t.dataset.i);return}
   if(t.hasAttribute('data-alvf')){UIALV.f=t.dataset.alvf;render()}else if(t.hasAttribute('data-alvnovo'))alvForm();else if(t.hasAttribute('data-alved'))alvForm(t.dataset.alved);else if(t.hasAttribute('data-alvren'))alvRenovar(t.dataset.alvren);else alvImportar()});
 document.addEventListener('input',e=>{if(e.target.id==='alvQ'){UIALV.q=e.target.value;clearTimeout(UIALV.t);UIALV.t=setTimeout(()=>{render();const i=document.getElementById('alvQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}});
+/* ---------- Propostas (gerador de propostas comerciais) ---------- */
+const UIPP={f:'',q:''};
+const PP_ST={rascunho:['Rascunho',''],enviada:['Enviada','blu'],aceita:['Aceita','grn'],recusada:['Recusada','red']};
+const PP_MENSAIS=['Contabilidade completa','Escrituração fiscal e apuração de impostos','Simples Nacional: apuração do DAS','Departamento pessoal e folha de pagamento','Pró-labore dos sócios','Obrigações acessórias (SPED, DCTFWeb, EFD-Reinf)','MEI: DAS mensal e declaração anual','Assessoria e atendimento'];
+const PP_AVULSOS=['Abertura de empresa','Alteração contratual','Baixa de empresa','Transformação de MEI em ME','Alvará de funcionamento','Regularização fiscal','Parcelamento de débitos','Declaração de Imposto de Renda (IRPF)','Certificado digital'];
+const PP_MOTIVOS=['Preço','Fechou com outro escritório','Desistiu de abrir ou mudar','Não respondeu','Outro'];
+const PP_PAD={nome:'Londe & Rodrigues Assessoria Contábil',cnpj:'',telefone:'',email:'',endereco:'',validade:15,
+  apresentacao:'Agradecemos a oportunidade de apresentar nossa proposta. Nosso compromisso é cuidar da rotina contábil, fiscal e de pessoal da sua empresa com responsabilidade, prazos em dia e atendimento próximo, para que você possa se concentrar no seu negócio.',
+  condicoes:'Os honorários mensais vencem todo dia 10 do mês seguinte ao da prestação dos serviços, por Pix ou boleto. Os serviços avulsos são pagos 50% na contratação e 50% na conclusão. Taxas, custas e guias de órgãos públicos não estão incluídas e são cobradas à parte. Os honorários são reajustados uma vez por ano.'};
+let PPCFG=null;
+function ppCfg(){return Object.assign({},PP_PAD,PPCFG||{})}
+function ppLigar(){if(ppLigar.on)return;ppLigar.on=true;
+  if(mode==='db'&&db){try{db.doc('config/propostas').onSnapshot(s=>{PPCFG=s.exists?s.data():{};if(UI.view==='propostas')render()},()=>{PPCFG={}})}catch(e){PPCFG={}}}else PPCFG=lsGet('gt.prop.cfg',{})}
+const ppNum=v=>{const n=parseFloat(String(v==null?'':v).replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));return isNaN(n)?0:Math.round(n*100)/100};
+const ppVal=v=>v?(+v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'';
+const ppSoma=l=>(l||[]).reduce((s,i)=>s+(+i.valor||0),0);
+const ppValidade=p=>addD(p.data||hoje(),+p.validadeDias||15);
+function ppLista(){return [...D.propostas.entries()].map(([id,p])=>Object.assign({id},p))}
+function ppCliente(p){return (p.cliente&&p.cliente.nome)||(p.empresaId&&empresa(p.empresaId)?empNome(p.empresaId):'Sem nome')}
+function ppProxNum(){const a=hoje().slice(0,4);let mx=0;D.propostas.forEach(p=>{const m=String(p.numero||'').match(/^(\d+)\/(\d{4})$/);if(m&&m[2]===a)mx=Math.max(mx,+m[1])});return String(mx+1).padStart(3,'0')+'/'+a}
+function ppFlag(p){const s=PP_ST[p.status]||PP_ST.rascunho;let x=`<span class="flag ${s[1]}">${s[0]}</span>`;
+  if(p.status==='enviada'){const v=ppValidade(p);if(v<hoje())x+=' <span class="flag amb">validade vencida</span>';else if(p.enviadaEm){const d=dias(p.enviadaEm.slice(0,10),hoje());if(d>=5)x+=` <span class="flag amb">sem resposta há ${plural(d,'dia','dias')}</span>`}}
+  if(p.status==='recusada'&&p.motivo)x+=`<div style="font-size:11.5px;color:var(--dim);margin-top:2px">${esc(p.motivo)}</div>`;
+  return x}
+function vPropostas(){ppLigar();
+  const tudo=ppLista(),q=norm(UIPP.q),ano=hoje().slice(0,4);
+  const cnt={'':tudo.length,rascunho:0,enviada:0,aceita:0,recusada:0};tudo.forEach(p=>{cnt[p.status||'rascunho']++});
+  const l=tudo.filter(p=>(!UIPP.f||(p.status||'rascunho')===UIPP.f)&&(!q||norm(ppCliente(p)+' '+(p.numero||'')+' '+(p.responsavel||'')+' '+((p.cliente&&p.cliente.cnpj)||'')).includes(q)))
+    .sort((a,b)=>(b.data||'').localeCompare(a.data||'')||String(b.numero||'').localeCompare(String(a.numero||'')));
+  const ab=tudo.filter(p=>p.status==='enviada'),ac=tudo.filter(p=>p.status==='aceita'&&(p.aceitaEm||p.data||'').slice(0,4)===ano),rc=tudo.filter(p=>p.status==='recusada'&&(p.recusadaEm||p.data||'').slice(0,4)===ano);
+  const taxa=ac.length+rc.length?Math.round(ac.length*100/(ac.length+rc.length))+'%':'—';
+  const ch=(k,t)=>`<button class="btn sm ${UIPP.f===k?'pri':'ghost'}" data-ppf="${k}">${t} <small>${cnt[k]}</small></button>`;
+  return `<div class="pp-k">
+    <div class="tile" style="cursor:default"><div class="l">Aguardando resposta</div><div class="n">${ab.length}</div><div class="rl-s">${brl(ppSoma([].concat(...ab.map(p=>p.mensais||[]))))} por mês em jogo</div></div>
+    <div class="tile" style="cursor:default"><div class="l">Aceitas em ${ano}</div><div class="n">${ac.length}</div><div class="rl-s">${brl(ppSoma([].concat(...ac.map(p=>p.mensais||[]))))} por mês conquistados</div></div>
+    <div class="tile" style="cursor:default"><div class="l">Recusadas em ${ano}</div><div class="n">${rc.length}</div><div class="rl-s">${rc.length?esc(ppMotivoTop(rc)):'nenhuma'}</div></div>
+    <div class="tile" style="cursor:default"><div class="l">Taxa de aceite</div><div class="n">${taxa}</div><div class="rl-s">aceitas ÷ (aceitas + recusadas)</div></div></div>
+  <section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><div style="display:flex;gap:4px;flex-wrap:wrap">${ch('','Todas')}${ch('rascunho','Rascunhos')}${ch('enviada','Enviadas')}${ch('aceita','Aceitas')}${ch('recusada','Recusadas')}</div><span class="sp"></span>
+    <input class="inp" id="ppQ" placeholder="Buscar cliente, número ou CNPJ" value="${esc(UIPP.q)}" style="max-width:220px">
+    <button class="btn sm" data-ppcfg>Dados do escritório</button><button class="btn sm pri" data-ppnovo>${svg('plus',2.2)}Nova proposta</button></div>
+    ${l.length?`<div class="tw"><table class="tlist pp-t"><thead><tr><th>Nº</th><th>Cliente</th><th>Data</th><th class="n">Mensal</th><th class="n hide-m">Avulsos</th><th>Situação</th><th></th></tr></thead><tbody>
+    ${l.map(p=>{const st=p.status||'rascunho';return `<tr><td class="mono">${esc(p.numero||'—')}</td><td><b>${esc(ppCliente(p))}</b>${p.responsavel?`<div style="font-size:12px;color:var(--dim)">por ${esc(p.responsavel)}</div>`:''}</td><td class="mono">${fmt(p.data)}</td>
+      <td class="n mono">${ppSoma(p.mensais)?brl(ppSoma(p.mensais)):'—'}</td><td class="n mono hide-m">${ppSoma(p.avulsos)?brl(ppSoma(p.avulsos)):'—'}</td><td>${ppFlag(p)}</td>
+      <td style="white-space:nowrap"><button class="btn sm ghost" data-pppdf="${p.id}" title="Baixar PDF">${svg('pdf')}PDF</button> <button class="btn sm ${st==='rascunho'?'pri':''}" data-ppenv="${p.id}">Enviar</button>${st==='rascunho'||st==='enviada'?` <button class="btn sm" data-ppres="${p.id}">Resultado</button>`:''}${st==='aceita'&&p.empresaId&&empresa(p.empresaId)?` <button class="btn sm ghost" data-emp="${p.empresaId}">Ver empresa</button>`:''} <button class="btn sm ghost" data-pped="${p.id}">Editar</button></td></tr>`}).join('')}</tbody></table></div>`:empty(tudo.length?'Nenhuma proposta neste filtro.':'Nenhuma proposta ainda.',tudo.length?'':'<button class="btn pri" data-ppnovo>+ Fazer a primeira proposta</button>')}
+  </section>
+  <div style="font-size:12px;color:var(--dim)">Monte a proposta com os serviços mensais e avulsos, gere o PDF com a marca do escritório e envie por WhatsApp ou e-mail. Depois registre o resultado: se for aceita, o cliente vira empresa cadastrada com um clique.</div>`;
+}
+function ppMotivoTop(l){const c={};l.forEach(p=>{const m=p.motivo||'Sem motivo';c[m]=(c[m]||0)+1});const t=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];return 'mais comum: '+t[0]}
+function ppErro(e){toast(/permission|42501|row-level|acesso/i.test(String(e&&e.message||e))?'Seu acesso ainda não permite salvar propostas. Fale com a diretoria.':'Não foi possível salvar a proposta.')}
+async function ppPut(id,data){const ant=D.propostas.get(id);D.propostas.set(id,data);if(mode==='db'){try{await C('propostas').doc(id).set(JSON.parse(JSON.stringify(data)))}catch(e){if(ant)D.propostas.set(id,ant);else D.propostas.delete(id);render();ppErro(e);return false}}else persistLocal();render();return true}
+function ppHist(p,txt){return (p.historico||[]).concat([{data:hoje(),txt,por:meuNome()}])}
+function ppLinha(desc,valor,tipo){return `<div class="pp-ln"><input class="inp" data-ppd list="ppL${tipo}" value="${esc(desc||'')}" placeholder="Serviço"><input class="inp mono" data-ppv inputmode="decimal" value="${esc(ppVal(valor))}" placeholder="0,00"><button type="button" class="btn ghost sm" data-pprm aria-label="Tirar serviço">${svg('x',2)}</button></div>`}
+function ppForm(id,base){
+  const p=id?D.propostas.get(id):(base||{data:hoje(),validadeDias:ppCfg().validade,responsavel:ME!=='Gestor'?meuNome():'',mensais:[{}],avulsos:[],condicoes:ppCfg().condicoes,cliente:{}});if(!p)return;
+  const c=p.cliente||{};
+  openModal(`${mh(id?'Proposta '+esc(p.numero||''):'Nova proposta')}<form id="ppF"><div class="mb"><div class="fg">
+   <div class="fd full"><div class="sec-t" style="margin:0">Cliente</div></div>
+   <div class="fd full"><label for="pp_e">Já é cliente?</label><select class="sel" id="pp_e">${empOptsAtivas(p.empresaId||'').replace('Selecione a empresa','Não: cliente novo')}</select></div>
+   <div class="fd full"><label for="pp_n">Nome ou razão social</label><input class="inp" id="pp_n" value="${esc(c.nome||'')}" required></div>
+   <div class="fd"><label for="pp_c">CNPJ ou CPF</label><input class="inp mono" id="pp_c" value="${esc(c.cnpj||'')}"></div>
+   <div class="fd"><label for="pp_r">Aos cuidados de</label><input class="inp" id="pp_r" value="${esc(c.contato||'')}" placeholder="Nome de quem vai receber"></div>
+   <div class="fd"><label for="pp_w">WhatsApp</label><input class="inp" id="pp_w" inputmode="tel" value="${esc(c.whatsapp||'')}" placeholder="(62) 9 9999-9999"></div>
+   <div class="fd"><label for="pp_m">E-mail</label><input class="inp" id="pp_m" type="email" value="${esc(c.email||'')}"></div>
+   <div class="fd"><label for="pp_mu">Município / UF</label><input class="inp" id="pp_mu" value="${esc(c.municipio||'')}" placeholder="Anápolis - GO"></div>
+   <div class="fd"><label for="pp_rg">Regime</label><select class="sel" id="pp_rg"><option value="">—</option>${REGIMES.map(r=>`<option ${c.regime===r?'selected':''}>${r}</option>`).join('')}</select></div>
+   <div class="fd full"><div class="sec-t" style="margin:8px 0 0">Serviços mensais <span class="pp-tot" id="ppTM"></span></div><div id="ppM">${(p.mensais||[]).map(i=>ppLinha(i.desc,i.valor,'M')).join('')}</div><button type="button" class="btn sm ghost" data-ppadd="M" style="align-self:flex-start">${svg('plus',2.2)}Serviço mensal</button></div>
+   <div class="fd full"><div class="sec-t" style="margin:8px 0 0">Serviços avulsos (pagamento único) <span class="pp-tot" id="ppTA"></span></div><div id="ppA">${(p.avulsos||[]).map(i=>ppLinha(i.desc,i.valor,'A')).join('')}</div><button type="button" class="btn sm ghost" data-ppadd="A" style="align-self:flex-start">${svg('plus',2.2)}Serviço avulso</button></div>
+   <datalist id="ppLM">${PP_MENSAIS.map(t=>`<option value="${esc(t)}">`).join('')}</datalist><datalist id="ppLA">${PP_AVULSOS.map(t=>`<option value="${esc(t)}">`).join('')}</datalist>
+   <div class="fd full"><div class="sec-t" style="margin:8px 0 0">Detalhes</div></div>
+   <div class="fd"><label for="pp_d">Data</label><input class="inp" id="pp_d" type="date" value="${esc(p.data||hoje())}"></div>
+   <div class="fd"><label for="pp_v">Validade (dias)</label><input class="inp" id="pp_v" type="number" min="1" max="180" value="${+p.validadeDias||15}"></div>
+   <div class="fd"><label for="pp_resp">Responsável</label><select class="sel" id="pp_resp"><option value="">—</option>${responsaveis().map(r=>`<option ${norm(r)===norm(p.responsavel||'')?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+   ${id?`<div class="fd"><label for="pp_st">Situação</label><select class="sel" id="pp_st">${Object.entries(PP_ST).map(([k,v])=>`<option value="${k}" ${(p.status||'rascunho')===k?'selected':''}>${v[0]}</option>`).join('')}</select></div>`:''}
+   <div class="fd full"><label for="pp_cd">Condições de pagamento</label><textarea class="inp" id="pp_cd" rows="3">${esc(p.condicoes||'')}</textarea></div>
+   <div class="fd full"><label for="pp_o">Observações (saem no PDF)</label><textarea class="inp" id="pp_o" rows="2" placeholder="Ex.: valores considerando até 3 funcionários e 50 notas por mês">${esc(p.obs||'')}</textarea></div>
+   ${id&&(p.historico||[]).length?`<div class="fd full"><label>Histórico</label><div style="font-size:12.5px;color:var(--mut);max-height:140px;overflow:auto">${p.historico.slice().reverse().map(h=>`<div>${fmt(h.data)} — ${esc(h.txt)}${h.por?` <span style="color:var(--dim)">(${esc(h.por)})</span>`:''}</div>`).join('')}</div></div>`:''}
+  </div></div><div class="mf" style="flex-wrap:wrap">${id?`<button type="button" class="btn ghost danger" id="ppDel" style="margin-right:auto">Excluir</button><button type="button" class="btn ghost" id="ppDup">Duplicar</button>`:''}<button type="button" class="btn" data-close>Cancelar</button><button type="submit" class="btn" data-ppsalva="1">Salvar</button><button type="submit" class="btn pri" data-ppsalva="pdf">${svg('pdf')}Salvar e gerar PDF</button></div></form>`,true);
+  const f=$('#ppF');
+  const tot=()=>{const s=k=>[...f.querySelectorAll('#pp'+k+' [data-ppv]')].reduce((a,i)=>a+ppNum(i.value),0);const m=s('M'),a=s('A');$('#ppTM').textContent=m?brl(m)+' por mês':'';$('#ppTA').textContent=a?brl(a):''};tot();
+  f.addEventListener('click',ev=>{const t=ev.target.closest('[data-ppadd],[data-pprm]');if(!t)return;
+    if(t.hasAttribute('data-ppadd')){const k=t.dataset.ppadd,box=$('#pp'+k);box.insertAdjacentHTML('beforeend',ppLinha('','',k));box.lastElementChild.querySelector('[data-ppd]').focus()}else{t.closest('.pp-ln').remove()}tot()});
+  f.addEventListener('input',ev=>{if(ev.target.hasAttribute('data-ppv'))tot()});
+  f.addEventListener('focusout',ev=>{if(ev.target.hasAttribute('data-ppv')){const v=ppNum(ev.target.value);ev.target.value=v?ppVal(v):''}});
+  $('#pp_e').addEventListener('change',ev=>{const e=empresa(ev.target.value);if(!e)return;const s=(i,v)=>{if(v)$('#'+i).value=v};
+    s('pp_n',e.razao||e.fantasia);s('pp_c',e.cnpj);s('pp_r',e.responsavel);s('pp_w',e.whatsapp||e.telefone);s('pp_m',e.email);s('pp_mu',e.municipio);if(e.regime)$('#pp_rg').value=e.regime});
+  let acao='1';f.querySelectorAll('[data-ppsalva]').forEach(b=>b.addEventListener('click',()=>{acao=b.dataset.ppsalva}));
+  if(id){$('#ppDel').onclick=()=>confirmBox(`Excluir a proposta <b>${esc(p.numero||'')}</b> de <b>${esc(ppCliente(p))}</b>?`,'Excluir',async()=>{D.propostas.delete(id);if(mode==='db'){try{await C('propostas').doc(id).delete()}catch(e){toast('Não foi possível excluir.')}}else persistLocal();closeModal();render();toast('Proposta excluída')});
+    $('#ppDup').onclick=()=>{const b=JSON.parse(JSON.stringify(p));['numero','status','historico','enviadaEm','aceitaEm','recusadaEm','motivo','pdf','criadoEm','criadoPor'].forEach(k=>delete b[k]);b.data=hoje();ppForm(null,b)}}
+  f.addEventListener('submit',async ev=>{ev.preventDefault();
+    const itens=k=>[...f.querySelectorAll('#pp'+k+' .pp-ln')].map(r=>({desc:r.querySelector('[data-ppd]').value.trim(),valor:ppNum(r.querySelector('[data-ppv]').value)})).filter(i=>i.desc||i.valor);
+    const mensais=itens('M'),avulsos=itens('A');
+    if(!val('pp_n')){toast('Informe o nome do cliente.');return}
+    if(!mensais.length&&!avulsos.length){toast('Coloque pelo menos um serviço.');return}
+    if([...mensais,...avulsos].some(i=>!i.desc)){toast('Há um valor sem a descrição do serviço.');return}
+    const n=Object.assign({},p,{empresaId:val('pp_e')||null,cliente:{nome:val('pp_n'),cnpj:val('pp_c'),contato:val('pp_r'),whatsapp:val('pp_w'),email:val('pp_m'),municipio:val('pp_mu'),regime:val('pp_rg')},
+      mensais,avulsos,data:val('pp_d')||hoje(),validadeDias:Math.max(1,+val('pp_v')||15),responsavel:val('pp_resp'),condicoes:val('pp_cd'),obs:val('pp_o'),atualizadoEm:agora(),atualizadoPor:meuNome()});
+    if(id){const st=val('pp_st');if(st&&st!==(p.status||'rascunho')){n.status=st;n.historico=ppHist(n,'Situação alterada para '+PP_ST[st][0])}}
+    else{n.numero=ppProxNum();n.status='rascunho';n.criadoEm=agora();n.criadoPor=meuNome();n.historico=ppHist(n,'Proposta criada')}
+    const nid=id||uid();if(await ppPut(nid,n)){closeModal();toast('Proposta '+n.numero+' salva');if(acao==='pdf')ppPDF(nid)}});
+}
+function ppCfgForm(){const c=ppCfg();
+  openModal(`${mh('Dados do escritório nas propostas')}<form id="ppCF"><div class="mb"><div class="fg">
+   <div class="fd full"><label for="pc_n">Nome do escritório</label><input class="inp" id="pc_n" value="${esc(c.nome)}" required></div>
+   <div class="fd"><label for="pc_c">CNPJ</label><input class="inp mono" id="pc_c" value="${esc(c.cnpj)}"></div>
+   <div class="fd"><label for="pc_t">Telefone / WhatsApp</label><input class="inp" id="pc_t" value="${esc(c.telefone)}"></div>
+   <div class="fd"><label for="pc_e">E-mail</label><input class="inp" id="pc_e" value="${esc(c.email)}"></div>
+   <div class="fd"><label for="pc_v">Validade padrão (dias)</label><input class="inp" id="pc_v" type="number" min="1" max="180" value="${+c.validade||15}"></div>
+   <div class="fd full"><label for="pc_end">Endereço</label><input class="inp" id="pc_end" value="${esc(c.endereco)}"></div>
+   <div class="fd full"><label for="pc_a">Texto de apresentação</label><textarea class="inp" id="pc_a" rows="4">${esc(c.apresentacao)}</textarea></div>
+   <div class="fd full"><label for="pc_cd">Condições de pagamento (padrão das novas propostas)</label><textarea class="inp" id="pc_cd" rows="4">${esc(c.condicoes)}</textarea></div>
+   <div class="fd full" style="font-size:12px;color:var(--dim)">O logo do PDF é o mesmo do sistema (menu Mais → Nome e logo). Estes dados valem para toda a equipe.</div>
+  </div></div><div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
+  $('#ppCF').addEventListener('submit',async ev=>{ev.preventDefault();
+    const n={nome:val('pc_n'),cnpj:val('pc_c'),telefone:val('pc_t'),email:val('pc_e'),endereco:val('pc_end'),validade:Math.max(1,+val('pc_v')||15),apresentacao:val('pc_a'),condicoes:val('pc_cd'),atualizadoEm:agora(),atualizadoPor:meuNome()};
+    if(mode==='db'){try{await db.doc('config/propostas').set(n)}catch(e){ppErro(e);return}}else lsSet('gt.prop.cfg',n);
+    PPCFG=n;closeModal();render();toast('Dados do escritório salvos')});
+}
+function ppLogo(){const o=GT.org||{};if(o.app_logo&&/^data:image\/(png|jpe?g)/.test(o.app_logo))return [o.app_logo,/png/.test(o.app_logo.slice(0,20))?'PNG':'JPEG'];return LOGO_PNG?[LOGO_PNG,'PNG']:null}
+function ppDoc(p){
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),cf=ppCfg(),c=p.cliente||{};
+  const txt=(s,x,y,o)=>doc.text(pt(s),x,y,o);
+  doc.setFillColor(...P_ACC);doc.rect(0,0,W,3,'F');
+  const lg=ppLogo();let x0=14;if(lg){try{doc.addImage(lg[0],lg[1],14,9,lg[0]===LOGO_PNG?19:16,lg[0]===LOGO_PNG?15:16,undefined,'FAST');x0=lg[0]===LOGO_PNG?37:34}catch(e){}}
+  doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(...P_INK);txt(cf.nome,x0,14.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(...P_MUT);
+  const ct=[cf.cnpj?'CNPJ '+cf.cnpj:'',cf.telefone,cf.email].filter(Boolean).join('  |  ');if(ct)txt(ct,x0,19.5);if(cf.endereco)txt(cf.endereco,x0,23.8);
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...P_ACC);txt('PROPOSTA Nº '+(p.numero||''),W-14,14.5,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setTextColor(...P_MUT);txt('Data: '+fmt(p.data),W-14,19.5,{align:'right'});txt('Válida até: '+fmt(ppValidade(p)),W-14,23.8,{align:'right'});
+  doc.setDrawColor(...P_LINE);doc.line(14,29,W-14,29);
+  doc.setFont('helvetica','bold');doc.setFontSize(17);doc.setTextColor(...P_INK);txt('Proposta de Prestação de Serviços Contábeis',14,40);
+  let y=47;
+  const cli=[c.cnpj?'CNPJ/CPF: '+c.cnpj:'',c.contato?'A/C: '+c.contato:'',c.municipio||'',c.regime?'Regime: '+c.regime:''].filter(Boolean);
+  const hBox=14+cli.length*4.6;doc.setFillColor(248,246,241);doc.setDrawColor(...P_LINE);doc.roundedRect(14,y,W-28,hBox,2,2,'FD');
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...P_ACC);txt('PARA',19,y+5.5);
+  doc.setFontSize(11);doc.setTextColor(...P_INK);txt(c.nome||ppCliente(p),19,y+10.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...P_MUT);cli.forEach((l,i)=>txt(l,19,y+15.3+i*4.6));y+=hBox+8;
+  const par=(s,size)=>{if(!s)return;doc.setFont('helvetica','normal');doc.setFontSize(size||10);doc.setTextColor(...P_INK);const ls=doc.splitTextToSize(pt(s),W-28);ls.forEach(l=>{if(y>H-22){doc.addPage();y=20}doc.text(l,14,y);y+=4.9});y+=4};
+  par(cf.apresentacao);
+  const sec=t=>{if(y>H-40){doc.addPage();y=20}doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(...P_ACC);txt(t.toUpperCase(),14,y);y+=3};
+  const tab=(l,col,totTxt)=>{doc.autoTable({startY:y,head:[['Serviço',pt(col)]],body:l.map(i=>[pt(i.desc),brl(i.valor)]),foot:[[pt(totTxt),brl(ppSoma(l))]],margin:{left:14,right:14},theme:'grid',
+    styles:{font:'helvetica',fontSize:9.5,cellPadding:2.4,textColor:P_INK,lineColor:P_LINE,lineWidth:.2},headStyles:{fillColor:[243,244,246],textColor:P_MUT,fontStyle:'bold',fontSize:8.5},
+    footStyles:{fillColor:[248,246,241],textColor:P_INK,fontStyle:'bold'},columnStyles:{1:{halign:'right',cellWidth:42}},didParseCell:d=>{if(d.column.index===1)d.cell.styles.halign='right'}});y=doc.lastAutoTable.finalY+9};
+  if((p.mensais||[]).length){sec('Serviços mensais');tab(p.mensais,'Valor mensal','Total mensal')}
+  if((p.avulsos||[]).length){sec('Serviços avulsos (pagamento único)');tab(p.avulsos,'Valor','Total dos serviços avulsos')}
+  if(p.obs){sec('Observações');y+=2;par(p.obs,9.5)}
+  if(p.condicoes){sec('Condições');y+=2;par(p.condicoes,9.5)}
+  if(y>H-50){doc.addPage();y=26}else y+=8;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(...P_INK);txt('De acordo,',14,y);y+=18;
+  const w=(W-28-16)/2;doc.setDrawColor(...P_MUT);doc.line(14,y,14+w,y);doc.line(W-14-w,y,W-14,y);
+  doc.setFontSize(8.5);doc.setTextColor(...P_MUT);txt(c.nome||ppCliente(p),14,y+4.5);txt(cf.nome,W-14-w,y+4.5);txt('Data: ____/____/______',14,y+9);
+  const n=doc.internal.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setDrawColor(...P_LINE);doc.line(14,H-13,W-14,H-13);doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...P_MUT);
+    txt([cf.nome,cf.telefone,cf.email].filter(Boolean).join('  |  '),14,H-8.5);txt(`Página ${i} de ${n}`,W-14,H-8.5,{align:'right'})}
+  return doc;
+}
+function ppArq(p){return 'Proposta-'+String(p.numero||'').replace('/','-')+'-'+norm(ppCliente(p)).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)+'.pdf'}
+function ppPDF(id){const p=D.propostas.get(id);if(!p)return;if(!window.jspdf||!window.jspdf.jsPDF){toast('Gerador de PDF não carregou. Recarregue a página.');return}
+  try{ppDoc(p).save(ppArq(p))}catch(e){console.error(e);toast('Não foi possível gerar o PDF.')}}
+async function ppEnviar(id){const p=D.propostas.get(id);if(!p)return;if(!window.jspdf||!window.jspdf.jsPDF){toast('Gerador de PDF não carregou. Recarregue a página.');return}
+  const c=p.cliente||{},cf=ppCfg();let blob;try{blob=ppDoc(p).output('blob')}catch(e){toast('Não foi possível gerar o PDF.');return}
+  const nome=ppArq(p);let link='';
+  openModal(`${mh('Enviar proposta '+esc(p.numero||''))}<div class="mb"><div class="ia-status" id="ppEnvSt"><span class="ia-dot"></span><span>Preparando o link do PDF…</span></div></div>`);
+  const org=GT.membro&&GT.membro.org_id;
+  if(mode==='db'&&org&&GT.sb){try{const path=org+'/prop-'+id+'/'+nome;const up=await GT.sb.storage.from('anexos').upload(path,blob,{contentType:'application/pdf',upsert:true});
+    if(!up.error){const s=await GT.sb.storage.from('anexos').createSignedUrl(path,2592000);if(!s.error&&s.data)link=s.data.signedUrl}}catch(e){}}
+  if(!document.getElementById('ppEnvSt'))return;
+  const prim=(c.contato||'').split(' ')[0];const m=ppSoma(p.mensais),a=ppSoma(p.avulsos);
+  const msg=`Olá${prim?', '+prim:''}! Tudo bem?\n\nSegue a nossa proposta de prestação de serviços contábeis nº ${p.numero} para ${c.nome||ppCliente(p)}.\n\n${m?'Honorário mensal: '+brl(m)+'\n':''}${a?'Serviços avulsos: '+brl(a)+'\n':''}\n${link?'Proposta completa em PDF:\n'+link+'\n\n':''}A proposta é válida até ${fmt(ppValidade(p))}. Qualquer dúvida, estamos à disposição!\n\n${cf.nome}`;
+  const wa=(c.whatsapp||'').replace(/\D/g,''),em=c.email||'';
+  openModal(`${mh('Enviar proposta '+esc(p.numero||''))}<div class="mb"><div style="font-size:13px;margin-bottom:8px"><b>${esc(ppCliente(p))}</b>${m?' · '+brl(m)+'/mês':''}${a?' · avulsos '+brl(a):''}</div>
+   <div class="fd"><label for="ppMsg">Mensagem</label><textarea class="inp" id="ppMsg" rows="11">${esc(msg)}</textarea></div>
+   <div style="font-size:12px;color:var(--dim);margin-top:6px">${link?'O link do PDF funciona por 30 dias.':'Não foi possível criar o link do PDF: baixe o arquivo e anexe na conversa, ou use Compartilhar.'} ${wa?'WhatsApp: '+esc(c.whatsapp):'Sem WhatsApp na proposta: você escolhe o contato.'}${em?' · E-mail: '+esc(em):''}</div></div>
+   <div class="mf" style="flex-wrap:wrap"><button class="btn" id="ppBx">${svg('dl')}Baixar PDF</button><button class="btn" id="ppCp">Copiar</button>${navigator.share?'<button class="btn" id="ppSh">Compartilhar PDF</button>':''}<button class="btn" id="ppMl">E-mail</button><button class="btn pri" id="ppWa">${svg('wa')} WhatsApp</button></div>`);
+  const reg=como=>{const cur=D.propostas.get(id)||p;const n=Object.assign({},cur,{historico:ppHist(cur,'Enviada por '+como)});if(!cur.status||cur.status==='rascunho'){n.status='enviada';n.enviadaEm=agora()}ppPut(id,n)};
+  $('#ppBx').onclick=()=>{const u=URL.createObjectURL(blob),x=document.createElement('a');x.href=u;x.download=nome;document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)};
+  $('#ppWa').onclick=()=>{window.open(wa?waLink(wa,val('ppMsg')):'https://wa.me/?text='+encodeURIComponent(val('ppMsg')),'_blank');reg('WhatsApp');closeModal()};
+  $('#ppMl').onclick=()=>{location.href=`mailto:${encodeURIComponent(em)}?subject=${encodeURIComponent('Proposta de serviços contábeis nº '+p.numero+' — '+cf.nome)}&body=${encodeURIComponent(val('ppMsg'))}`;reg('e-mail');closeModal()};
+  $('#ppCp').onclick=async()=>{try{await navigator.clipboard.writeText(val('ppMsg'));toast('Mensagem copiada');reg('mensagem copiada')}catch(x){toast('Não foi possível copiar.')}};
+  const sh=$('#ppSh');if(sh)sh.onclick=async()=>{try{const f=new File([blob],nome,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:val('ppMsg').split('\n\n').slice(0,2).join('\n\n')});else await navigator.share({text:val('ppMsg')});reg('compartilhamento');closeModal()}catch(err){if(err&&err.name!=='AbortError')toast('Não foi possível compartilhar.')}};
+}
+function ppResultado(id){const p=D.propostas.get(id);if(!p)return;const c=p.cliente||{},m=ppSoma(p.mensais);const tem=p.empresaId&&empresa(p.empresaId);
+  openModal(`${mh('Resultado da proposta '+esc(p.numero||''))}<div class="mb"><div style="font-size:13px;margin-bottom:10px"><b>${esc(ppCliente(p))}</b>${m?' · '+brl(m)+'/mês':''}</div>
+   <div class="seg" style="margin-bottom:12px"><button class="on" data-pprt="ok">Aceita</button><button data-pprt="no">Recusada</button></div>
+   <div id="ppOk">${tem?`<div style="font-size:13px;color:var(--mut)">A proposta já está ligada à empresa <b>${esc(empNome(p.empresaId))}</b>.</div>`:`<label class="chk"><input type="checkbox" id="ppCad" checked> Cadastrar <b>${esc(c.nome||'o cliente')}</b> como empresa${m?' (honorário de '+brl(m)+')':''}</label><div style="font-size:12px;color:var(--dim);margin-top:4px">Os dados da proposta vão para o cadastro. Depois é só completar o que faltar.</div>`}</div>
+   <div id="ppNo" hidden><div class="fd"><label for="ppMot">Motivo</label><select class="sel" id="ppMot">${PP_MOTIVOS.map(x=>`<option>${x}</option>`).join('')}</select></div><div class="fd" style="margin-top:8px"><label for="ppMotT">Detalhe (opcional)</label><input class="inp" id="ppMotT" placeholder="Ex.: achou caro, pediu desconto de 20%"></div></div>
+  </div><div class="mf"><button class="btn" data-close>Cancelar</button><button class="btn pri" id="ppRok">Registrar</button></div>`);
+  let r='ok';document.querySelectorAll('[data-pprt]').forEach(b=>b.onclick=()=>{r=b.dataset.pprt;document.querySelectorAll('[data-pprt]').forEach(x=>x.classList.toggle('on',x===b));$('#ppOk').hidden=r!=='ok';$('#ppNo').hidden=r==='ok'});
+  $('#ppRok').onclick=async()=>{const cur=D.propostas.get(id)||p;
+    if(r==='no'){const mot=val('ppMot')+(val('ppMotT')?': '+val('ppMotT'):'');if(await ppPut(id,Object.assign({},cur,{status:'recusada',recusadaEm:agora(),motivo:mot,historico:ppHist(cur,'Recusada · '+mot)}))){closeModal();toast('Proposta marcada como recusada')}return}
+    const n=Object.assign({},cur,{status:'aceita',aceitaEm:agora(),historico:ppHist(cur,'Aceita')});let nid=null;
+    const cad=document.getElementById('ppCad');
+    if(cad&&cad.checked){nid=uid();const e={razao:c.nome||'',fantasia:'',cnpj:maskCNPJ(c.cnpj||''),responsavel:c.contato||'',regime:c.regime||'',whatsapp:c.whatsapp||'',email:c.email||'',municipio:c.municipio||'',
+        obs:'Cliente da proposta nº '+p.numero+'.'+((p.avulsos||[]).length?' Serviços avulsos contratados: '+p.avulsos.map(i=>i.desc).join(', ')+'.':''),criadoEm:agora(),criadoPor:ME};
+      if(m)e.honorario=m;put('empresas',nid,e);n.empresaId=nid;n.historico=ppHist(n,'Cliente cadastrado como empresa');
+      if(WS!=='pessoal')put('avisos',uid(),{tipo:'empresa',titulo:'Nova empresa: '+(e.razao||''),texto:['Proposta nº '+p.numero+' aceita',e.cnpj?'CNPJ '+e.cnpj:'',e.regime?'Regime: '+e.regime:''].filter(Boolean).join(' · '),empresaId:nid,autor:ME,criadoEm:agora(),fixo:false,ate:addD(hoje(),15)})}
+    if(await ppPut(id,n)){closeModal();toast('Proposta aceita! 🎉');if(nid){UI.empresaId=nid;go('empresa')}}};
+}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-ppf],[data-ppnovo],[data-pped],[data-pppdf],[data-ppenv],[data-ppres],[data-ppcfg]');if(!t)return;
+  if(t.hasAttribute('data-ppf')){UIPP.f=t.dataset.ppf;render()}else if(t.hasAttribute('data-ppnovo'))ppForm();else if(t.hasAttribute('data-pped'))ppForm(t.dataset.pped);else if(t.hasAttribute('data-pppdf'))ppPDF(t.dataset.pppdf);
+  else if(t.hasAttribute('data-ppenv'))ppEnviar(t.dataset.ppenv);else if(t.hasAttribute('data-ppres'))ppResultado(t.dataset.ppres);else ppCfgForm()});
+document.addEventListener('input',e=>{if(e.target.id==='ppQ'){UIPP.q=e.target.value;clearTimeout(UIPP.t);UIPP.t=setTimeout(()=>{render();const i=document.getElementById('ppQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}});
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-13b',data:'13/11/2026',itens:['📝 Nova tela Propostas (no grupo Clientes): monte propostas com serviços mensais e avulsos, gere o PDF com a marca do escritório e envie por WhatsApp ou e-mail.','📊 Acompanhe cada proposta (rascunho, enviada, aceita, recusada) e veja a taxa de aceite. Proposta aceita vira empresa cadastrada com um clique.']},
  {id:'2026-11-13',data:'13/11/2026',itens:['💬 O Buzz (mensageiro da equipe) foi retirado do sistema.']},
  {id:'2026-11-11b',data:'11/11/2026',itens:['🔒 Bloqueio com digital: no menu Mais, ligue "Bloqueio com digital" para o aplicativo pedir a digital ao abrir (vale só para o aparelho em que você ligar).']},
  {id:'2026-11-10',data:'10/11/2026',itens:['📊 Nova tela Relatórios: concluídas, % no prazo, tempo médio e entrada × saída por período, com tabelas por responsável, categoria e empresa. Exporta Excel e PDF.','⚡ Adicionar rápido na tela Tarefas: escreva "Alteração contratual #Clínica Vida @Thais sexta !urgente" e tecle Enter.','✓ Botão de concluir com um clique nas listas.','⌨️ Atalhos: N nova tarefa, A adicionar rápido, G+T tarefas, G+R relatórios. Tecle ? para ver todos.']},
