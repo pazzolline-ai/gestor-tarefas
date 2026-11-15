@@ -3700,6 +3700,19 @@ function dashTopo(all,ab,cHoje,cAtr,cAg,cConc){
   </div>
   <div class="pd-mais">Visão do escritório</div>`;
 }
+/* ---------- Efeito 3D leve: cartões inclinam acompanhando o mouse ---------- */
+(function(){try{if(!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){return}
+  const SEL='.pd-card,.pd-st,.tile,.mod-card,.ag-card,.reminder,.pp-k .tile';let cur=null;
+  const solta=el=>{el.classList.remove('tilt3d');el.classList.add('tilt3d-out');el.style.removeProperty('--rx');el.style.removeProperty('--ry');setTimeout(()=>el.classList.remove('tilt3d-out'),380)};
+  document.addEventListener('pointermove',e=>{const el=e.target.closest&&e.target.closest(SEL);
+    if(cur&&cur!==el){solta(cur);cur=null}
+    if(!el||el.offsetWidth>760||el.closest('.md'))return;
+    const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+    el.style.setProperty('--ry',((x-.5)*5).toFixed(2)+'deg');el.style.setProperty('--rx',((.5-y)*5).toFixed(2)+'deg');
+    el.style.setProperty('--mx',(x*100).toFixed(1)+'%');el.style.setProperty('--my',(y*100).toFixed(1)+'%');
+    if(cur!==el){el.classList.add('tilt3d');cur=el}},{passive:true});
+  document.addEventListener('pointerleave',()=>{if(cur){solta(cur);cur=null}});
+})();
 function mobNavHtml(navHtml){const t=document.createElement('div');t.innerHTML=navHtml;const bs=[...t.querySelectorAll('button[data-go]')];const pri=['dashboard','tarefas','agenda','empresas'];
   const out=pri.map(k=>bs.find(b=>b.dataset.go===k)).filter(Boolean).map(b=>{const l=b.querySelector('span:not(.ct)');if(l)l.className='l';return b.outerHTML});
   const resto=bs.filter(b=>!pri.includes(b.dataset.go));const n=resto.reduce((s,b)=>s+(+((b.querySelector('.ct')||{}).textContent)||0),0);const on=resto.some(b=>b.classList.contains('on'));
@@ -6085,13 +6098,13 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 .ag-go:hover{background:var(--ink);opacity:.92}
 
 /* ===== Início Premium ===== */
-.pd-hero{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;animation:pdRise .5s ease both}
+.pd-hero{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;animation:pdRise .5s ease backwards}
 .pd-hero>div{flex:1 1 320px;min-width:0}
 .pd-hero p{margin:0;color:var(--mut);font-size:13px;font-weight:500}
 .pd-hero h2{margin:4px 0 0;font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
 .pd-hero .sum{margin-top:8px;font-size:14.5px;color:var(--mut)}
 .pd-hero .sum a{font-weight:600;text-decoration:none}
-.pd-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh-1);overflow:hidden;animation:pdRise .5s ease .05s both}
+.pd-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh-1);overflow:hidden;animation:pdRise .5s ease .05s backwards}
 .pd-st{all:unset;cursor:pointer;padding:18px 22px;display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--line);transition:background .2s ease}
 .pd-st:first-child{border-left:0}
 .pd-st:hover{background:var(--panel2)}
@@ -6100,7 +6113,7 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 .pd-st b{font-family:var(--f-head);font-size:30px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
 .pd-st em{font-style:normal;font-size:12px;font-weight:500;color:var(--mut)}
 .pd-grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(300px,1fr);gap:22px;align-items:start}
-.pd-card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh-1);padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0;animation:pdRise .5s ease .1s both}
+.pd-card{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh-1);padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0;animation:pdRise .5s ease .1s backwards}
 .pd-card h3{margin:0;font-size:17px;font-weight:700;letter-spacing:-.02em}
 .pd-ch{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .pd-ch>div{flex:1;min-width:120px}
@@ -6116,7 +6129,7 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 .pd-bar{height:5px;border-radius:5px;background:rgba(127,127,127,.18);margin-top:10px;overflow:hidden}
 .pd-bar i{display:block;height:5px;border-radius:5px;background:var(--acc)}
 .pd-list{display:flex;flex-direction:column}
-.pd-row{display:grid;grid-template-columns:28px minmax(0,1fr) 140px 90px 28px;align-items:center;gap:14px;padding:10px 12px;border-radius:14px;transition:background .2s ease;animation:pdRise .45s ease both}
+.pd-row{display:grid;grid-template-columns:28px minmax(0,1fr) 140px 90px 28px;align-items:center;gap:14px;padding:10px 12px;border-radius:14px;transition:background .2s ease;animation:pdRise .45s ease backwards}
 .pd-row:hover{background:var(--panel2)}
 .pd-ck{all:unset;cursor:pointer;width:22px;height:22px;border-radius:50%;border:1.6px solid var(--line2);display:grid;place-items:center;color:transparent;transition:background .25s ease,border-color .25s ease,color .25s ease}
 .pd-ck:hover{border-color:var(--grn);color:var(--grn)}
@@ -6158,6 +6171,10 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 @media (prefers-reduced-motion:reduce){.pd-hero,.pd-stats,.pd-card,.pd-row{animation:none}*{transition-duration:.01ms!important}}
 @media (max-width:1100px){.pd-grid{grid-template-columns:minmax(0,1fr)}}
 
+/* Efeito 3D leve nos cartões */
+.tilt3d{transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-2px)!important;transition:transform .15s ease-out,box-shadow .2s ease;box-shadow:var(--sh-2)!important;background-image:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.10),transparent 45%);will-change:transform}
+:root[data-theme="light"] .tilt3d,:root:not([data-theme]) .tilt3d{background-image:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.65),transparent 45%)}
+.tilt3d-out{transition:transform .35s cubic-bezier(.2,.8,.2,1)}
 /* ===== Celular ===== */
 .mob-sheet{display:none}
 @media (max-width:760px){
