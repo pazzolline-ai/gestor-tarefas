@@ -1923,7 +1923,7 @@ more:'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="
 wa:'<path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-1.5-1-2-2l1-1-1-2z"/>'
 };
 const svg=(k,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const VIEWS=[['dashboard','Início','home'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['propostas','Propostas','prop'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
+const VIEWS=[['dashboard','Início','home'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['crm','CRM','chat'],['whats','WhatsApp','wa'],['prospec','Buscar clientes','search'],['propostas','Propostas','prop'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -1978,7 +1978,7 @@ async function boot(){
   }else{
     mode='local';
     const s=lsGet('cs.local',{tarefas:{},empresas:{},contatos:{},equipe:{},pagamentos:{},das:{}});
-    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
+    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
     rbAssinar();
     render();
   }
@@ -1986,9 +1986,9 @@ async function boot(){
 function C(name){return WS==='pessoal'&&UID?db.doc('data/users/'+UID+'/pessoal').collection(name):db.collection(name)}
 function assinar(){
   UNSUB.forEach(f=>{try{f()}catch(e){}});UNSUB=[];
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg'].forEach(col=>{D[col]=new Map();loaded[col]=false});
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(col=>{D[col]=new Map();loaded[col]=false});
   const ws=WS;
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg'].forEach(col=>{
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(col=>{
     UNSUB.push(C(col).onSnapshot(snap=>{
       if(ws!==WS)return;
       const m=new Map();snap.docs.forEach(d=>{if(d.exists)m.set(d.id,d.data())});
@@ -2068,7 +2068,7 @@ function trocarWS(ws,liberado){
   assinar.semeado=false;assinar();if(ws==='pessoal')carregarPix();go('dashboard');
   toast(ws==='pessoal'?'Espaço do Lucas':'Escritório');
 }
-function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
+function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
 async function put(col,id,data){
   const clean=JSON.parse(JSON.stringify(data));if(col==='tarefas')TN.eu.set(id,Date.now());
   if(col==='tarefas'&&!TALL.has(id)&&!D.tarefas.has(id)&&!clean.criadoPor){clean.criadoPor=meuNome();if(UID)clean.criadoUid=UID}
@@ -2969,7 +2969,7 @@ function chatPos(fq){const b=document.getElementById('chatMsgs');if(b)b.scrollTo
 }
 
 /* ---------- Backup ---------- */
-const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg'];
+const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'];
 function backupDados(){const o={app:'gestor-de-tarefas',versao:2,geradoEm:new Date().toISOString(),por:meuNome(),colecoes:{}};
   BK_COLS.forEach(c=>{o.colecoes[c]=Object.fromEntries(c==='tarefas'?TALL:D[c])});
   try{o.colecoes.viagens=Object.fromEntries(RB.viagens||new Map());o.colecoes.veiculos=Object.fromEntries(RB.veiculos||new Map());o.reembolsoCfg=RB.cfg||null}catch(e){}
@@ -3067,7 +3067,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   const n=cobrarList().filter(t=>!t._i.cobradoHoje).length;
   const nFin=WS==='pessoal'?finAtrasados().length:0;const nRb=rbPendN();
   const NGRP={dashboard:'Visão geral',tarefas:'Trabalho',empresas:'Clientes',equipe:'Gestão'};
-  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
+  const navHtml=VIEWS.filter(([k])=>(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')&&(k!=='whats'||WS!=='pessoal')&&(k!=='prospec'||prSouLucas())).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
   $('#nav').innerHTML=navHtml;UI.navHtml=navHtml;$('#mobNav').innerHTML=mobNavHtml(navHtml);
   const d=new Date();
   $('#sideFoot').innerHTML=`${WS==='pessoal'?'<button class="btn sm" data-bloquear style="align-self:flex-start">Bloquear espaço Lucas</button>':''}<span id="gDot">${gDotTxt()}</span>${mode==='db'&&ME?`<div class="side-me">${aviHtml(ME_AV,meuNome(),'')}<span>${esc(meuNome())}</span></div>`:''}${onlineHtml()}<span>${mode==='db'?'Dados compartilhados':'Modo local'}</span>`;
@@ -3078,13 +3078,13 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
   $('#respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+rs.map(r=>`<option ${UI.resp===r?'selected':''}>${esc(r)}</option>`).join('');
-  const titles={dashboard:['Início',''],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Sua semana organizada por prazo, prioridade e horários livres'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],propostas:['Propostas','Monte, envie e acompanhe as propostas para clientes'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
+  const titles={dashboard:['Início',''],whats:['WhatsApp','Funil de clientes e agentes de atendimento'],prospec:['Buscar clientes','Prospecção de novos clientes na internet'],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Sua semana organizada por prazo, prioridade e horários livres'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],propostas:['Propostas','Monte, envie e acompanhe as propostas para clientes'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
   const tt=titles[UI.view]||titles.dashboard;
   $('#pageTitle').innerHTML=`${tt[0]}${UI.mod&&!['empresas','empresa','crm','equipe','financeiro','reembolso','mural','rendimento'].includes(UI.view)?`<span class="mod-tag" style="--c:${MODC[UI.mod]}">${MODL[UI.mod]}</span>`:''}<span class="ws-tag">Lucas · privado</span>${MESTRE.ok?'<button class="mk-tag" id="btnMestre" title="Clique para desligar">🔑 Chave mestre</button>':''}${tt[1]?`<small>${WS==='pessoal'&&UI.view==='dashboard'?'Espaço do Lucas · protegido por senha · ':''}${tt[1]}</small>`:''}`;
   const fq=document.activeElement&&document.activeElement.id;const pos=fq&&document.activeElement.selectionStart;
   setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);rdSync();
   const v=$('#view');
-  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras,propostas:vPropostas}[UI.view]||vDashboard)();
+  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,whats:vWhats,prospec:vProspec,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras,propostas:vPropostas}[UI.view]||vDashboard)();
   if(UI.view==='chat')chatPos(fq);
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
@@ -3753,6 +3753,178 @@ function dashTopo(all,ab,cHoje,cAtr,cAg,cConc){
     if(cur!==el){el.classList.add('tilt3d');cur=el}},{passive:true});
   document.addEventListener('pointerleave',()=>{if(cur){solta(cur);cur=null}});
 })();
+/* ================= WhatsApp · Funil · Agentes ================= */
+const ESC_END='Rua PB-15, Qd. 21, Lt. 24, Bairro Parque Brasília, Anápolis-GO, CEP 75.093-700',ESC_TEL='(62) 98297-8899 / (62) 99182-9987',ESC_MAPA='https://maps.google.com/?q=Rua+PB-15+Qd+21+Lt+24+Parque+Brasilia+Anapolis+GO';
+const FUNIL=[['novo','Novo contato','#6B7AF5'],['qualif','Qualificação','#3FA7E0'],['proposta','Proposta enviada','#E0A040'],['negoc','Negociação','#C77DFF'],['ganho','Fechado','#2FB57A'],['perdido','Perdido','#E06070']];
+const LEAD_ORIG=['WhatsApp','Indicação','Instagram','Google','Site','Prospecção','Outro'];
+const WAG_PAD=[
+ {id:'recep',nome:'Recepção',cor:'#6B7AF5',quando:'Primeiro contato',txt:'Olá, {nome}! Aqui é da Londe & Rodrigues Assessoria Contábil. Obrigado pelo contato! 😊\nPara te atender melhor, me conta: você já tem empresa aberta ou quer abrir uma?'},
+ {id:'end',nome:'Endereço e horário',cor:'#2FB57A',quando:'Cliente pede o endereço',txt:'Nosso escritório fica na {endereco}.\nAtendemos de segunda a sexta, das 8h às 18h.\nLocalização: {mapa}\nTelefones: {telefone}'},
+ {id:'abert',nome:'Abertura de empresa',cor:'#E0A040',quando:'Quer abrir empresa',txt:'Para abrir sua empresa, {nome}, precisamos de:\n• RG e CPF dos sócios\n• Comprovante de endereço dos sócios e do local da empresa\n• IPTU do imóvel (inscrição imobiliária)\n• Atividades que vai exercer e capital social\nCom isso em mãos, a gente cuida de tudo: CNPJ, inscrições e alvarás. Quer agendar uma conversa aqui no escritório ({endereco})?'},
+ {id:'prop',nome:'Follow-up da proposta',cor:'#C77DFF',quando:'2 dias depois de enviar a proposta',txt:'Oi, {nome}! Tudo bem? Passando para saber se conseguiu ver a nossa proposta. Fico à disposição para tirar qualquer dúvida ou ajustar os serviços.'},
+ {id:'troca',nome:'Troca de contador',cor:'#3FA7E0',quando:'Já tem empresa e quer trocar',txt:'Que bom, {nome}! A troca de contador é simples e a gente cuida de tudo com o escritório atual. Me envia o CNPJ da empresa que eu já preparo uma proposta para você.'},
+ {id:'cob',nome:'Lembrete de pagamento',cor:'#E06070',quando:'Honorário em aberto',txt:'Olá, {nome}! Tudo bem? Só um lembrete do honorário deste mês. Se já pagou, desconsidere. Qualquer coisa estamos aqui: {telefone}.'}];
+const UIW={tab:'funil',q:''};
+function leadsLista(){return [...D.leads.entries()].filter(([i])=>i!=='_agentes').map(([id,l])=>Object.assign({id},l))}
+function waAgentes(){const c=D.leads.get('_agentes');return (c&&c.lista&&c.lista.length)?c.lista:WAG_PAD}
+function waFone(t){t=String(t||'').replace(/\D/g,'');if(!t)return '';if(t.length<=11)t='55'+t;return t}
+function waTxt(tpl,l){const nome=String((l&&(l.contato||l.nome))||'').split(' ')[0]||'tudo bem';return String(tpl||'').replace(/\{nome\}/g,nome).replace(/\{endereco\}/g,ESC_END).replace(/\{telefone\}/g,ESC_TEL).replace(/\{mapa\}/g,ESC_MAPA).replace(/\{empresa\}/g,(l&&l.nome)||'')}
+function waAbrir(fone,txt){const f=waFone(fone);const u=(f?'https://wa.me/'+f:'https://wa.me/')+(txt?'?text='+encodeURIComponent(txt):'');window.open(u,'gtwa')}
+function waWeb(){const w=Math.min(1200,screen.availWidth-80),h=Math.min(860,screen.availHeight-60);window.open('https://web.whatsapp.com/','gtwaweb',`width=${w},height=${h},left=${screen.availWidth-w-20},top=20`)}
+async function leadPut(id,d){D.leads.set(id,d);if(mode==='db'){try{await C('leads').doc(id).set(JSON.parse(JSON.stringify(d)))}catch(e){toast('Só gestor e diretoria podem mexer no funil.');return false}}else persistLocal();render();return true}
+function vWhats(){
+  const ls=leadsLista(),q=norm(UIW.q),f=ls.filter(l=>!q||norm([l.nome,l.contato,l.telefone,l.servico,l.origem].join(' ')).includes(q));
+  const ab=ls.filter(l=>!['ganho','perdido'].includes(l.etapa));const tot=ab.reduce((s,l)=>s+(+l.valor||0),0);
+  const mes=hoje().slice(0,7),gan=ls.filter(l=>l.etapa==='ganho'&&String(l.fechadoEm||'').slice(0,7)===mes);
+  const ret=ab.filter(l=>l.proximo&&l.proximo<=hoje());
+  const tabs=`<div class="seg">${[['funil','Funil de clientes'],['agentes','Agentes e respostas']].map(([k,t])=>`<button class="${UIW.tab===k?'on':''}" data-watab="${k}">${t}</button>`).join('')}</div>`;
+  const top=`<section class="wa-hero"><div class="wa-hl"><div class="wa-ic">${svg('wa')}</div><div><b>WhatsApp do escritório</b><div class="sub">Abra o WhatsApp numa janela ao lado e trabalhe os contatos pelo funil. As respostas dos agentes já saem com o nosso endereço.</div></div></div>
+    <div class="wa-hr"><button class="btn pri" data-waweb>${svg('wa')}Abrir WhatsApp</button><button class="btn" data-leadnovo>+ Novo contato</button></div></section>
+   <div class="tiles wa-k">${[[ab.length,'Contatos no funil','var(--acc)'],[brl(tot),'Valor mensal em negociação','#C77DFF'],[gan.length,'Fechados no mês','#2FB57A'],[ret.length,'Retornos para hoje','#E06070']].map(([n,l,c])=>`<div class="tile" style="--c:${c}"><span class="n">${n}</span><span class="l">${l}</span></div>`).join('')}</div>`;
+  if(UIW.tab==='agentes'){const ags=waAgentes();
+    return top+`<div class="bar">${tabs}<span style="flex:1"></span><button class="btn sm" data-agnovo>+ Novo agente</button></div>
+    <div class="wa-ags">${ags.map(a=>`<div class="wa-ag" style="--c:${a.cor||'#6B7AF5'}"><div class="wa-agh"><span class="dot"></span><b>${esc(a.nome)}</b><span class="sp"></span><button class="btn sm ghost" data-aged="${esc(a.id)}">Editar</button></div><div class="sub">${esc(a.quando||'')}</div><div class="wa-agt">${esc(waTxt(a.txt,{nome:'Cliente'}))}</div><div class="wa-agf"><button class="btn sm" data-agcopy="${esc(a.id)}">Copiar</button><button class="btn sm pri" data-agwa="${esc(a.id)}">${svg('wa')}Enviar</button></div></div>`).join('')}</div>
+    <div style="font-size:12px;color:var(--dim)">Use <b>{nome}</b>, <b>{endereco}</b>, <b>{telefone}</b> e <b>{mapa}</b> nos textos: o sistema troca pelos dados do contato e do escritório.</div>`}
+  return top+`<div class="bar">${tabs}<div class="search">${svg('search')}<input class="inp" id="waQ" placeholder="Buscar contato" value="${esc(UIW.q)}"></div></div>
+  <div class="wa-kb">${FUNIL.map(([k,t,c])=>{const it=f.filter(l=>(l.etapa||'novo')===k).sort((a,b)=>String(a.proximo||'9').localeCompare(String(b.proximo||'9')));const v=it.reduce((s,l)=>s+(+l.valor||0),0);
+    return `<div class="wa-col" data-wacol="${k}" style="--c:${c}"><div class="wa-colh"><span class="dot"></span><b>${t}</b><span class="ct">${it.length}</span>${v?`<small>${brl(v)}</small>`:''}</div>
+    ${it.map(l=>`<div class="wa-card" draggable="true" data-lead="${l.id}"><div class="nm">${esc(l.nome||l.contato||'Sem nome')}</div>${l.contato&&l.nome?`<div class="sub">${esc(l.contato)}</div>`:''}
+      <div class="tg">${l.servico?`<span class="flag">${esc(l.servico)}</span>`:''}${l.origem?`<span class="flag">${esc(l.origem)}</span>`:''}${+l.valor?`<span class="flag grn">${brl(+l.valor)}/mês</span>`:''}${l.proximo?`<span class="flag ${l.proximo<=hoje()?'red':''}">Retorno ${fmtC(l.proximo)}</span>`:''}</div>
+      <div class="ac">${l.telefone?`<button class="btn sm pri" data-leadwa="${l.id}" title="Responder no WhatsApp">${svg('wa')}</button>`:''}<button class="btn sm ghost" data-leadmv="${l.id}" data-d="-1" title="Voltar etapa">‹</button><button class="btn sm ghost" data-leadmv="${l.id}" data-d="1" title="Avançar etapa">›</button><button class="btn sm ghost" data-leaded="${l.id}">Abrir</button></div></div>`).join('')||'<div class="wa-empty">Arraste contatos para cá</div>'}</div>`}).join('')}</div>`;
+}
+function leadForm(id,pre){const l=id?D.leads.get(id):Object.assign({etapa:'novo',origem:'WhatsApp',responsavel:meuNome()},pre||{});if(!l)return;
+  openModal(`${mh(id?'Contato do funil':'Novo contato')}<form id="ldF"><div class="mb"><div class="fg">
+   <div class="fd"><label for="ld_n">Empresa ou nome</label><input class="inp" id="ld_n" required value="${esc(l.nome||'')}"></div>
+   <div class="fd"><label for="ld_c">Pessoa de contato</label><input class="inp" id="ld_c" value="${esc(l.contato||'')}"></div>
+   <div class="fd"><label for="ld_t">WhatsApp</label><input class="inp" id="ld_t" inputmode="tel" value="${esc(l.telefone||'')}" placeholder="(62) 9 ...."></div>
+   <div class="fd"><label for="ld_e">E-mail</label><input class="inp" id="ld_e" value="${esc(l.email||'')}"></div>
+   <div class="fd"><label for="ld_cn">CNPJ (se já tem)</label><input class="inp" id="ld_cn" value="${esc(l.cnpj||'')}"></div>
+   <div class="fd"><label for="ld_s">Serviço de interesse</label><input class="inp" id="ld_s" list="ldS" value="${esc(l.servico||'')}"><datalist id="ldS">${['Abertura de empresa','Troca de contador','Contabilidade mensal','MEI','Folha de pagamento','Alvarás','Imposto de renda','BPO financeiro'].map(x=>`<option value="${x}">`).join('')}</datalist></div>
+   <div class="fd"><label for="ld_v">Honorário mensal estimado (R$)</label><input class="inp" id="ld_v" type="number" min="0" step="10" value="${esc(l.valor||'')}"></div>
+   <div class="fd"><label for="ld_o">Origem</label><select class="sel" id="ld_o">${LEAD_ORIG.map(o=>`<option ${o===l.origem?'selected':''}>${o}</option>`).join('')}</select></div>
+   <div class="fd"><label for="ld_et">Etapa</label><select class="sel" id="ld_et">${FUNIL.map(([k,t])=>`<option value="${k}" ${k===(l.etapa||'novo')?'selected':''}>${t}</option>`).join('')}</select></div>
+   <div class="fd"><label for="ld_p">Próximo retorno</label><input class="inp" id="ld_p" type="date" value="${esc(l.proximo||'')}"></div>
+   <div class="fd"><label for="ld_r">Responsável</label><select class="sel" id="ld_r">${responsaveis().map(r=>`<option ${norm(r)===norm(l.responsavel||'')?'selected':''}>${esc(r)}</option>`).join('')}</select></div>
+   <div class="fd full"><label for="ld_o2">Anotações da conversa</label><textarea class="inp" id="ld_o2" rows="3">${esc(l.obs||'')}</textarea></div>
+   ${id&&(l.hist||[]).length?`<div class="fd full"><label>Histórico</label><div style="font-size:12.5px;color:var(--mut);max-height:120px;overflow:auto">${l.hist.slice().reverse().map(h=>`<div>${fmt(String(h.em).slice(0,10))} — ${esc(h.txt)}</div>`).join('')}</div></div>`:''}
+  </div></div><div class="mf">${id?`<button type="button" class="btn ghost danger" id="ldDel" style="margin-right:auto">Excluir</button>${l.etapa==='ganho'&&!l.empresaId?`<button type="button" class="btn" id="ldConv">Cadastrar como cliente</button>`:''}`:''}<button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`);
+  if(id){$('#ldDel').onclick=()=>confirmBox('Excluir este contato do funil?','Excluir',async()=>{D.leads.delete(id);if(mode==='db'){try{await C('leads').doc(id).delete()}catch(e){}}else persistLocal();closeModal();render()});
+    const cv=document.getElementById('ldConv');if(cv)cv.onclick=async()=>{const eid=uid(),now=agora();await put('empresas',eid,{razao:String(l.nome||'').toUpperCase(),cnpj:l.cnpj||'',telefone:l.telefone||'',whatsapp:l.telefone||'',email:l.email||'',responsavel:l.contato||'',criadoEm:now,proxContato:null,obs:'Cliente vindo do funil ('+(l.origem||'')+').'});await leadPut(id,Object.assign({},l,{empresaId:eid}));closeModal();UI.empresaId=eid;go('empresa');toast('Cliente cadastrado. Complete os dados.')}}
+  $('#ldF').addEventListener('submit',async ev=>{ev.preventDefault();const now=agora(),et=val('ld_et');const h=(l.hist||[]).slice();if(!id)h.push({em:now,txt:'Contato criado ('+val('ld_o')+')'});else if((l.etapa||'novo')!==et)h.push({em:now,txt:'Etapa: '+FUNIL.find(x=>x[0]===et)[1]});
+    const n=Object.assign({},l,{nome:val('ld_n'),contato:val('ld_c'),telefone:val('ld_t'),email:val('ld_e'),cnpj:val('ld_cn'),servico:val('ld_s'),valor:+val('ld_v')||0,origem:val('ld_o'),etapa:et,proximo:val('ld_p'),responsavel:val('ld_r'),obs:val('ld_o2'),hist:h,atualizadoEm:now});
+    if(!id)n.criadoEm=now;if(et==='ganho'&&!l.fechadoEm)n.fechadoEm=now;if(await leadPut(id||uid(),n)){closeModal();toast('Contato salvo')}});
+}
+function leadMover(id,d){const l=D.leads.get(id);if(!l)return;const i=FUNIL.findIndex(x=>x[0]===(l.etapa||'novo'));const j=Math.max(0,Math.min(FUNIL.length-1,i+d));if(i===j)return;leadEtapa(id,FUNIL[j][0])}
+function leadEtapa(id,et){const l=D.leads.get(id);if(!l||(l.etapa||'novo')===et)return;const now=agora();const n=Object.assign({},l,{etapa:et,atualizadoEm:now,hist:(l.hist||[]).concat([{em:now,txt:'Etapa: '+FUNIL.find(x=>x[0]===et)[1]}])});if(et==='ganho'&&!l.fechadoEm)n.fechadoEm=now;leadPut(id,n)}
+function leadWa(id){const l=D.leads.get(id);if(!l)return;const ags=waAgentes();
+  openModal(`${mh('Responder '+esc(l.contato||l.nome||''))}<div class="mb"><div style="font-size:12.5px;color:var(--mut);margin-bottom:8px">Escolha o agente. A mensagem abre no WhatsApp já escrita, é só conferir e enviar.</div>
+   <div class="wa-pick">${ags.map(a=>`<button type="button" class="btn sm" data-pk="${esc(a.id)}" style="border-left:3px solid ${a.cor}">${esc(a.nome)}</button>`).join('')}</div>
+   <textarea class="inp" id="waMsg" rows="7" style="margin-top:10px">${esc(waTxt(ags[0].txt,l))}</textarea></div>
+   <div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button type="button" class="btn pri" id="waGo">${svg('wa')}Abrir no WhatsApp</button></div>`);
+  document.querySelectorAll('[data-pk]').forEach(b=>b.onclick=()=>{const a=ags.find(x=>x.id===b.dataset.pk);$('#waMsg').value=waTxt(a.txt,l)});
+  $('#waGo').onclick=()=>{waAbrir(l.telefone,val('waMsg'));const now=agora();leadPut(id,Object.assign({},l,{ultimoContato:now,hist:(l.hist||[]).concat([{em:now,txt:'Mensagem enviada pelo WhatsApp'}])}));closeModal()}}
+function agForm(aid){const ags=waAgentes().map(a=>Object.assign({},a));const a=aid?ags.find(x=>x.id===aid):{id:uid(),nome:'',cor:'#6B7AF5',quando:'',txt:''};
+  openModal(`${mh(aid?'Editar agente':'Novo agente')}<form id="agF"><div class="mb"><div class="fg">
+   <div class="fd"><label for="ag_n">Nome do agente</label><input class="inp" id="ag_n" required value="${esc(a.nome)}"></div>
+   <div class="fd"><label for="ag_q">Quando usar</label><input class="inp" id="ag_q" value="${esc(a.quando||'')}"></div>
+   <div class="fd full"><label for="ag_t">Mensagem</label><textarea class="inp" id="ag_t" rows="8" required>${esc(a.txt)}</textarea><small style="color:var(--dim)">Variáveis: {nome} {endereco} {telefone} {mapa}</small></div>
+  </div></div><div class="mf">${aid?`<button type="button" class="btn ghost danger" id="agDel" style="margin-right:auto">Excluir</button>`:''}<button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`);
+  const salvar=async l=>{if(await leadPut('_agentes',{lista:l,atualizadoEm:agora()})){closeModal();toast('Agentes salvos')}};
+  if(aid)$('#agDel').onclick=()=>salvar(ags.filter(x=>x.id!==aid));
+  $('#agF').addEventListener('submit',ev=>{ev.preventDefault();Object.assign(a,{nome:val('ag_n'),quando:val('ag_q'),txt:val('ag_t')});salvar(aid?ags:ags.concat([a]))})}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-watab],[data-waweb],[data-leadnovo],[data-leaded],[data-leadmv],[data-leadwa],[data-agnovo],[data-aged],[data-agcopy],[data-agwa],[data-prsrch],[data-prlead],[data-relogio],[data-icscfg]');if(!t)return;
+  if(t.hasAttribute('data-watab')){UIW.tab=t.dataset.watab;render()}else if(t.hasAttribute('data-waweb'))waWeb();else if(t.hasAttribute('data-leadnovo'))leadForm();else if(t.hasAttribute('data-leaded'))leadForm(t.dataset.leaded);
+  else if(t.hasAttribute('data-leadmv'))leadMover(t.dataset.leadmv,+t.dataset.d);else if(t.hasAttribute('data-leadwa'))leadWa(t.dataset.leadwa);else if(t.hasAttribute('data-agnovo'))agForm();else if(t.hasAttribute('data-aged'))agForm(t.dataset.aged);
+  else if(t.hasAttribute('data-agcopy')){const a=waAgentes().find(x=>x.id===t.dataset.agcopy);try{navigator.clipboard.writeText(waTxt(a.txt,{}));toast('Mensagem copiada')}catch(err){}}
+  else if(t.hasAttribute('data-agwa')){const a=waAgentes().find(x=>x.id===t.dataset.agwa);waAbrir('',waTxt(a.txt,{}))}
+  else if(t.hasAttribute('data-prsrch'))prBuscar();else if(t.hasAttribute('data-prlead'))prLead(+t.dataset.prlead);else if(t.hasAttribute('data-relogio'))relogioAbrir();else if(t.hasAttribute('data-icscfg'))icsCfg()});
+document.addEventListener('input',e=>{if(e.target.id==='waQ'){UIW.q=e.target.value;clearTimeout(UIW.t);UIW.t=setTimeout(()=>{render();const el=document.getElementById('waQ');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}},250)}});
+document.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('[data-lead]');if(c){e.dataTransfer.setData('text/plain',c.dataset.lead);c.classList.add('drag')}});
+document.addEventListener('dragover',e=>{const c=e.target.closest&&e.target.closest('[data-wacol]');if(c){e.preventDefault();c.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const c=e.target.closest&&e.target.closest('[data-wacol]');if(c)c.classList.remove('over')});
+document.addEventListener('drop',e=>{const c=e.target.closest&&e.target.closest('[data-wacol]');if(c){e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(id)leadEtapa(id,c.dataset.wacol)}});
+function leadAvisos(){if(WS==='pessoal'||!loaded.leads)return;const r=leadsLista().filter(l=>!['ganho','perdido'].includes(l.etapa)&&l.proximo&&l.proximo<=hoje()&&norm(l.responsavel||'')===norm(meuNome()));if(!r.length)return;const k='gt.leadav.'+hoje();if(lsGet(k,false))return;lsSet(k,true);
+  notificar('💬 '+plural(r.length,'contato para retornar','contatos para retornar')+' hoje',r.slice(0,3).map(l=>l.nome||l.contato).join(', '),()=>go('whats'))}
+setInterval(leadAvisos,30*60e3);setTimeout(leadAvisos,8000);
+
+/* ================= Buscador de clientes (só Lucas) ================= */
+const PR_CAT=[['Restaurantes e lanchonetes','["amenity"~"restaurant|fast_food|cafe|ice_cream|bar|pub"]'],['Clínicas, consultórios e dentistas','["amenity"~"clinic|dentist|doctors|veterinary"]'],['Academias e estúdios','["leisure"="fitness_centre"]'],['Salões e barbearias','["shop"~"hairdresser|beauty"]'],['Lojas de roupa e calçados','["shop"~"clothes|shoes|boutique"]'],['Mercados e conveniências','["shop"~"supermarket|convenience|greengrocer|butcher|bakery"]'],['Farmácias','["amenity"="pharmacy"]'],['Oficinas e autopeças','["shop"~"car_repair|car_parts|tyres|car"]'],['Materiais de construção','["shop"~"hardware|doityourself|paint|trade"]'],['Escritórios e prestadores','["office"]'],['Escolas e cursos','["amenity"~"school|kindergarten|language_school|college"]'],['Pet shops','["shop"="pet"]']];
+const UIPR={cid:'Anápolis',cat:0,res:[],st:'',q:''};
+const prSouLucas=()=>/lucas/i.test(meuNome()||'')||!!(GT.membro&&GT.membro.dono);
+function vProspec(){if(!prSouLucas())return `<section class="panel">${empty('Área exclusiva do Lucas.')}</section>`;
+  const cli=new Set([...D.empresas.values()].flatMap(e=>[norm(e.razao||''),norm(e.fantasia||'')]).filter(Boolean)),lds=new Set(leadsLista().map(l=>norm(l.nome||'')));
+  const r=UIPR.res.filter(x=>!UIPR.q||norm(x.nome+' '+x.end).includes(norm(UIPR.q)));
+  return `<section class="wa-hero"><div class="wa-hl"><div class="wa-ic" style="background:linear-gradient(135deg,#6B7AF5,#C77DFF)">${svg('search')}</div><div><b>Buscador de clientes</b><div class="sub">Procura na internet (mapa aberto OpenStreetMap) negócios da cidade e do ramo escolhido, com telefone e site quando houver. Só você vê esta tela.</div></div></div></section>
+  <section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><input class="inp" id="prCid" value="${esc(UIPR.cid)}" placeholder="Cidade" style="max-width:180px"><select class="sel" id="prCat" style="max-width:260px">${PR_CAT.map((c,i)=>`<option value="${i}" ${i===UIPR.cat?'selected':''}>${c[0]}</option>`).join('')}</select><button class="btn pri" data-prsrch>${svg('search')}Buscar</button><span class="sp"></span>${UIPR.res.length?`<input class="inp" id="prQ" placeholder="Filtrar resultados" value="${esc(UIPR.q)}" style="max-width:200px">`:''}</div>
+  ${UIPR.st?`<div style="padding:10px 16px">${UIPR.st}</div>`:''}
+  ${r.length?`<div class="tw"><table class="tlist"><thead><tr><th>Negócio</th><th>Endereço</th><th>Contato</th><th></th></tr></thead><tbody>${r.map(x=>{const i=UIPR.res.indexOf(x),ja=cli.has(norm(x.nome)),nf=lds.has(norm(x.nome));return `<tr><td><b>${esc(x.nome)}</b><div class="sub" style="font-size:12px;color:var(--dim)">${esc(x.tipo||'')}</div></td><td style="font-size:12.5px">${esc(x.end||'—')}</td><td style="font-size:12.5px">${x.tel?esc(x.tel)+'<br>':''}${x.site?`<a href="${esc(x.site)}" target="_blank" rel="noopener">site</a> · `:''}<a href="https://www.google.com/search?q=${encodeURIComponent(x.nome+' '+UIPR.cid+' cnpj')}" target="_blank" rel="noopener">Google</a></td>
+   <td style="white-space:nowrap">${ja?'<span class="flag grn">Já é cliente</span>':nf?'<span class="flag">No funil</span>':`<button class="btn sm pri" data-prlead="${i}">+ Funil</button>`}</td></tr>`}).join('')}</tbody></table></div>`:''}</section>
+  <div style="font-size:12px;color:var(--dim)">Dica: comece pelos negócios <b>com telefone</b>; ao clicar em <b>+ Funil</b> o contato entra em WhatsApp → Funil, na etapa Novo contato, com origem Prospecção.</div>`}
+async function prBuscar(){UIPR.cid=val('prCid')||'Anápolis';UIPR.cat=+val('prCat')||0;UIPR.res=[];UIPR.q='';UIPR.st='<div class="ia-status"><span class="ia-dot"></span><span>Procurando na internet…</span></div>';render();
+  const f=PR_CAT[UIPR.cat][1],cid=UIPR.cid.replace(/"/g,'');
+  const ql=`[out:json][timeout:40];area["name"="${cid}"]["boundary"="administrative"]["admin_level"~"8"]->.a;(node${f}(area.a);way${f}(area.a););out center tags 400;`;
+  try{let j=null;for(const ep of ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter']){try{const r=await fetch(ep,{method:'POST',body:'data='+encodeURIComponent(ql),headers:{'Content-Type':'application/x-www-form-urlencoded'}});if(r.ok){j=await r.json();break}}catch(e){}}
+    if(!j)throw new Error('sem resposta');
+    UIPR.res=(j.elements||[]).map(e=>{const t=e.tags||{};return {nome:t.name||t.brand||'',tipo:t.amenity||t.shop||t.office||t.leisure||'',tel:t.phone||t['contact:phone']||t['contact:whatsapp']||t['contact:mobile']||'',site:t.website||t['contact:website']||t['contact:instagram']||'',email:t.email||t['contact:email']||'',
+      end:[[t['addr:street'],t['addr:housenumber']].filter(Boolean).join(', '),t['addr:suburb']||t['addr:neighbourhood']].filter(Boolean).join(' – ')}}).filter(x=>x.nome).sort((a,b)=>(!!b.tel-!!a.tel)||a.nome.localeCompare(b.nome,'pt'));
+    UIPR.st=UIPR.res.length?`<b>${UIPR.res.length}</b> negócios encontrados · ${UIPR.res.filter(x=>x.tel).length} com telefone`:'Nada encontrado. Confira o nome da cidade (com acento) ou troque o ramo.'}
+  catch(e){UIPR.st='<span style="color:var(--red)">O serviço de busca não respondeu agora. Tente de novo em instantes.</span>'}render()}
+async function prLead(i){const x=UIPR.res[i];if(!x)return;const now=agora();await leadPut(uid(),{nome:x.nome,telefone:x.tel,email:x.email,origem:'Prospecção',etapa:'novo',responsavel:meuNome(),obs:[x.tipo,x.end,x.site].filter(Boolean).join(' · '),criadoEm:now,atualizadoEm:now,hist:[{em:now,txt:'Encontrado no buscador de clientes'}]});toast('Levado para o funil')}
+document.addEventListener('input',e=>{if(e.target.id==='prQ'){UIPR.q=e.target.value;clearTimeout(UIPR.t);UIPR.t=setTimeout(()=>{render();const el=document.getElementById('prQ');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}},250)}});
+
+/* ================= Relógio premium + Google Agenda ================= */
+let GEV=[],ICS_ST='';const ICS_K='gt.ics.'+(UID||'eu');
+function icsUrl(){return lsGet(ICS_K,'')||''}
+function icsParse(txt){const ls=txt.replace(/\r?\n[ \t]/g,'').split(/\r?\n/);const out=[];let ev=null;
+  const dt=(v,p)=>{const m=String(v).match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/);if(!m)return null;if(!m[4])return {d:`${m[1]}-${m[2]}-${m[3]}`,dia:true};
+    const d=m[7]?new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5])):new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5]);return {d:isoD(d),h:pad(d.getHours())+':'+pad(d.getMinutes()),t:d.getTime()}};
+  const un=s=>String(s||'').replace(/\\n/g,'\n').replace(/\\([,;\\])/g,'$1');
+  for(const l of ls){if(l==='BEGIN:VEVENT')ev={};else if(l==='END:VEVENT'){if(ev&&ev.ini)out.push(ev);ev=null}else if(ev){const i=l.indexOf(':');if(i<0)continue;const k=l.slice(0,i).split(';')[0],v=l.slice(i+1);
+    if(k==='DTSTART')ev.ini=dt(v);else if(k==='DTEND')ev.fim=dt(v);else if(k==='SUMMARY')ev.titulo=un(v);else if(k==='LOCATION')ev.local=un(v);else if(k==='UID')ev.uid=v;else if(k==='RRULE')ev.rrule=v;else if(k==='STATUS')ev.status=v}}
+  const hj=hoje(),lim=addD(hj,60),res=[];
+  out.forEach(e=>{if(e.status==='CANCELLED')return;const base={titulo:e.titulo||'(sem título)',local:e.local||'',dia:!!e.ini.dia,ini:e.ini.h||'',fim:(e.fim&&e.fim.h)||''};
+    if(e.rrule&&/FREQ=(DAILY|WEEKLY)/.test(e.rrule)){const daily=/DAILY/.test(e.rrule),un_=(e.rrule.match(/UNTIL=(\d{8})/)||[])[1],ate=un_?`${un_.slice(0,4)}-${un_.slice(4,6)}-${un_.slice(6,8)}`:lim;let d=e.ini.d;let n=0;while(d<=lim&&d<=ate&&n<400){if(d>=addD(hj,-7))res.push(Object.assign({data:d,id:'g:'+e.uid+':'+d},base));d=addD(d,daily?1:7);n++}}
+    else if(e.ini.d>=addD(hj,-30)&&e.ini.d<=lim)res.push(Object.assign({data:e.ini.d,id:'g:'+(e.uid||e.ini.d+e.titulo)},base))});
+  return res.sort((a,b)=>(a.data+a.ini).localeCompare(b.data+b.ini))}
+async function icsSync(){const u=icsUrl();if(!u||!GT.sb)return;try{const r=await GT.sb.functions.invoke('agenda-ics',{body:{url:u}});if(r.error)throw r.error;const txt=typeof r.data==='string'?r.data:(r.data&&r.data.error?'':await new Response(r.data).text());if(!/BEGIN:VCALENDAR/.test(txt))throw new Error('formato');GEV=icsParse(txt);ICS_ST='ok';lsSet('gt.icscache',GEV);if(UI.view==='agenda'||UI.view==='dashboard')render()}catch(e){ICS_ST='erro';console.warn('ics',e)}}
+try{GEV=lsGet('gt.icscache',[])||[]}catch(e){GEV=[]}
+setInterval(icsSync,10*60e3);setTimeout(icsSync,4000);
+function icsCfg(){openModal(`${mh('Sincronizar com o Google Agenda')}<form id="icF"><div class="mb"><ol style="font-size:13px;color:var(--mut);padding-left:18px;margin:0 0 12px">
+   <li>Abra o <a href="https://calendar.google.com/calendar/r/settings" target="_blank" rel="noopener">Google Agenda → Configurações</a>.</li><li>À esquerda, clique na sua agenda (seu nome).</li><li>Desça até <b>Integrar agenda</b> e copie o <b>Endereço secreto no formato iCal</b>.</li><li>Cole abaixo. Só você vê esse link (fica salvo neste computador).</li></ol>
+   <input class="inp" id="icU" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" value="${esc(icsUrl())}">
+   ${ICS_ST==='erro'?'<div class="gd-msg" style="color:var(--red);margin-top:8px">Não consegui ler a agenda com esse link. Confira se copiou o endereço secreto completo.</div>':ICS_ST==='ok'?`<div class="gd-msg" style="color:var(--grn);margin-top:8px">Sincronizado · ${GEV.length} compromisso(s) dos próximos 60 dias.</div>`:''}
+  </div><div class="mf">${icsUrl()?'<button type="button" class="btn ghost danger" id="icOff" style="margin-right:auto">Desconectar</button>':''}<button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Conectar</button></div></form>`);
+  const off=document.getElementById('icOff');if(off)off.onclick=()=>{lsSet(ICS_K,'');GEV=[];lsSet('gt.icscache',[]);closeModal();render()};
+  $('#icF').addEventListener('submit',async ev=>{ev.preventDefault();lsSet(ICS_K,val('icU').trim());ICS_ST='';await icsSync();if(ICS_ST==='ok'){closeModal();toast('Google Agenda conectado: '+GEV.length+' compromisso(s)');render()}else icsCfg()})}
+function proxEventos(){const hj=hoje(),ag=Date.now(),me=meuNome();
+  const loc=[...D.compromissos.entries()].map(([id,c])=>Object.assign({id},c)).filter(c=>c.data>=hj&&c.data<=addD(hj,7)&&c.ini&&(!(c.participantes||[]).length||(c.participantes||[]).some(x=>norm(x)===norm(me)))).map(c=>({titulo:c.titulo||c.tipo||'Compromisso',data:c.data,ini:c.ini,fim:c.fim,local:c.local||'',src:'gestor'}));
+  const g=GEV.filter(e=>!e.dia&&e.ini&&e.data>=hj).map(e=>Object.assign({src:'google'},e));
+  return loc.concat(g).map(e=>Object.assign(e,{t:toD(e.data).setHours(+e.ini.slice(0,2),+e.ini.slice(3,5),0,0)})).filter(e=>e.t>ag-15*60e3).sort((a,b)=>a.t-b.t)}
+function falta(ms){const m=Math.round(ms/60e3);if(m<=0)return 'agora';if(m<60)return m+' min';const h=Math.floor(m/60),r=m%60;if(h<24)return h+'h'+(r?pad(r):'');return Math.floor(h/24)+'d '+(h%24)+'h'}
+const RELAV={};
+function relTick(){const evs=proxEventos(),now=Date.now(),e=evs.find(x=>x.t>=now-5*60e3);
+  let chip=document.getElementById('nextMeet');const hd=document.querySelector('header.top');
+  if(hd&&!chip){chip=document.createElement('button');chip.id='nextMeet';chip.className='btn next-meet';chip.setAttribute('data-relogio','');const ref=document.getElementById('btnBusca');hd.insertBefore(chip,ref)}
+  if(chip){const hm=new Date();const relo=`<span class="nm-clock">${pad(hm.getHours())}:${pad(hm.getMinutes())}</span>`;
+    if(e&&e.t-now<12*3600e3){const ms=e.t-now,urg=ms<=15*60e3;chip.className='btn next-meet'+(urg?' urg':'');chip.innerHTML=`${relo}<span class="nm-sep"></span><span class="nm-t">${ms>0?'Em '+falta(ms):'Agora'}</span><span class="nm-n hide-m">${esc(e.titulo)}</span>`}
+    else chip.innerHTML=`${relo}<span class="nm-sep"></span><span class="nm-t hide-m">Sem reuniões próximas</span>`}
+  evs.forEach(x=>{const m=Math.round((x.t-now)/60e3);[15,5,1].forEach(a=>{const k=x.src+x.data+x.ini+x.titulo+a;if(m===a&&!RELAV[k]){RELAV[k]=1;notificar('⏰ '+x.titulo+' em '+a+' min',x.ini+(x.local?' · '+x.local:''),relogioAbrir);if(a<=5)try{relogioAbrir();window.focus()}catch(err){}}})});
+  const rl=document.getElementById('relW');if(rl)relDesenha()}
+setInterval(relTick,15e3);setTimeout(relTick,1500);
+function relogioAbrir(){if(document.getElementById('relW'))return;const d=document.createElement('div');d.id='relW';d.className='rel-w';d.innerHTML='<div class="rel-in" id="relIn"></div>';d.addEventListener('click',ev=>{if(ev.target===d||ev.target.closest('[data-relx]'))d.remove()});document.body.appendChild(d);relDesenha();clearInterval(relogioAbrir.iv);relogioAbrir.iv=setInterval(()=>{if(!document.getElementById('relW'))return clearInterval(relogioAbrir.iv);relDesenha()},1000)}
+function relDesenha(){const el=document.getElementById('relIn');if(!el)return;const n=new Date(),evs=proxEventos(),e=evs.find(x=>x.t>=Date.now()-5*60e3);
+  const s=n.getSeconds(),mi=n.getMinutes(),h=n.getHours()%12,ang=(v,t)=>v/t*360;
+  const marks=Array.from({length:60},(x,i)=>`<line x1="100" y1="${i%5?12:10}" x2="100" y2="${i%5?16:22}" transform="rotate(${i*6} 100 100)" class="${i%5?'mk':'mk5'}"/>`).join('');
+  const ms=e?e.t-Date.now():0;const pct=e?Math.max(0,Math.min(1,1-ms/(60*60e3))):0;
+  el.innerHTML=`<button class="rel-x" data-relx aria-label="Fechar">${svg('x',2)}</button>
+   <div class="rel-face"><svg viewBox="0 0 200 200"><defs><linearGradient id="rg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6B7AF5"/><stop offset="1" stop-color="#C77DFF"/></linearGradient></defs>
+    <circle cx="100" cy="100" r="96" class="rf-bg"/>${e?`<circle cx="100" cy="100" r="96" class="rf-pr" stroke-dasharray="${(603*pct).toFixed(1)} 603" transform="rotate(-90 100 100)"/>`:''}${marks}
+    <line x1="100" y1="100" x2="100" y2="52" class="hh" transform="rotate(${ang(h+mi/60,12)} 100 100)"/><line x1="100" y1="100" x2="100" y2="30" class="mm" transform="rotate(${ang(mi+s/60,60)} 100 100)"/><line x1="100" y1="112" x2="100" y2="24" class="ss" transform="rotate(${ang(s,60)} 100 100)"/><circle cx="100" cy="100" r="3.5" class="ct"/></svg></div>
+   <div class="rel-dig">${pad(n.getHours())}:${pad(mi)}<small>:${pad(s)}</small></div><div class="rel-dt">${n.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</div>
+   ${e?`<div class="rel-nx ${ms<=15*60e3?'urg':''}"><div class="k">${ms>0?'Próxima reunião em':'Acontecendo agora'}</div><div class="v">${ms>0?falta(ms):e.ini}</div><div class="t">${esc(e.titulo)}</div><div class="s">${e.ini}${e.fim?'–'+e.fim:''}${e.local?' · '+esc(e.local):''} · ${e.src==='google'?'Google Agenda':'Gestor'}</div>${/^https?:\/\//.test(e.local)?`<a class="btn pri sm" href="${esc(e.local)}" target="_blank" rel="noopener">Entrar na reunião</a>`:''}</div>`:'<div class="rel-nx"><div class="k">Nenhuma reunião nas próximas horas</div></div>'}
+   <div class="rel-ls">${evs.filter(x=>x!==e).slice(0,4).map(x=>`<div><b>${x.data===hoje()?'Hoje':fmtC(x.data)} ${x.ini}</b> ${esc(x.titulo)}</div>`).join('')}</div>
+   <button class="btn sm ghost rel-g" data-icscfg>${svg('cal')}${icsUrl()?'Google Agenda conectado':'Conectar Google Agenda'}</button>`}
+
 function mobNavHtml(navHtml){const t=document.createElement('div');t.innerHTML=navHtml;const bs=[...t.querySelectorAll('button[data-go]')];const pri=['dashboard','tarefas','agenda','empresas'];
   const out=pri.map(k=>bs.find(b=>b.dataset.go===k)).filter(Boolean).map(b=>{const l=b.querySelector('span:not(.ct)');if(l)l.className='l';return b.outerHTML});
   const resto=bs.filter(b=>!pri.includes(b.dataset.go));const n=resto.reduce((s,b)=>s+(+((b.querySelector('.ct')||{}).textContent)||0),0);const on=resto.some(b=>b.classList.contains('on'));
@@ -3779,7 +3951,7 @@ function agEstAuto(t){
       Object.entries(g).forEach(([k,l])=>{if(l.length>=3){l.sort((a,b)=>a-b);agEstAuto.cache[k]=Math.min(480,Math.max(15,Math.round(l[Math.floor(l.length/2)]/15)*15))}})}
     if(agEstAuto.cache[cat])return {m:agEstAuto.cache[cat],auto:true,hist:true}}
   return {m:60,auto:true}}
-function agComps(p,a,b){return [...D.compromissos.entries()].map(([id,c])=>Object.assign({id},c)).filter(c=>c.data>=a&&c.data<=b&&(!p||(c.participantes||[]).some(x=>norm(x)===norm(p))||(!(c.participantes||[]).length&&norm(c.criadoPor||'')===norm(p))))}
+function agComps(p,a,b){return [...D.compromissos.entries()].map(([id,c])=>Object.assign({id},c)).concat((!p||norm(p)===norm(meuNome()))?GEV.filter(e=>!e.dia&&e.ini).map(e=>({id:e.id,titulo:e.titulo,data:e.data,ini:e.ini,fim:e.fim||e.ini,tipo:'Google Agenda',local:e.local,participantes:[],criadoPor:meuNome(),google:true})):[]).filter(c=>c.data>=a&&c.data<=b&&(!p||(c.participantes||[]).some(x=>norm(x)===norm(p))||(!(c.participantes||[]).length&&norm(c.criadoPor||'')===norm(p))))}
 function agOrdem(t){const h=hoje();const i=info(t);let ef=i.atraso>0?'0000-00-00':(t.prazo||addD(h,21));
   if(t.prioridade==='urgente'&&ef>h)ef=h;else if(t.prioridade==='alta'&&ef>addD(h,2))ef=addD(h,2);return ef}
 function agPlano(p,sem){
@@ -3997,6 +4169,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-17',data:'17/11/2026',itens:['💬 Novo módulo WhatsApp: funil de clientes (arraste entre etapas), agentes com respostas prontas que já falam o endereço do escritório e botão para abrir o WhatsApp ao lado.','⏰ Relógio no topo com contagem até a próxima reunião; clique para o relógio grande. Avisa 15, 5 e 1 min antes.','📅 Google Agenda: conecte pelo relógio e seus compromissos aparecem na Agenda do Gestor.','🔎 Buscar clientes (só Lucas): procura negócios por cidade e ramo e leva para o funil.']},
  {id:'2026-11-16',data:'16/11/2026',itens:['📄 Alvarás: botão Ver abre o documento do Drive aqui mesmo, sem baixar. Toda a equipe enxerga a lista.','🔁 Faltando 45 dias para vencer, o sistema cria sozinho a tarefa de renovação com o checklist.','🏢 Empresa nova aparece no Início de todos por 10 dias.','🧹 Empresas → Dados faltando: preenche o cadastro pela Receita com um clique.','📝 Propostas saem no papel timbrado do escritório.']},
  {id:'2026-11-14',data:'14/11/2026',itens:['✨ Visual novo, mais leve: menu lateral flutuante, botões arredondados, ícones novos e tema claro como padrão (o escuro continua no botão de tema).','🏠 Novo Início: o seu dia com a tarefa de agora, a lista do dia, quem cobrar e um resumo da semana.','📱 No celular, menu flutuante embaixo com Início, Tarefas, Agenda e Empresas; o resto fica em Mais.']},
  {id:'2026-11-13c',data:'13/11/2026',itens:['🎨 Agenda com visual novo: calendário do mês, eventos do dia, distribuição de tempo e meus calendários na lateral; semana em blocos coloridos e cartão de detalhes ao clicar.','🗓️ Agenda inteligente: a semana em horários, com as suas tarefas distribuídas sozinhas nos horários livres por prazo e prioridade. Ela se reorganiza quando algo muda.','📅 Marque compromissos (reunião, ligação, visita) clicando num horário vazio. Em Meu horário você define expediente, almoço e folga para imprevistos.','⏱️ Nova opção Tempo estimado na tarefa. Sem ela, o sistema usa a média do histórico daquele tipo de tarefa.','⚠️ A agenda avisa quando uma tarefa não cabe até o prazo ou vai atrasar com a ordem atual.']},
@@ -6251,5 +6424,41 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
   .pd-now{flex-wrap:wrap;padding:14px}
   .pd-now .btn{width:100%}
 }
+
+/* WhatsApp / funil */
+.wa-hero{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 20px;border-radius:20px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--sh-1)}
+.wa-hl{display:flex;gap:14px;align-items:center;min-width:240px;flex:1}.wa-hl .sub{font-size:12.5px;color:var(--mut);margin-top:2px;max-width:560px}
+.wa-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;flex:none}.wa-ic svg{width:22px;height:22px}
+.wa-hr{display:flex;gap:8px;flex-wrap:wrap}
+.wa-k{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(max-width:760px){.wa-k{grid-template-columns:repeat(2,1fr)}}
+.wa-kb{display:grid;grid-template-columns:repeat(6,minmax(220px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px}
+.wa-col{background:color-mix(in srgb,var(--panel2) 70%,transparent);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:220px;display:flex;flex-direction:column;gap:8px;transition:background .15s}
+.wa-col.over{background:color-mix(in srgb,var(--c) 12%,var(--panel))}
+.wa-colh{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:2px 4px 6px}.wa-colh .dot,.wa-agh .dot{width:8px;height:8px;border-radius:50%;background:var(--c)}.wa-colh .ct{font-family:var(--f-mono);font-size:11px;color:var(--dim)}.wa-colh small{margin-left:auto;color:var(--mut);font-size:11px}
+.wa-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:grab;box-shadow:var(--sh-1);border-left:3px solid var(--c)}.wa-card.drag{opacity:.5}
+.wa-card .nm{font-weight:600;font-size:13.5px}.wa-card .sub{font-size:12px;color:var(--mut)}.wa-card .tg{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.wa-card .ac{display:flex;gap:4px;align-items:center}.wa-card .ac .btn{padding:4px 8px}.wa-card .ac svg{width:14px;height:14px}
+.wa-empty{font-size:12px;color:var(--dim);text-align:center;padding:18px 6px;border:1px dashed var(--line2);border-radius:10px}
+.wa-ags{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.wa-ag{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--sh-1);border-top:3px solid var(--c)}
+.wa-agh{display:flex;align-items:center;gap:8px}.wa-ag .sub{font-size:12px;color:var(--dim)}.wa-agt{white-space:pre-wrap;font-size:12.5px;background:color-mix(in srgb,#25D366 7%,var(--panel2));border-radius:12px 12px 12px 4px;padding:10px 12px;color:var(--ink);flex:1}
+.wa-agf{display:flex;gap:6px;justify-content:flex-end}.wa-pick{display:flex;gap:6px;flex-wrap:wrap}
+/* relógio */
+.next-meet{display:inline-flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}.next-meet .nm-clock{font-family:var(--f-head);font-weight:700;letter-spacing:-.01em}.next-meet .nm-sep{width:1px;height:14px;background:var(--line2)}
+.next-meet .nm-n{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}.next-meet.urg{background:linear-gradient(135deg,#6B7AF5,#C77DFF)!important;color:#fff!important;border-color:transparent!important;animation:nmP 2s infinite}.next-meet.urg .nm-n{color:#fff}
+@keyframes nmP{50%{box-shadow:0 0 0 6px rgba(124,108,245,.18)}}
+.rel-w{position:fixed;inset:0;z-index:300;background:rgba(6,8,14,.72);backdrop-filter:blur(14px);display:grid;place-items:center;animation:pdRise .25s backwards}
+.rel-in{position:relative;width:min(420px,92vw);padding:28px 26px 22px;border-radius:32px;background:radial-gradient(120% 80% at 50% 0%,#1d2340,#0b0e18 70%);color:#EEF0F6;box-shadow:0 40px 120px -20px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.08);text-align:center}
+.rel-x{position:absolute;top:14px;right:14px;all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.08)}.rel-x svg{width:16px;height:16px}
+.rel-face{width:230px;height:230px;margin:6px auto 10px}.rel-face svg{width:100%;height:100%}
+.rf-bg{fill:rgba(255,255,255,.03);stroke:rgba(255,255,255,.08);stroke-width:1.5}.rf-pr{fill:none;stroke:url(#rg1);stroke-width:4;stroke-linecap:round}
+.mk{stroke:rgba(255,255,255,.18);stroke-width:1}.mk5{stroke:rgba(255,255,255,.7);stroke-width:2.2;stroke-linecap:round}
+.hh{stroke:#fff;stroke-width:5;stroke-linecap:round}.mm{stroke:#cfd5ff;stroke-width:3.2;stroke-linecap:round}.ss{stroke:#C77DFF;stroke-width:1.4;stroke-linecap:round}.ct{fill:#C77DFF}
+.rel-dig{font-family:var(--f-head);font-size:54px;font-weight:700;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}.rel-dig small{font-size:22px;opacity:.5;margin-left:2px}
+.rel-dt{text-transform:capitalize;color:#9AA3B8;font-size:13.5px;margin:6px 0 16px}
+.rel-nx{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:3px;align-items:center}
+.rel-nx.urg{background:linear-gradient(135deg,rgba(107,122,245,.35),rgba(199,125,255,.3));border-color:rgba(199,125,255,.5)}
+.rel-nx .k{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA3B8}.rel-nx .v{font-family:var(--f-head);font-size:34px;font-weight:700;letter-spacing:-.03em}.rel-nx .t{font-weight:600}.rel-nx .s{font-size:12px;color:#9AA3B8;margin-bottom:6px}
+.rel-ls{margin-top:12px;font-size:12.5px;color:#B8BFD0;display:flex;flex-direction:column;gap:4px;text-align:left}.rel-ls b{color:#EEF0F6;font-weight:600;margin-right:4px}
+.rel-g{margin-top:14px;color:#cfd5ff!important}
 </style>
 </body></html>
