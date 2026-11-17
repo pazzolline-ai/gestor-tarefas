@@ -3334,19 +3334,20 @@ function alvFlag(a){const s=alvSit(a);if(s==='arq')return '<span class="flag">ar
 function alvNome(a){return a.empresaId&&empresa(a.empresaId)?empNome(a.empresaId):(a.empresaNome||'Sem empresa')}
 function vAlvaras(){
   const tudo=alvLista(),q=norm(UIALV.q);
-  const cnt={'':tudo.filter(a=>!a.arquivado).length,venc:0,vencendo:0,ok:0,arq:0};tudo.forEach(a=>{const s=alvSit(a);if(s==='sem')cnt.ok++;else cnt[s]++});
-  const l=tudo.filter(a=>{const s=alvSit(a);if(UIALV.f==='arq'?s!=='arq':(s==='arq'||(UIALV.f&&(UIALV.f==='ok'?!(s==='ok'||s==='sem'):s!==UIALV.f))))return false;
+  const sem=alvSemLista();const cnt={'':tudo.filter(a=>!a.arquivado).length,venc:0,vencendo:0,ok:0,arq:0,sem:sem.length};tudo.forEach(a=>{const s=alvSit(a);if(s==='sem')cnt.ok++;else cnt[s]++});
+  const l=UIALV.f==='sem'?[]:tudo.filter(a=>{const s=alvSit(a);if(UIALV.f==='arq'?s!=='arq':(s==='arq'||(UIALV.f&&(UIALV.f==='ok'?!(s==='ok'||s==='sem'):s!==UIALV.f))))return false;
     return !q||norm(alvNome(a)+' '+(a.tipo||'')+' '+(a.numero||'')+' '+(a.responsavel||'')).includes(q)})
     .sort((a,b)=>(a.validade||'9999').localeCompare(b.validade||'9999')||alvNome(a).localeCompare(alvNome(b),'pt'));
   const ch=(k,t,c)=>`<button class="btn sm ${UIALV.f===k?'pri':'ghost'}" data-alvf="${k}">${t} <small ${c&&cnt[k]?`style="color:${c};font-weight:700"`:''}>${cnt[k]}</small></button>`;
   const al=alvAlerta();
   return `${al.length?`<div class="reminder" style="background:var(--amb-soft);border-color:color-mix(in srgb,var(--amb) 40%,transparent)">${svg('shield')}<div style="flex:1;min-width:200px"><b>${plural(al.length,'alvará precisa','alvarás precisam')} de renovação</b> · ${al.filter(a=>alvSit(a)==='venc').length} vencido(s) · o aviso fica aqui até registrar a renovação.</div></div>`:''}
-  <section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><div style="display:flex;gap:4px;flex-wrap:wrap">${ch('','Todos')}${ch('venc','Vencidos','var(--red)')}${ch('vencendo','Vencendo','var(--amb)')}${ch('ok','Em dia')}${ch('arq','Arquivados')}</div><span class="sp"></span>
+  <section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><div style="display:flex;gap:4px;flex-wrap:wrap">${ch('','Todos')}${ch('venc','Vencidos','var(--red)')}${ch('vencendo','Vencendo','var(--amb)')}${ch('ok','Em dia')}${ch('sem','Sem alvará','var(--amb)')}${ch('arq','Arquivados')}</div><span class="sp"></span>
     <input class="inp" id="alvQ" placeholder="Buscar empresa, tipo ou número" value="${esc(UIALV.q)}" style="max-width:220px">
-    <button class="btn sm" data-alvimp>Importar em lote</button><button class="btn sm pri" data-alvnovo>+ Novo alvará</button></div>
+    <button class="btn sm pri" data-alvimppdf>📄 Importar PDFs</button><button class="btn sm" data-alvimp>Importar em lote</button><button class="btn sm pri" data-alvnovo>+ Novo alvará</button></div>
+    ${(()=>{const sq=sem.filter(([i,e])=>!q||norm(e.fantasia||e.razao||'').includes(q));return (UIALV.f==='sem'||UIALV.f==='')&&sq.length?`<div class="alv-sem"><div class="alv-semh">${svg('shield')}<b>${plural(sq.length,'empresa sem alvará cadastrado','empresas sem alvará cadastrado')}</b><span style="color:var(--dim);font-size:12px">· cadastre, importe o PDF ou marque que não precisa</span></div><div class="tw"><table class="tlist"><tbody>${(UIALV.f==='sem'?sq:sq.slice(0,8)).map(([i,e])=>`<tr><td><b>${esc(e.fantasia||e.razao)}</b><div class="sub" style="font-size:12px;color:var(--dim)">${esc(e.cnpj||'sem CNPJ')}${e.regime?' · '+esc(e.regime):''}</div></td><td><span class="flag amb">Sem alvará</span></td><td style="white-space:nowrap;text-align:right"><button class="btn sm ghost" data-alvnp="${i}">Não precisa</button> <button class="btn sm pri" data-alvsem="${i}">+ Cadastrar</button></td></tr>`).join('')}</tbody></table></div>${UIALV.f!=='sem'&&sq.length>8?`<button class="btn sm ghost" data-alvf="sem" style="margin:8px 12px">Ver as ${sq.length}</button>`:''}</div>`:''})()}
     ${l.length?`<div class="tw"><table class="tlist"><thead><tr><th>Empresa</th><th>Tipo</th><th>Número</th><th>Validade</th><th>Situação</th><th>Responsável</th><th></th></tr></thead><tbody>
     ${l.map(a=>`<tr><td><b>${esc(alvNome(a))}</b>${a.obs?`<div class="sub" style="font-size:12px;color:var(--dim)">${esc(a.obs)}</div>`:''}</td><td>${esc(a.tipo||'—')}</td><td class="mono">${esc(a.numero||'—')}</td><td class="mono">${a.validade?fmt(a.validade):'—'}</td><td>${alvFlag(a)}</td><td>${esc(a.responsavel||'—')}</td>
-      <td style="white-space:nowrap">${a.driveId?`<button class="btn sm" data-alvver="${a.id}" title="Ver o documento sem baixar">${svg('eye')}Ver</button> `:''}${a.arquivado?'':`<button class="btn sm ${['venc','vencendo'].includes(alvSit(a))?'pri':''}" data-alvren="${a.id}">Renovar</button> `}${(a.anexos||[]).length?`<button class="btn sm ghost" data-alvanx="${a.id}" title="Ver anexo">📎</button><button class="btn sm" data-alvenv="${a.id}">Enviar</button> `:`<button class="btn sm ghost" data-alvanx="${a.id}" title="Anexar o alvará">📎 Anexar</button> `}<button class="btn sm ghost" data-alved="${a.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:empty(tudo.length?'Nenhum alvará neste filtro.':'Nenhum alvará cadastrado ainda.',tudo.length?'':'<button class="btn pri" data-alvnovo>+ Cadastrar o primeiro</button>')}
+      <td style="white-space:nowrap">${a.driveId?`<button class="btn sm" data-alvver="${a.id}" title="Ver o documento sem baixar">${svg('eye')}Ver</button> `:''}${a.arquivado?'':`<button class="btn sm ${['venc','vencendo'].includes(alvSit(a))?'pri':''}" data-alvren="${a.id}">Renovar</button> `}${(a.anexos||[]).length?`<button class="btn sm ghost" data-alvanx="${a.id}" title="Ver anexo">📎</button><button class="btn sm" data-alvenv="${a.id}">Enviar</button> `:`<button class="btn sm ghost" data-alvanx="${a.id}" title="Anexar o alvará">📎 Anexar</button> `}<button class="btn sm ghost" data-alved="${a.id}">Editar</button></td></tr>`).join('')}</tbody></table></div>`:UIALV.f==='sem'?'':empty(tudo.length?'Nenhum alvará neste filtro.':'Nenhum alvará cadastrado ainda.',tudo.length?'':'<button class="btn pri" data-alvnovo>+ Cadastrar o primeiro</button>')}
   </section>
   <div style="font-size:12px;color:var(--dim)">O sistema avisa a partir de ${30} dias antes do vencimento (dá para mudar por alvará) e continua avisando, inclusive depois de vencido, até você clicar em <b>Renovar</b> e informar a nova validade. Ao renovar, o histórico guarda a validade anterior.</div>`;
 }
@@ -3392,7 +3393,7 @@ function empFalta(){const l=empFaltaLista(),com=l.filter(([i,e])=>cnpjValido(Str
     if(st)st.innerHTML=`<div class="gd-msg" style="color:var(--grn)">${ok} cadastro(s) atualizado(s)${er?' · '+er+' não encontrado(s) ou sem resposta':''}. Feche e abra de novo para ver o que ainda falta.</div>`;render()}}
 function alvErro(e){toast(/permission|42501|row-level|acesso/i.test(String(e&&e.message||e))?'Seu acesso ainda não permite cadastrar alvarás. Fale com a diretoria.':'Não foi possível salvar o alvará.')}
 async function alvPut(id,data){D.alvaras.set(id,data);if(mode==='db'){try{await C('alvaras').doc(id).set(JSON.parse(JSON.stringify(data)))}catch(e){D.alvaras.delete(id);render();alvErro(e);return false}}else persistLocal();render();return true}
-function alvForm(id){const a=id?D.alvaras.get(id):{aviso:30,responsavel:ME!=='Gestor'?ME:''};if(!a)return;
+function alvForm(id,pre){const a=id?D.alvaras.get(id):Object.assign({aviso:30,responsavel:ME!=='Gestor'?ME:''},pre||{});if(!a)return;
   openModal(`${mh(id?'Editar alvará':'Novo alvará')}<form id="alvF"><div class="mb"><div class="fg">
    <div class="fd full"><label for="al_e">Empresa</label><select class="sel" id="al_e" required>${empOptsAtivas(a.empresaId||'')}</select></div>
    <div class="fd"><label for="al_t">Tipo</label><input class="inp" id="al_t" list="alTipos" value="${esc(a.tipo||'')}" placeholder="Escolha ou digite" required><datalist id="alTipos">${ALV_TIPOS.map(t=>`<option value="${esc(t)}">`).join('')}</datalist></div>
@@ -3766,7 +3767,6 @@ const WAG_PAD=[
  {id:'cob',nome:'Lembrete de pagamento',cor:'#E06070',quando:'Honorário em aberto',txt:'Olá, {nome}! Tudo bem? Só um lembrete do honorário deste mês. Se já pagou, desconsidere. Qualquer coisa estamos aqui: {telefone}.'}];
 const UIW={tab:'funil',q:''};
 function leadsLista(){return [...D.leads.entries()].filter(([i])=>i!=='_agentes').map(([id,l])=>Object.assign({id},l))}
-function waAgentes(){const c=D.leads.get('_agentes');return (c&&c.lista&&c.lista.length)?c.lista:WAG_PAD}
 function waFone(t){t=String(t||'').replace(/\D/g,'');if(!t)return '';if(t.length<=11)t='55'+t;return t}
 function waTxt(tpl,l){const nome=String((l&&(l.contato||l.nome))||'').split(' ')[0]||'tudo bem';return String(tpl||'').replace(/\{nome\}/g,nome).replace(/\{endereco\}/g,ESC_END).replace(/\{telefone\}/g,ESC_TEL).replace(/\{mapa\}/g,ESC_MAPA).replace(/\{empresa\}/g,(l&&l.nome)||'')}
 function waAbrir(fone,txt){const f=waFone(fone);const u=(f?'https://wa.me/'+f:'https://wa.me/')+(txt?'?text='+encodeURIComponent(txt):'');window.open(u,'gtwa')}
@@ -3777,14 +3777,16 @@ function vWhats(){
   const ab=ls.filter(l=>!['ganho','perdido'].includes(l.etapa));const tot=ab.reduce((s,l)=>s+(+l.valor||0),0);
   const mes=hoje().slice(0,7),gan=ls.filter(l=>l.etapa==='ganho'&&String(l.fechadoEm||'').slice(0,7)===mes);
   const ret=ab.filter(l=>l.proximo&&l.proximo<=hoje());
-  const tabs=`<div class="seg">${[['funil','Funil de clientes'],['agentes','Agentes e respostas']].map(([k,t])=>`<button class="${UIW.tab===k?'on':''}" data-watab="${k}">${t}</button>`).join('')}</div>`;
+  const tabs=`<div class="seg">${[['funil','Funil de clientes'],['camp','Campanhas'],['agentes','Agentes e respostas']].map(([k,t])=>`<button class="${UIW.tab===k?'on':''}" data-watab="${k}">${t}</button>`).join('')}</div>`;
   const top=`<section class="wa-hero"><div class="wa-hl"><div class="wa-ic">${svg('wa')}</div><div><b>WhatsApp do escritório</b><div class="sub">Abra o WhatsApp numa janela ao lado e trabalhe os contatos pelo funil. As respostas dos agentes já saem com o nosso endereço.</div></div></div>
     <div class="wa-hr"><button class="btn pri" data-waweb>${svg('wa')}Abrir WhatsApp</button><button class="btn" data-leadnovo>+ Novo contato</button></div></section>
    <div class="tiles wa-k">${[[ab.length,'Contatos no funil','var(--acc)'],[brl(tot),'Valor mensal em negociação','#C77DFF'],[gan.length,'Fechados no mês','#2FB57A'],[ret.length,'Retornos para hoje','#E06070']].map(([n,l,c])=>`<div class="tile" style="--c:${c}"><span class="n">${n}</span><span class="l">${l}</span></div>`).join('')}</div>`;
-  if(UIW.tab==='agentes'){const ags=waAgentes();
+  if(UIW.tab==='camp')return top+`<div class="bar">${tabs}</div>`+vCampanha();
+  if(UIW.tab==='agentes'){const ags=waAgentes();const card=a=>`<div class="wa-ag" style="--c:${a.cor||'#6B7AF5'}"><div class="wa-agh"><span class="dot"></span><b>${esc(a.nome)}</b><span class="sp"></span><button class="btn sm ghost" data-aged="${esc(a.id)}">Editar</button></div><div class="sub">${esc(a.quando||'')}</div><div class="wa-agt">${esc(waTxt(a.txt,{nome:'Cliente'}))}</div><div class="wa-agf"><button class="btn sm" data-agcopy="${esc(a.id)}">Copiar</button><button class="btn sm pri" data-agwa="${esc(a.id)}">${svg('wa')}Enviar</button></div></div>`;
     return top+`<div class="bar">${tabs}<span style="flex:1"></span><button class="btn sm" data-agnovo>+ Novo agente</button></div>
-    <div class="wa-ags">${ags.map(a=>`<div class="wa-ag" style="--c:${a.cor||'#6B7AF5'}"><div class="wa-agh"><span class="dot"></span><b>${esc(a.nome)}</b><span class="sp"></span><button class="btn sm ghost" data-aged="${esc(a.id)}">Editar</button></div><div class="sub">${esc(a.quando||'')}</div><div class="wa-agt">${esc(waTxt(a.txt,{nome:'Cliente'}))}</div><div class="wa-agf"><button class="btn sm" data-agcopy="${esc(a.id)}">Copiar</button><button class="btn sm pri" data-agwa="${esc(a.id)}">${svg('wa')}Enviar</button></div></div>`).join('')}</div>
-    <div style="font-size:12px;color:var(--dim)">Use <b>{nome}</b>, <b>{endereco}</b>, <b>{telefone}</b> e <b>{mapa}</b> nos textos: o sistema troca pelos dados do contato e do escritório.</div>`}
+    <h3 class="wa-sec">Abordagem <small>· quando você chama o cliente</small></h3><div class="wa-ags">${ags.filter(a=>a.tipo==='abordagem').map(card).join('')}</div>
+    <h3 class="wa-sec">Atendimento <small>· quando o cliente chama você</small></h3><div class="wa-ags">${ags.filter(a=>a.tipo!=='abordagem').map(card).join('')}</div>
+    <div style="font-size:12px;color:var(--dim)">Use <b>{nome}</b>, <b>{endereco}</b>, <b>{telefone}</b> e <b>{mapa}</b> nos textos: o sistema troca pelos dados do contato e do escritório. Escreva <b>[[Oi|Olá|Bom dia]]</b> para o sistema sortear uma das opções em cada envio — cada mensagem sai diferente, o que ajuda a não ser bloqueado.</div>`}
   return top+`<div class="bar">${tabs}<div class="search">${svg('search')}<input class="inp" id="waQ" placeholder="Buscar contato" value="${esc(UIW.q)}"></div></div>
   <div class="wa-kb">${FUNIL.map(([k,t,c])=>{const it=f.filter(l=>(l.etapa||'novo')===k).sort((a,b)=>String(a.proximo||'9').localeCompare(String(b.proximo||'9')));const v=it.reduce((s,l)=>s+(+l.valor||0),0);
     return `<div class="wa-col" data-wacol="${k}" style="--c:${c}"><div class="wa-colh"><span class="dot"></span><b>${t}</b><span class="ct">${it.length}</span>${v?`<small>${brl(v)}</small>`:''}</div>
@@ -3827,11 +3829,12 @@ function agForm(aid){const ags=waAgentes().map(a=>Object.assign({},a));const a=a
   openModal(`${mh(aid?'Editar agente':'Novo agente')}<form id="agF"><div class="mb"><div class="fg">
    <div class="fd"><label for="ag_n">Nome do agente</label><input class="inp" id="ag_n" required value="${esc(a.nome)}"></div>
    <div class="fd"><label for="ag_q">Quando usar</label><input class="inp" id="ag_q" value="${esc(a.quando||'')}"></div>
+   <div class="fd"><label for="ag_tp">Tipo</label><select class="sel" id="ag_tp"><option value="abordagem" ${a.tipo==='abordagem'?'selected':''}>Abordagem (eu chamo o cliente)</option><option value="atend" ${a.tipo!=='abordagem'?'selected':''}>Atendimento (cliente me chama)</option></select></div>
    <div class="fd full"><label for="ag_t">Mensagem</label><textarea class="inp" id="ag_t" rows="8" required>${esc(a.txt)}</textarea><small style="color:var(--dim)">Variáveis: {nome} {endereco} {telefone} {mapa}</small></div>
   </div></div><div class="mf">${aid?`<button type="button" class="btn ghost danger" id="agDel" style="margin-right:auto">Excluir</button>`:''}<button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`);
-  const salvar=async l=>{if(await leadPut('_agentes',{lista:l,atualizadoEm:agora()})){closeModal();toast('Agentes salvos')}};
-  if(aid)$('#agDel').onclick=()=>salvar(ags.filter(x=>x.id!==aid));
-  $('#agF').addEventListener('submit',ev=>{ev.preventDefault();Object.assign(a,{nome:val('ag_n'),quando:val('ag_q'),txt:val('ag_t')});salvar(aid?ags:ags.concat([a]))})}
+  const c0=D.leads.get('_agentes')||{};const salvar=async(l,rm)=>{if(await leadPut('_agentes',{lista:l,removidos:(c0.removidos||[]).concat(rm?[rm]:[]),atualizadoEm:agora()})){closeModal();toast('Agentes salvos')}};
+  if(aid)$('#agDel').onclick=()=>salvar(ags.filter(x=>x.id!==aid),aid);
+  $('#agF').addEventListener('submit',ev=>{ev.preventDefault();Object.assign(a,{nome:val('ag_n'),quando:val('ag_q'),txt:val('ag_t'),tipo:val('ag_tp')});salvar(aid?ags:ags.concat([a]))})}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-watab],[data-waweb],[data-leadnovo],[data-leaded],[data-leadmv],[data-leadwa],[data-agnovo],[data-aged],[data-agcopy],[data-agwa],[data-prsrch],[data-prlead],[data-relogio],[data-icscfg]');if(!t)return;
   if(t.hasAttribute('data-watab')){UIW.tab=t.dataset.watab;render()}else if(t.hasAttribute('data-waweb'))waWeb();else if(t.hasAttribute('data-leadnovo'))leadForm();else if(t.hasAttribute('data-leaded'))leadForm(t.dataset.leaded);
   else if(t.hasAttribute('data-leadmv'))leadMover(t.dataset.leadmv,+t.dataset.d);else if(t.hasAttribute('data-leadwa'))leadWa(t.dataset.leadwa);else if(t.hasAttribute('data-agnovo'))agForm();else if(t.hasAttribute('data-aged'))agForm(t.dataset.aged);
@@ -3924,6 +3927,113 @@ function relDesenha(){const el=document.getElementById('relIn');if(!el)return;co
    ${e?`<div class="rel-nx ${ms<=15*60e3?'urg':''}"><div class="k">${ms>0?'Próxima reunião em':'Acontecendo agora'}</div><div class="v">${ms>0?falta(ms):e.ini}</div><div class="t">${esc(e.titulo)}</div><div class="s">${e.ini}${e.fim?'–'+e.fim:''}${e.local?' · '+esc(e.local):''} · ${e.src==='google'?'Google Agenda':'Gestor'}</div>${/^https?:\/\//.test(e.local)?`<a class="btn pri sm" href="${esc(e.local)}" target="_blank" rel="noopener">Entrar na reunião</a>`:''}</div>`:'<div class="rel-nx"><div class="k">Nenhuma reunião nas próximas horas</div></div>'}
    <div class="rel-ls">${evs.filter(x=>x!==e).slice(0,4).map(x=>`<div><b>${x.data===hoje()?'Hoje':fmtC(x.data)} ${x.ini}</b> ${esc(x.titulo)}</div>`).join('')}</div>
    <button class="btn sm ghost rel-g" data-icscfg>${svg('cal')}${icsUrl()?'Google Agenda conectado':'Conectar Google Agenda'}</button>`}
+
+/* ================= Abordagem ativa + campanhas com limite ================= */
+const WAG_ABORD=[
+ {id:'ab1',tipo:'abordagem',nome:'1º contato – comércio local',cor:'#F08C3A',quando:'Negócio encontrado no buscador ou no bairro',txt:'[[Oi|Olá|Bom dia]], {nome}! [[Tudo bem?|Como vai?]] Aqui é o Lucas, da Londe & Rodrigues Assessoria Contábil, aqui em Anápolis ({endereco}).\n[[Vi o seu negócio|Conheci o trabalho de vocês]] e queria saber: hoje vocês estão satisfeitos com a contabilidade? A gente cuida de impostos, folha, alvarás e abertura, com atendimento rápido pelo WhatsApp.\nPosso te mandar uma proposta sem compromisso?'},
+ {id:'ab2',tipo:'abordagem',nome:'1º contato – empresa recém-aberta',cor:'#E0607E',quando:'Empresa aberta há pouco tempo',txt:'[[Oi|Olá]], {nome}! [[Parabéns pela empresa nova!|Vi que vocês abriram a empresa recentemente, parabéns!]] 🎉\nSou da Londe & Rodrigues Assessoria Contábil ({endereco}). Nesse começo é comum surgir dúvida sobre alvará, Simples Nacional e emissão de nota. Se quiser, faço uma conversa rápida e gratuita para deixar tudo certo desde o início.'},
+ {id:'ab3',tipo:'abordagem',nome:'1º contato – clínicas e profissionais de saúde',cor:'#3FA7E0',quando:'Consultórios, clínicas, fisioterapia, odontologia',txt:'[[Olá|Oi]], {nome}! Aqui é da Londe & Rodrigues Assessoria Contábil.\nAtendemos várias clínicas e consultórios aqui em Anápolis e ajudamos a [[pagar menos imposto de forma legal|reduzir a carga tributária]] (Fator R, equiparação hospitalar, alvará sanitário e CERCON em dia).\nPosso fazer um diagnóstico gratuito do seu caso?'},
+ {id:'ab4',tipo:'abordagem',nome:'2º toque (3 dias depois)',cor:'#9B7CF2',quando:'Sem resposta ao 1º contato',txt:'[[Oi|Olá]], {nome}! Passando só para retomar a mensagem de [[outro dia|alguns dias atrás]]. Se fizer sentido, te mando uma proposta rapidinho. Se não for o momento, sem problema! 🙂'},
+ {id:'ab5',tipo:'abordagem',nome:'Último toque (7 dias depois)',cor:'#6B7280',quando:'Sem resposta ao 2º toque',txt:'{nome}, essa é minha última mensagem para não te incomodar. Fica nosso contato para quando precisar: {telefone} · {endereco}. [[Sucesso aí!|Um abraço!]]'}];
+function waAgentes(){const c=D.leads.get('_agentes');const salvo=(c&&c.lista&&c.lista.length)?c.lista:WAG_PAD;const del=(c&&c.removidos)||[];const ids=new Set(salvo.map(a=>a.id));
+  return WAG_ABORD.filter(a=>!ids.has(a.id)&&!del.includes(a.id)).concat(salvo.map(a=>Object.assign({tipo:WAG_ABORD.some(x=>x.id===a.id)?'abordagem':'atend'},a)))}
+const _waTxt0=waTxt;waTxt=function(t,l){return _waTxt0(String(t||'').replace(/\[\[([^\]]+)\]\]/g,(m,o)=>{const p=o.split('|');return p[Math.floor(Math.random()*p.length)]}),l)};
+const CP_PAD={ligada:false,maxDia:25,aquec:true,ini:'09:00',fim:'17:30',almIni:'12:00',almFim:'13:30',intMin:4,intMax:9,dias:[1,2,3,4,5],ag1:'ab1',seq:[{dias:3,ag:'ab4'},{dias:7,ag:'ab5'}],log:[],inicio:''};
+function cpCfg(){return Object.assign({},CP_PAD,(D.leads.get('_campanha')||{}))}
+function cpLimiteHoje(c){if(!c.aquec||!c.inicio)return c.maxDia;const d=Math.max(0,dias(c.inicio,hoje()));return Math.min(c.maxDia,10+d*5)}
+function cpHoje(c){return (c.log||[]).filter(x=>String(x.em).slice(0,10)===hoje()).length}
+function cpFila(){const c=cpCfg(),hj=hoje();return leadsLista().filter(l=>l.telefone&&(l.etapa||'novo')==='novo'&&!l.semCampanha&&(l.seqPasso||0)<=c.seq.length&&(!l.seqProx||l.seqProx<=hj)).sort((a,b)=>(a.seqPasso||0)-(b.seqPasso||0)||String(a.criadoEm).localeCompare(String(b.criadoEm)))}
+function cpAgDe(l,c){const p=l.seqPasso||0;return p===0?c.ag1:(c.seq[p-1]||{}).ag}
+function cpJanela(c){const n=new Date(),hm=pad(n.getHours())+':'+pad(n.getMinutes());if(!c.dias.includes(n.getDay()))return 'Fora dos dias de envio';if(hm<c.ini||hm>=c.fim)return 'Fora do horário ('+c.ini+'–'+c.fim+')';if(c.almIni&&hm>=c.almIni&&hm<c.almFim)return 'Pausa de almoço';return ''}
+let CP_PROX=0;
+function cpProxEm(c){const last=(c.log||[]).slice(-1)[0];if(!last)return 0;if(!CP_PROX||CP_PROX<new Date(last.em).getTime()){const r=c.intMin+Math.random()*(Math.max(c.intMax,c.intMin)-c.intMin);CP_PROX=new Date(last.em).getTime()+r*60e3}return CP_PROX}
+async function cpSalvar(c){return leadPut('_campanha',c)}
+function cpTick(){if(WS==='pessoal'||!loaded.leads)return;const c=cpCfg();if(!c.ligada||norm(c.dono||'')!==norm(meuNome()))return;const box=document.getElementById('cpPop');
+  const j=cpJanela(c),lim=cpLimiteHoje(c),fe=cpHoje(c),fila=cpFila();if(j||fe>=lim||!fila.length){if(box)box.remove();return}
+  const quando=cpProxEm(c);if(Date.now()<quando){if(box)box.remove();return}
+  if(box)return;const l=fila[0],ag=waAgentes().find(a=>a.id===cpAgDe(l,c));if(!ag)return;
+  const p=document.createElement('div');p.id='cpPop';p.className='cp-pop';p.innerHTML=`<div class="cp-h">${svg('wa')}<b>Próximo envio da campanha</b><span>${fe+1}/${lim} hoje</span></div><div class="cp-n">${esc(l.contato||l.nome)}</div><div class="cp-s">${esc(ag.nome)}</div><div class="cp-a"><button class="btn sm" data-cpskip="${l.id}">Pular</button><button class="btn sm ghost" data-cpoff>Pausar</button><button class="btn sm pri" data-cpsend="${l.id}">${svg('wa')}Enviar agora</button></div>`;document.body.appendChild(p);
+  notificar('💬 Hora de enviar: '+(l.contato||l.nome),ag.nome+' · clique para abrir',()=>{go('whats')})}
+setInterval(cpTick,20e3);setTimeout(cpTick,6000);
+async function cpEnviar(id,pular){const c=cpCfg(),l=D.leads.get(id);const box=document.getElementById('cpPop');if(box)box.remove();if(!l)return;const ag=waAgentes().find(a=>a.id===cpAgDe(l,c));const now=agora();
+  if(!pular&&ag)waAbrir(l.telefone,waTxt(ag.txt,l));const p=(l.seqPasso||0)+1,nx=c.seq[p-1];
+  await leadPut(id,Object.assign({},l,{seqPasso:p,seqProx:nx?addD(hoje(),nx.dias):'',ultimoContato:pular?l.ultimoContato:now,hist:(l.hist||[]).concat([{em:now,txt:pular?'Pulado na campanha':'Campanha: '+(ag?ag.nome:'mensagem')}])}));
+  if(!pular){c.log=(c.log||[]).concat([{em:now,lead:id}]).slice(-400);CP_PROX=0;await cpSalvar(c)}render()}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-cpsend],[data-cpskip],[data-cpoff],[data-cpon],[data-cpcfg],[data-alvimppdf],[data-alvsem],[data-alvnp]');if(!t)return;
+  if(t.hasAttribute('data-cpsend'))cpEnviar(t.dataset.cpsend);else if(t.hasAttribute('data-cpskip'))cpEnviar(t.dataset.cpskip,true);
+  else if(t.hasAttribute('data-cpoff')){const c=cpCfg();c.ligada=false;cpSalvar(c);const b=document.getElementById('cpPop');if(b)b.remove()}
+  else if(t.hasAttribute('data-cpon')){const c=cpCfg();c.ligada=true;c.dono=meuNome();if(!c.inicio)c.inicio=hoje();cpSalvar(c);try{Notification.requestPermission()}catch(err){}toast('Campanha ligada. Deixe o Gestor aberto.');setTimeout(cpTick,1500)}
+  else if(t.hasAttribute('data-cpcfg'))cpForm();else if(t.hasAttribute('data-alvimppdf'))alvImpPdf();else if(t.hasAttribute('data-alvsem'))alvForm(null,{empresaId:t.dataset.alvsem});
+  else if(t.hasAttribute('data-alvnp'))alvNaoPrecisa(t.dataset.alvnp)});
+function vCampanha(){const c=cpCfg(),fila=cpFila(),lim=cpLimiteHoje(c),fe=cpHoje(c),j=cpJanela(c),ags=waAgentes(),ag=id=>(ags.find(a=>a.id===id)||{}).nome||'—';
+  const prox=cpProxEm(c),mn=prox?Math.max(0,Math.ceil((prox-Date.now())/60e3)):0;const meu=norm(c.dono||'')===norm(meuNome());
+  return `<section class="panel cp-box"><div class="cp-top"><div><div class="cp-st ${c.ligada?'on':''}"><span class="dot"></span>${c.ligada?'Campanha ligada'+(c.dono&&!meu?' no computador de '+esc(c.dono):''):'Campanha pausada'}</div>
+   <div class="sub">${c.ligada?(j?j+' · retoma sozinha no próximo horário.':fe>=lim?'Limite de hoje atingido. Retoma amanhã.':!fila.length?'Fila vazia. Adicione contatos em Novo contato.':mn?'Próximo envio em ~'+mn+' min.':'Enviando agora.'):'Nada é enviado enquanto estiver pausada.'}</div></div>
+   <div class="cp-btns"><button class="btn" data-cpcfg>Regras de envio</button>${c.ligada?'<button class="btn" data-cpoff>Pausar</button>':'<button class="btn pri" data-cpon>Ligar campanha</button>'}</div></div>
+   <div class="tiles wa-k" style="margin-top:12px">${[[fe+'/'+lim,'Enviadas hoje (limite)','#6B7AF5'],[fila.length,'Na fila agora','#E0A040'],[c.intMin+'–'+c.intMax+' min','Intervalo entre mensagens','#3FA7E0'],[c.ini+'–'+c.fim,'Horário de envio','#2FB57A']].map(([n,l,co])=>`<div class="tile" style="--c:${co}"><span class="n" style="font-size:22px">${n}</span><span class="l">${l}</span></div>`).join('')}</div>
+   <div class="cp-seq"><b>Sequência:</b> <span class="flag">Dia 0 · ${esc(ag(c.ag1))}</span>${c.seq.map(s=>`<span class="flag">+${s.dias} dias · ${esc(ag(s.ag))}</span>`).join('')} <span style="color:var(--dim);font-size:12px">· para sozinha quando você move o contato para Qualificação</span></div></section>
+  <section class="panel"><div class="ph"><b>Fila de envio</b><span class="sp"></span><small style="color:var(--dim)">Contatos em "Novo contato" com WhatsApp</small></div>
+   ${fila.length?`<div class="rows">${fila.slice(0,30).map(l=>`<div class="row"><div class="main-t"><div>${esc(l.contato||l.nome)} <small style="color:var(--dim)">${esc(l.telefone)}</small></div><div class="sub">${esc(ag(cpAgDe(l,c)))}${l.seqPasso?' · toque '+(l.seqPasso+1):''}</div></div><button class="btn sm ghost" data-cpskip="${l.id}">Pular</button><button class="btn sm" data-cpsend="${l.id}">Enviar já</button></div>`).join('')}</div>`:empty('Ninguém na fila. Leve contatos para o funil pelo Buscar clientes ou + Novo contato.')}</section>
+  <div class="cp-dica">${svg('shield')}<div><b>Como evitar banimento:</b> o sistema respeita o limite diário (começa com 10 por dia e sobe 5 por dia até o máximo), espera um intervalo aleatório entre as mensagens, só envia em horário comercial, varia as palavras de cada mensagem e para a sequência quando o contato responde. Evite enviar para quem não conhece o escritório em massa e salve o seu número na agenda dos clientes.</div></div>`}
+function cpForm(){const c=cpCfg(),ags=waAgentes().filter(a=>a.tipo==='abordagem'),o=s=>ags.map(a=>`<option value="${a.id}" ${a.id===s?'selected':''}>${esc(a.nome)}</option>`).join('');
+  openModal(`${mh('Regras de envio da campanha')}<form id="cpF"><div class="mb"><div class="fg">
+   <div class="fd"><label for="cp_m">Máximo por dia</label><input class="inp" id="cp_m" type="number" min="1" max="60" value="${c.maxDia}"><small style="color:var(--dim)">Recomendado: até 30.</small></div>
+   <label class="chk fd"><input type="checkbox" id="cp_aq" ${c.aquec?'checked':''}> Aquecimento (começa com 10/dia e sobe aos poucos)</label>
+   <div class="fd"><label for="cp_i1">Intervalo mínimo (min)</label><input class="inp" id="cp_i1" type="number" min="2" value="${c.intMin}"></div>
+   <div class="fd"><label for="cp_i2">Intervalo máximo (min)</label><input class="inp" id="cp_i2" type="number" min="3" value="${c.intMax}"></div>
+   <div class="fd"><label for="cp_h1">Começa às</label><input class="inp" id="cp_h1" type="time" value="${c.ini}"></div>
+   <div class="fd"><label for="cp_h2">Para às</label><input class="inp" id="cp_h2" type="time" value="${c.fim}"></div>
+   <div class="fd"><label for="cp_a1">Pausa de almoço</label><input class="inp" id="cp_a1" type="time" value="${c.almIni}"></div>
+   <div class="fd"><label for="cp_a2">Volta às</label><input class="inp" id="cp_a2" type="time" value="${c.almFim}"></div>
+   <div class="fd full"><label>Dias de envio</label><div style="display:flex;gap:10px;flex-wrap:wrap">${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d,i)=>`<label class="chk"><input type="checkbox" class="cp_d" value="${i}" ${c.dias.includes(i)?'checked':''}> ${d}</label>`).join('')}</div></div>
+   <div class="fd full"><label for="cp_g1">1ª mensagem</label><select class="sel" id="cp_g1">${o(c.ag1)}</select></div>
+   <div class="fd"><label for="cp_g2">2º toque após (dias)</label><input class="inp" id="cp_s1" type="number" min="1" value="${(c.seq[0]||{}).dias||3}"><select class="sel" id="cp_g2" style="margin-top:6px">${o((c.seq[0]||{}).ag||'ab4')}</select></div>
+   <div class="fd"><label for="cp_g3">Último toque após (dias)</label><input class="inp" id="cp_s2" type="number" min="1" value="${(c.seq[1]||{}).dias||7}"><select class="sel" id="cp_g3" style="margin-top:6px">${o((c.seq[1]||{}).ag||'ab5')}</select></div>
+  </div></div><div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`);
+  $('#cpF').addEventListener('submit',async ev=>{ev.preventDefault();const n=Object.assign(c,{maxDia:Math.min(60,Math.max(1,+val('cp_m')||25)),aquec:$('#cp_aq').checked,intMin:Math.max(2,+val('cp_i1')||4),intMax:Math.max(3,+val('cp_i2')||9),ini:val('cp_h1'),fim:val('cp_h2'),almIni:val('cp_a1'),almFim:val('cp_a2'),
+    dias:[...document.querySelectorAll('.cp_d:checked')].map(x=>+x.value),ag1:val('cp_g1'),seq:[{dias:+val('cp_s1')||3,ag:val('cp_g2')},{dias:+val('cp_s2')||7,ag:val('cp_g3')}]});if(n.intMax<n.intMin)n.intMax=n.intMin+2;if(await cpSalvar(n)){closeModal();toast('Regras salvas')}})}
+
+/* ================= Alvarás: empresas sem alvará + importador de PDFs ================= */
+function alvSemLista(){const com=new Set(alvLista().filter(a=>!a.arquivado).map(a=>a.empresaId));return [...D.empresas.entries()].filter(([i,e])=>!e.inativa&&!e.exemplo&&!e.semAlvara&&!com.has(i)&&!/^lista de \d+ empresas/i.test(e.razao||'')).sort((a,b)=>(a[1].fantasia||a[1].razao||'').localeCompare(b[1].fantasia||b[1].razao||'','pt'))}
+async function alvNaoPrecisa(eid){const e=D.empresas.get(eid);if(!e)return;confirmBox(`<b>${esc(e.fantasia||e.razao)}</b> não precisa de alvará (ex.: MEI sem estabelecimento)? Ela sai desta lista.`,'Confirmar',async()=>{await put('empresas',eid,Object.assign({},e,{semAlvara:true}));render()})}
+let PDFJS=null;
+async function pdfjsCarregar(){if(PDFJS)return PDFJS;await new Promise((ok,er)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=ok;s.onerror=er;document.head.appendChild(s)});
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';PDFJS=window.pdfjsLib;return PDFJS}
+async function pdfTexto(f){const lib=await pdfjsCarregar();const doc=await lib.getDocument({data:await f.arrayBuffer()}).promise;let t='';for(let i=1;i<=Math.min(doc.numPages,4);i++){const pg=await doc.getPage(i);const c=await pg.getTextContent();t+=c.items.map(x=>x.str).join(' ')+'\n'}return t}
+const MESN={janeiro:1,fevereiro:2,'março':3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+function alvLer(t,nome){const T=t.replace(/\s+/g,' '),N=norm(T+' '+nome);const r={};
+  r.tipo=/bombeiro|cercon|certificado de conformidade|siapi/.test(N)?'Bombeiros (CERCON)':/licenca ambiental|meio ambiente.*licen|dispensa de licenciamento/.test(N)?'Licença ambiental':/sanitari|vigilancia/.test(N)?'Vigilância sanitária':/uso do solo|uso e ocupacao/.test(N)?'Uso do solo':/alvara|funcionamento|localizacao/.test(N)?'Alvará de funcionamento (prefeitura)':'Outro';
+  const iso=(d,m,a)=>`${a}-${pad(+m)}-${pad(+d)}`;const ds=[];T.replace(/\b(\d{2})\/(\d{2})\/(20\d{2})\b/g,(x,d,m,a)=>{ds.push(iso(d,m,a))});T.replace(/\b(\d{1,2}) de ([A-Za-zçÇ]+) de (20\d{2})/gi,(x,d,m,a)=>{const k=MESN[m.toLowerCase()];if(k)ds.push(iso(d,k,a))});
+  const vx=T.match(/(?:VALIDADE ATÉ\s*:?|Válido até|Validade\s*:?)\s*(\d{1,2}(?:\/\d{2}\/\d{4}| de [A-Za-zç]+ de \d{4}))/i);
+  let val='';if(vx&&r.tipo!=='Bombeiros (CERCON)'){const s=vx[1];const m1=s.match(/(\d{2})\/(\d{2})\/(\d{4})/),m2=s.match(/(\d{1,2}) de ([A-Za-zç]+) de (\d{4})/i);val=m1?iso(m1[1],m1[2],m1[3]):m2&&MESN[m2[2].toLowerCase()]?iso(m2[1],MESN[m2[2].toLowerCase()],m2[3]):''}
+  const ok=ds.filter(d=>d>='2015-01-01'&&d<='2035-12-31').sort();if(!val&&ok.length)val=ok[ok.length-1];r.validade=val;r.emissao=ok.find(d=>d<val)||'';
+  const n=T.match(/PROTOCOLO:?\s*(\d{3,7}\/\d{2})/i)||T.match(/N[úu]mero:?\s*(\d{6,9}\/20\d{2})/i)||T.match(/ALVAR[ÁA] SANIT[ÁA]RIO N[ºo°]?\s*(\d{4,})/i)||T.match(/N[úu]mero:?\s*(\d{6,})/i)||T.match(/LICEN[ÇC]A N\.?º\s*([\d\/]+)/i);r.numero=n?n[1]:'';
+  const cn=[...new Set((T.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/g)||[]).map(x=>x.replace(/\D/g,'')))],cpf=(T.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/g)||[]);
+  const emps=[...D.empresas.entries()];let e=emps.find(([i,x])=>cn.includes(String(x.cnpj||'').replace(/\D/g,'')));
+  if(!e){const nn=norm(nome+' '+T).replace(/[^a-z0-9 ]/g,' ');e=emps.filter(([i,x])=>{const k=norm(x.fantasia||x.razao||'').replace(/[^a-z0-9 ]/g,' ').trim();return k.length>=5&&nn.includes(k)}).sort((a,b)=>(b[1].fantasia||b[1].razao).length-(a[1].fantasia||a[1].razao).length)[0]}
+  r.empresaId=e?e[0]:'';r.cnpjs=cn;r.cpf=cpf[0]||'';return r}
+function alvImpPdf(){if(mode!=='db'){toast('Entre com login para importar.');return}
+  openModal(`${mh('Importar alvarás em PDF')}<div class="mb"><div style="font-size:13px;color:var(--mut);margin-bottom:10px">Selecione os PDFs dos alvarás, CERCON, sanitários e licenças (pode ser a pasta inteira, já baixada do Drive). O sistema lê cada documento, descobre a empresa, o tipo, o número e a validade, mostra para você conferir e anexa o arquivo.</div>
+   <label class="btn pri" style="cursor:pointer">📄 Escolher PDFs<input type="file" id="aiF" accept=".pdf" multiple hidden></label><div id="aiR" style="margin-top:12px"></div></div>
+   <div class="mf"><button type="button" class="btn" data-close>Fechar</button><button type="button" class="btn pri" id="aiGo" hidden>Importar e anexar</button></div>`);
+  const md=document.querySelector('.md');if(md)md.style.maxWidth='1080px';
+  $('#aiF').onchange=async ev=>{const fs=[...ev.target.files];const box=$('#aiR');const res=[];
+    for(let k=0;k<fs.length;k++){box.innerHTML=`<div class="ia-status"><span class="ia-dot"></span><span>Lendo ${k+1} de ${fs.length}: ${esc(fs[k].name)}</span></div>`;let r={};try{r=alvLer(await pdfTexto(fs[k]),fs[k].name)}catch(e){r={erro:true,tipo:'Outro'}}r.f=fs[k];
+      const ex=alvLista().find(a=>a.empresaId&&a.empresaId===r.empresaId&&((r.numero&&a.numero===r.numero)||(a.tipo===r.tipo&&a.validade===r.validade)));r.exId=ex?ex.id:'';r.acao=ex?'anexar':(r.validade&&r.validade>=hoje()?'criar':'criar');res.push(r)}
+    const ops=sel=>empOptsAtivas(sel);
+    box.innerHTML=`<div class="tw" style="max-height:56vh;overflow:auto"><table class="tlist"><thead><tr><th>Arquivo</th><th>Empresa</th><th>Tipo</th><th>Número</th><th>Validade</th><th>O que fazer</th></tr></thead><tbody>${res.map((r,i)=>`<tr data-ai="${i}"><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(r.f.name)}${r.erro?'<br><span class="flag red">não consegui ler</span>':''}</td>
+      <td><select class="sel ai-e" style="min-width:180px">${ops(r.empresaId)}</select>${!r.empresaId&&r.cnpjs&&r.cnpjs.length?`<div style="font-size:11px;color:var(--amb)">CNPJ no PDF: ${esc(r.cnpjs.join(', '))}</div>`:''}</td>
+      <td><select class="sel ai-t">${ALV_TIPOS.map(t=>`<option ${t===r.tipo?'selected':''}>${t}</option>`).join('')}</select></td><td><input class="inp ai-n" value="${esc(r.numero||'')}" style="width:120px"></td><td><input class="inp ai-v" type="date" value="${esc(r.validade||'')}">${r.validade&&r.validade<hoje()?'<div style="font-size:11px;color:var(--red)">vencido</div>':''}</td>
+      <td><select class="sel ai-a">${r.exId?'<option value="anexar" selected>Anexar ao alvará já cadastrado</option>':''}<option value="criar" ${r.exId?'':'selected'}>Cadastrar e anexar</option><option value="arq">Cadastrar como arquivado (histórico)</option><option value="nao">Ignorar</option></select></td></tr>`).join('')}</tbody></table></div>`;
+    const go=$('#aiGo');go.hidden=false;go.onclick=async()=>{go.disabled=true;let n=0,er=0;const org=GT.membro&&GT.membro.org_id;
+      for(let i=0;i<res.length;i++){const r=res[i],tr=document.querySelector(`[data-ai="${i}"]`),q=c=>tr.querySelector(c).value,ac=q('.ai-a');if(ac==='nao')continue;const emp=q('.ai-e');if(!emp){er++;continue}
+        go.textContent=`Importando ${i+1} de ${res.length}…`;
+        const nome=r.f.name.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w.\-]+/g,'_').slice(-80);let id=ac==='anexar'?r.exId:uid();const path=org+'/alv-'+id+'/'+Date.now().toString(36)+'-'+nome;
+        const up=await GT.sb.storage.from('anexos').upload(path,r.f,{contentType:'application/pdf'});if(up.error){er++;continue}
+        const ax={nome:r.f.name,path,tam:r.f.size,tipo:'application/pdf',por:meuNome(),em:agora()};
+        if(ac==='anexar'){const a=D.alvaras.get(id);await alvPut(id,Object.assign({},a,{anexos:(a.anexos||[]).concat([ax]),historico:(a.historico||[]).concat([{data:hoje(),txt:'Anexou pelo importador: '+r.f.name,por:meuNome()}])}))}
+        else{const v=q('.ai-v');await alvPut(id,{empresaId:emp,empresaNome:empNome(emp),tipo:q('.ai-t'),numero:q('.ai-n'),emissao:r.emissao||'',validade:v,aviso:30,responsavel:respPadrao('societario'),obs:'Importado do PDF '+r.f.name,renovando:false,arquivado:ac==='arq',anexos:[ax],criadoEm:agora(),criadoPor:meuNome(),historico:[{data:hoje(),txt:'Importado do PDF'+(v?' · validade '+fmt(v):''),por:meuNome()}]})}n++}
+      closeModal();toast(`${n} documento(s) importado(s)`+(er?` · ${er} sem empresa ou com erro`:''));render()}}}
 
 function mobNavHtml(navHtml){const t=document.createElement('div');t.innerHTML=navHtml;const bs=[...t.querySelectorAll('button[data-go]')];const pri=['dashboard','tarefas','agenda','empresas'];
   const out=pri.map(k=>bs.find(b=>b.dataset.go===k)).filter(Boolean).map(b=>{const l=b.querySelector('span:not(.ct)');if(l)l.className='l';return b.outerHTML});
@@ -4169,6 +4279,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-17b',data:'17/11/2026',itens:['📣 Mensagens de abordagem para chamar clientes novos, com 1º contato, 2º toque e último toque.','🛡️ Campanhas com limite anti-bloqueio: máximo por dia, aquecimento, intervalo aleatório e só em horário comercial.','📄 Alvarás → Importar PDFs: o sistema lê os documentos, acha a empresa e a validade e anexa o arquivo.','🏢 A lista de alvarás agora mostra as empresas sem alvará cadastrado.']},
  {id:'2026-11-17',data:'17/11/2026',itens:['💬 Novo módulo WhatsApp: funil de clientes (arraste entre etapas), agentes com respostas prontas que já falam o endereço do escritório e botão para abrir o WhatsApp ao lado.','⏰ Relógio no topo com contagem até a próxima reunião; clique para o relógio grande. Avisa 15, 5 e 1 min antes.','📅 Google Agenda: conecte pelo relógio e seus compromissos aparecem na Agenda do Gestor.','🔎 Buscar clientes (só Lucas): procura negócios por cidade e ramo e leva para o funil.']},
  {id:'2026-11-16',data:'16/11/2026',itens:['📄 Alvarás: botão Ver abre o documento do Drive aqui mesmo, sem baixar. Toda a equipe enxerga a lista.','🔁 Faltando 45 dias para vencer, o sistema cria sozinho a tarefa de renovação com o checklist.','🏢 Empresa nova aparece no Início de todos por 10 dias.','🧹 Empresas → Dados faltando: preenche o cadastro pela Receita com um clique.','📝 Propostas saem no papel timbrado do escritório.']},
  {id:'2026-11-14',data:'14/11/2026',itens:['✨ Visual novo, mais leve: menu lateral flutuante, botões arredondados, ícones novos e tema claro como padrão (o escuro continua no botão de tema).','🏠 Novo Início: o seu dia com a tarefa de agora, a lista do dia, quem cobrar e um resumo da semana.','📱 No celular, menu flutuante embaixo com Início, Tarefas, Agenda e Empresas; o resto fica em Mais.']},
@@ -6460,5 +6571,15 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 .rel-nx .k{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA3B8}.rel-nx .v{font-family:var(--f-head);font-size:34px;font-weight:700;letter-spacing:-.03em}.rel-nx .t{font-weight:600}.rel-nx .s{font-size:12px;color:#9AA3B8;margin-bottom:6px}
 .rel-ls{margin-top:12px;font-size:12.5px;color:#B8BFD0;display:flex;flex-direction:column;gap:4px;text-align:left}.rel-ls b{color:#EEF0F6;font-weight:600;margin-right:4px}
 .rel-g{margin-top:14px;color:#cfd5ff!important}
+
+.wa-sec{font:600 14px var(--f-head);margin:6px 2px -2px;display:flex;gap:6px;align-items:baseline}.wa-sec small{font-weight:400;color:var(--dim);font-size:12px}
+.cp-box{padding:16px 18px}.cp-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}.cp-top .sub{font-size:12.5px;color:var(--mut);margin-top:4px}
+.cp-st{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-family:var(--f-head);font-size:16px}.cp-st .dot{width:10px;height:10px;border-radius:50%;background:var(--dim)}.cp-st.on .dot{background:#2FB57A;box-shadow:0 0 0 4px rgba(47,181,122,.18);animation:nmP 2s infinite}
+.cp-btns{display:flex;gap:8px}.cp-seq{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px}
+.cp-dica{display:flex;gap:10px;font-size:12.5px;color:var(--mut);background:color-mix(in srgb,#2FB57A 8%,var(--panel));border:1px solid color-mix(in srgb,#2FB57A 25%,transparent);border-radius:14px;padding:12px 14px}.cp-dica svg{width:18px;height:18px;flex:none;color:#2FB57A}
+.cp-pop{position:fixed;right:20px;bottom:20px;z-index:250;width:320px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 60px -12px rgba(0,0,0,.35);padding:14px;animation:pdRise .3s backwards;border-top:3px solid #25D366}
+.cp-h{display:flex;gap:8px;align-items:center;font-size:12.5px}.cp-h svg{width:16px;height:16px;color:#25D366}.cp-h span{margin-left:auto;color:var(--dim);font-family:var(--f-mono);font-size:11px}
+.cp-n{font:700 17px var(--f-head);margin:8px 0 2px}.cp-s{font-size:12px;color:var(--mut)}.cp-a{display:flex;gap:6px;justify-content:flex-end;margin-top:12px}
+.alv-sem{border-bottom:1px solid var(--line);padding-bottom:6px}.alv-semh{display:flex;gap:8px;align-items:center;padding:12px 16px 4px;font-size:13px}.alv-semh svg{width:16px;height:16px;color:var(--amb)}
 </style>
 </body></html>
