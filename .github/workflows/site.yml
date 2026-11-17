@@ -26,7 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir site && cp index.html manifest.webmanifest sw.js icon-*.png site/
+          mkdir site && cp index.html manifest.webmanifest sw.js icon-*.png site/ && cp -r escritorio site/
           sed -i "s/__BUILD__/${GITHUB_SHA}/" site/index.html
           PC=$(gh api repos/${{ github.repository }}/releases/tags/programa-windows --jq .name 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 1.0.0)
           AND=$(gh api repos/${{ github.repository }}/releases/tags/app-android --jq .name 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 0.0.0)
