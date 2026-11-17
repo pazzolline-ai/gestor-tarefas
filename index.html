@@ -3086,6 +3086,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   const v=$('#view');
   v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,whats:vWhats,prospec:vProspec,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras,propostas:vPropostas}[UI.view]||vDashboard)();
   if(UI.view==='chat')chatPos(fq);
+  try{ferAplicar()}catch(e){}
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
 function go(view){UI.view=view;if(view==='chat')chatMarcar();if(view==='mural')lsSet('cs.muralVisto',agora());if(view!=='empresa')UI.empresaId=null;if(view!=='empresas'){UI.selMode=false;UI.sel.clear()}try{history.replaceState(null,'','#'+view)}catch(e){}render();window.scrollTo(0,0);const cv=$('#view');if(cv){cv.classList.remove('enter');void cv.offsetWidth;cv.classList.add('enter')}}
@@ -3766,7 +3767,7 @@ const WAG_PAD=[
  {id:'troca',nome:'Troca de contador',cor:'#3FA7E0',quando:'Já tem empresa e quer trocar',txt:'Que bom, {nome}! A troca de contador é simples e a gente cuida de tudo com o escritório atual. Me envia o CNPJ da empresa que eu já preparo uma proposta para você.'},
  {id:'cob',nome:'Lembrete de pagamento',cor:'#E06070',quando:'Honorário em aberto',txt:'Olá, {nome}! Tudo bem? Só um lembrete do honorário deste mês. Se já pagou, desconsidere. Qualquer coisa estamos aqui: {telefone}.'}];
 const UIW={tab:'funil',q:''};
-function leadsLista(){return [...D.leads.entries()].filter(([i])=>i!=='_agentes').map(([id,l])=>Object.assign({id},l))}
+function leadsLista(){return [...D.leads.entries()].filter(([i])=>i[0]!=='_').map(([id,l])=>Object.assign({id},l))}
 function waFone(t){t=String(t||'').replace(/\D/g,'');if(!t)return '';if(t.length<=11)t='55'+t;return t}
 function waTxt(tpl,l){const nome=String((l&&(l.contato||l.nome))||'').split(' ')[0]||'tudo bem';return String(tpl||'').replace(/\{nome\}/g,nome).replace(/\{endereco\}/g,ESC_END).replace(/\{telefone\}/g,ESC_TEL).replace(/\{mapa\}/g,ESC_MAPA).replace(/\{empresa\}/g,(l&&l.nome)||'')}
 function waAbrir(fone,txt){const f=waFone(fone);const u=(f?'https://wa.me/'+f:'https://wa.me/')+(txt?'?text='+encodeURIComponent(txt):'');window.open(u,'gtwa')}
@@ -3779,7 +3780,7 @@ function vWhats(){
   const ret=ab.filter(l=>l.proximo&&l.proximo<=hoje());
   const tabs=`<div class="seg">${[['funil','Funil de clientes'],['camp','Campanhas'],['agentes','Agentes e respostas']].map(([k,t])=>`<button class="${UIW.tab===k?'on':''}" data-watab="${k}">${t}</button>`).join('')}</div>`;
   const top=`<section class="wa-hero"><div class="wa-hl"><div class="wa-ic">${svg('wa')}</div><div><b>WhatsApp do escritório</b><div class="sub">Abra o WhatsApp numa janela ao lado e trabalhe os contatos pelo funil. As respostas dos agentes já saem com o nosso endereço.</div></div></div>
-    <div class="wa-hr"><button class="btn pri" data-waweb>${svg('wa')}Abrir WhatsApp</button><button class="btn" data-leadnovo>+ Novo contato</button></div></section>
+    <div class="wa-hr"><button class="btn ${roboCfg().ligado?'':'ghost'}" data-robotg title="Robô manda boas-vindas assim que o contato cai no funil">🤖 Robô ${roboCfg().ligado?'ligado':'desligado'}</button><button class="btn pri" data-waweb>${svg('wa')}Abrir WhatsApp</button><button class="btn" data-leadnovo>+ Novo contato</button></div></section>
    <div class="tiles wa-k">${[[ab.length,'Contatos no funil','var(--acc)'],[brl(tot),'Valor mensal em negociação','#C77DFF'],[gan.length,'Fechados no mês','#2FB57A'],[ret.length,'Retornos para hoje','#E06070']].map(([n,l,c])=>`<div class="tile" style="--c:${c}"><span class="n">${n}</span><span class="l">${l}</span></div>`).join('')}</div>`;
   if(UIW.tab==='camp')return top+`<div class="bar">${tabs}</div>`+vCampanha();
   if(UIW.tab==='agentes'){const ags=waAgentes();const card=a=>`<div class="wa-ag" style="--c:${a.cor||'#6B7AF5'}"><div class="wa-agh"><span class="dot"></span><b>${esc(a.nome)}</b><span class="sp"></span><button class="btn sm ghost" data-aged="${esc(a.id)}">Editar</button></div><div class="sub">${esc(a.quando||'')}</div><div class="wa-agt">${esc(waTxt(a.txt,{nome:'Cliente'}))}</div><div class="wa-agf"><button class="btn sm" data-agcopy="${esc(a.id)}">Copiar</button><button class="btn sm pri" data-agwa="${esc(a.id)}">${svg('wa')}Enviar</button></div></div>`;
@@ -3792,7 +3793,7 @@ function vWhats(){
     return `<div class="wa-col" data-wacol="${k}" style="--c:${c}"><div class="wa-colh"><span class="dot"></span><b>${t}</b><span class="ct">${it.length}</span>${v?`<small>${brl(v)}</small>`:''}</div>
     ${it.map(l=>`<div class="wa-card" draggable="true" data-lead="${l.id}"><div class="nm">${esc(l.nome||l.contato||'Sem nome')}</div>${l.contato&&l.nome?`<div class="sub">${esc(l.contato)}</div>`:''}
       <div class="tg">${l.servico?`<span class="flag">${esc(l.servico)}</span>`:''}${l.origem?`<span class="flag">${esc(l.origem)}</span>`:''}${+l.valor?`<span class="flag grn">${brl(+l.valor)}/mês</span>`:''}${l.proximo?`<span class="flag ${l.proximo<=hoje()?'red':''}">Retorno ${fmtC(l.proximo)}</span>`:''}</div>
-      <div class="ac">${l.telefone?`<button class="btn sm pri" data-leadwa="${l.id}" title="Responder no WhatsApp">${svg('wa')}</button>`:''}<button class="btn sm ghost" data-leadmv="${l.id}" data-d="-1" title="Voltar etapa">‹</button><button class="btn sm ghost" data-leadmv="${l.id}" data-d="1" title="Avançar etapa">›</button><button class="btn sm ghost" data-leaded="${l.id}">Abrir</button></div></div>`).join('')||'<div class="wa-empty">Arraste contatos para cá</div>'}</div>`}).join('')}</div>`;
+      <div class="ac">${l.telefone?`<button class="btn sm pri" data-leadwa="${l.id}" title="Responder no WhatsApp">${svg('wa')}</button>`:''}<button class="btn sm" data-robo="${l.id}" title="Robô: responder o cliente">🤖${(l.conversa||[]).length?`<small style="margin-left:2px;opacity:.7">${l.conversa.length}</small>`:''}</button><button class="btn sm ghost" data-leadmv="${l.id}" data-d="-1" title="Voltar etapa">‹</button><button class="btn sm ghost" data-leadmv="${l.id}" data-d="1" title="Avançar etapa">›</button><button class="btn sm ghost" data-leaded="${l.id}">Abrir</button></div></div>`).join('')||'<div class="wa-empty">Arraste contatos para cá</div>'}</div>`}).join('')}</div>`;
 }
 function leadForm(id,pre){const l=id?D.leads.get(id):Object.assign({etapa:'novo',origem:'WhatsApp',responsavel:meuNome()},pre||{});if(!l)return;
   openModal(`${mh(id?'Contato do funil':'Novo contato')}<form id="ldF"><div class="mb"><div class="fg">
@@ -4034,6 +4035,66 @@ function alvImpPdf(){if(mode!=='db'){toast('Entre com login para importar.');ret
         if(ac==='anexar'){const a=D.alvaras.get(id);await alvPut(id,Object.assign({},a,{anexos:(a.anexos||[]).concat([ax]),historico:(a.historico||[]).concat([{data:hoje(),txt:'Anexou pelo importador: '+r.f.name,por:meuNome()}])}))}
         else{const v=q('.ai-v');await alvPut(id,{empresaId:emp,empresaNome:empNome(emp),tipo:q('.ai-t'),numero:q('.ai-n'),emissao:r.emissao||'',validade:v,aviso:30,responsavel:respPadrao('societario'),obs:'Importado do PDF '+r.f.name,renovando:false,arquivado:ac==='arq',anexos:[ax],criadoEm:agora(),criadoPor:meuNome(),historico:[{data:hoje(),txt:'Importado do PDF'+(v?' · validade '+fmt(v):''),por:meuNome()}]})}n++}
       closeModal();toast(`${n} documento(s) importado(s)`+(er?` · ${er} sem empresa ou com erro`:''));render()}}}
+
+/* ================= Feriados animados ================= */
+const FER_TEMA={ano:{n:'Ano Novo',e:['🎆','✨','🎇','🥂'],a:'burst',c:['#1b1f4b','#6B4DFF']},carn:{n:'Carnaval',e:['🎉','🎊','🎭','🪅'],a:'fall',c:['#FF3D7F','#FFB800']},sexta:{n:'Sexta-feira Santa',e:['🕊️','✝️','🌿'],a:'float',c:['#5E4B8B','#9C8AC9']},
+ tira:{n:'Tiradentes',e:['🇧🇷','⭐','📜'],a:'wave',c:['#0E8A45','#E8C21A']},trab:{n:'Dia do Trabalho',e:['🛠️','⚙️','💼','👷'],a:'fall',c:['#E06B1A','#F4A340']},corp:{n:'Corpus Christi',e:['🌸','🌼','🕊️'],a:'fall',c:['#B76FD1','#F2A7C9']},
+ indep:{n:'Independência do Brasil',e:['🇧🇷','💚','💛','⭐'],a:'wave',c:['#0E8A45','#E8C21A']},apar:{n:'N. Sra. Aparecida · Dia das Crianças',e:['🎈','🧸','🪁','🌹'],a:'rise',c:['#2A7DE1','#7CC4FF']},
+ fin:{n:'Finados',e:['🕯️','🤍','🌙'],a:'float',c:['#2D3142','#6B7088']},rep:{n:'Proclamação da República',e:['🇧🇷','⭐','🏛️'],a:'wave',c:['#1D4E89','#3FA7E0']},cons:{n:'Consciência Negra',e:['✊🏿','🌍','💛'],a:'float',c:['#3B2416','#C98B2E']},
+ natal:{n:'Natal',e:['❄️','🎄','🎁','⭐','❄️'],a:'fall',c:['#B3123A','#0E6B3A']}};
+function ferLista(y){const p=pascoaData(y),pd=n=>{const d=new Date(p);d.setDate(d.getDate()+n);return isoD(d)};
+  return [[y+'-01-01','ano'],[pd(-48),'carn'],[pd(-47),'carn'],[pd(-2),'sexta'],[y+'-04-21','tira'],[y+'-05-01','trab'],[pd(60),'corp'],[y+'-09-07','indep'],[y+'-10-12','apar'],[y+'-11-02','fin'],[y+'-11-15','rep'],[y+'-11-20','cons'],[y+'-12-25','natal']]}
+function ferSemana(ini){const fim=addD(ini,6);const ys=[...new Set([ini.slice(0,4),fim.slice(0,4)])];return ys.flatMap(y=>ferLista(+y)).filter(([d])=>d>=ini&&d<=fim).map(([d,k])=>Object.assign({data:d,k},FER_TEMA[k]))}
+function ferParts(t,n,cls){return Array.from({length:n},(x,i)=>`<i class="fp ${cls||''} fa-${t.a}" style="left:${Math.round(Math.random()*100)}%;animation-delay:${(Math.random()*(t.a==='burst'?2.5:6)).toFixed(2)}s;animation-duration:${(t.a==='burst'?1.6:5+Math.random()*5).toFixed(2)}s;font-size:${14+Math.round(Math.random()*16)}px;${t.a==='burst'?`top:${10+Math.round(Math.random()*60)}%;`:''}">${t.e[i%t.e.length]}</i>`).join('')}
+function ferBannerHtml(fs){return fs.map(f=>{const dd=toD(f.data),dia=dd.toLocaleDateString('pt-BR',{weekday:'long'}),fal=dias(hoje(),f.data);
+  return `<div class="fer-b" style="--c1:${f.c[0]};--c2:${f.c[1]}"><div class="fer-fx">${ferParts(f,18)}</div><span class="fer-em">${f.e[0]}</span><div class="fer-tx"><b>${f.n}</b><span>${dia}, ${fmt(f.data)} · ${fal===0?'é hoje!':fal>0?'faltam '+plural(fal,'dia','dias'):'foi '+(fal===-1?'ontem':'há '+(-fal)+' dias')}</span></div><span class="fer-tag">Feriado</span></div>`}).join('')}
+function ferAplicar(){if(!['agenda','dashboard'].includes(UI.view))return;const v=document.getElementById('view');if(!v||v.querySelector('.fer-wrap'))return;
+  const ini=UI.view==='agenda'?(UI.agSem||agSeg(hoje())):agSeg(hoje());const fs=ferSemana(ini);if(!fs.length)return;
+  const w=document.createElement('div');w.className='fer-wrap';w.innerHTML=ferBannerHtml(fs);v.insertBefore(w,v.firstChild);
+  fs.forEach(f=>document.querySelectorAll(`[data-agdia="${f.data}"],[data-dia="${f.data}"]`).forEach(el=>{el.classList.add('fer-dia');el.title=f.n}));
+  const k='gt.fershow.'+fs[0].data;if(!lsGet(k,false)&&!matchMedia('(prefers-reduced-motion: reduce)').matches){lsSet(k,true);ferShow(fs[0])}}
+function ferShow(f){const o=document.createElement('div');o.className='fer-ov';o.style.setProperty('--c1',f.c[0]);o.style.setProperty('--c2',f.c[1]);
+  o.innerHTML=`<div class="fer-fx">${ferParts(f,46,'big')}</div><div class="fer-card"><div class="fer-big">${f.e[0]}</div><b>${f.n}</b><span>${toD(f.data).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</span></div>`;
+  o.addEventListener('click',()=>o.remove());document.body.appendChild(o);setTimeout(()=>o.classList.add('out'),4200);setTimeout(()=>o.remove(),5000)}
+
+/* ================= Robô de atendimento do funil ================= */
+const ROBO_INT=[
+ {k:'end',re:/endere|onde fica|localiza|como cheg|mapa|escritorio fica/,ag:'end',etapa:''},
+ {k:'hor',re:/horario|que horas|abre|fecha|atendem (sabado|domingo)|funciona/,txt:'Atendemos de segunda a sexta, das 8h às 18h, aqui na {endereco}. Pelo WhatsApp respondemos rapidinho também! 🙂',etapa:''},
+ {k:'abrir',re:/abrir|abertura|cnpj novo|montar (uma )?empresa|formalizar|tirar (o )?cnpj/,ag:'abert',etapa:'qualif'},
+ {k:'mei',re:/\bmei\b|microempreendedor|das mei|desenquadr/,txt:'Trabalhamos com MEI sim, {nome}! Cuidamos do DAS, da declaração anual e, quando o faturamento cresce, da passagem para ME sem dor de cabeça. Você já é MEI ou quer abrir?',etapa:'qualif'},
+ {k:'troca',re:/trocar|mudar de contador|outro contador|insatisf|contador atual/,ag:'troca',etapa:'qualif'},
+ {k:'preco',re:/pre[cç]o|valor|quanto (custa|fica|cobra)|honor|mensalidade|or[cç]amento|proposta/,txt:'O valor depende do tipo de empresa e dos serviços, {nome}. Para te passar uma proposta certinha, me conta: qual o ramo, o regime (MEI, Simples…) e se tem funcionários?',etapa:'qualif'},
+ {k:'docs',re:/document|o que (precisa|preciso)|quais papeis/,ag:'abert',etapa:''},
+ {k:'alv',re:/alvar|bombeir|cercon|sanit|vigil/,txt:'Cuidamos de alvará de funcionamento, CERCON (bombeiros) e alvará sanitário, {nome}, inclusive da renovação. Me diz o CNPJ e o endereço do estabelecimento que eu já vejo o que falta.',etapa:'qualif'},
+ {k:'ir',re:/imposto de renda|\birpf\b|declara[cç][aã]o/,txt:'Fazemos a declaração de Imposto de Renda, {nome}! Me manda seus informes de rendimento que eu já te passo o valor e o prazo.',etapa:'qualif'},
+ {k:'humano',re:/falar com (alguem|uma pessoa|atendente|humano)|ligar|telefone/,txt:'Claro, {nome}! Vou pedir para um dos nossos contadores te chamar agora. Se preferir, ligue: {telefone}.',etapa:'',humano:true},
+ {k:'obg',re:/obrigad|valeu|show|perfeito|beleza/,txt:'Imagina, {nome}! Qualquer coisa estamos por aqui. 😉',etapa:''},
+ {k:'oi',re:/^(oi|ola|bom dia|boa tarde|boa noite|opa|e ai)\b/,ag:'recep',etapa:''}];
+function roboCfg(){return Object.assign({ligado:true,boasVindas:'recep'},D.leads.get('_robo')||{})}
+function roboResponder(msg,l){const m=norm(msg||'');const ags=waAgentes();const ORD=['preco','abrir','mei','troca','alv','ir','docs','humano','end','hor','obg','oi'];let hits=ROBO_INT.filter(x=>x.re.test(m)).sort((a,b)=>ORD.indexOf(a.k)-ORD.indexOf(b.k));if(hits.length>1)hits=hits.filter(h=>h.k!=='oi'&&h.k!=='obg');if(hits.some(h=>h.k==='abrir'))hits=hits.filter(h=>h.k!=='docs');
+  if(!hits.length)return {txt:waTxt('Obrigado pela mensagem, {nome}! Já vou verificar e te respondo em seguida. Se quiser adiantar, me conta se já tem empresa aberta ou se quer abrir uma.',l),etapa:'',k:'geral',humano:true};
+  const partes=hits.slice(0,3).map(h=>h.ag?(ags.find(a=>a.id===h.ag)||{}).txt:h.txt).filter(Boolean);const et=(hits.find(h=>h.etapa)||{}).etapa||'';
+  return {txt:waTxt(partes.join('\n\n'),l),etapa:et,k:hits.map(h=>h.k).join(', '),humano:hits.some(h=>h.humano)}}
+function roboChat(id){const l=D.leads.get(id);if(!l)return;const conv=l.conversa||[];
+  openModal(`${mh('🤖 Robô · '+esc(l.contato||l.nome||''))}<div class="mb"><div class="rb-chat" id="rbC">${conv.map(c=>`<div class="rb-m ${c.de==='cli'?'cli':'rb'}">${esc(c.txt)}<small>${fmtC(String(c.em).slice(0,10))} ${String(c.em).slice(11,16)}</small></div>`).join('')||'<div class="rb-vz">Cole aqui o que o cliente escreveu no WhatsApp. O robô entende o assunto (endereço, preço, abertura, MEI, alvará, troca de contador…) e já escreve a resposta.</div>'}</div>
+   <textarea class="inp" id="rbIn" rows="2" placeholder="Mensagem do cliente…" style="margin-top:10px"></textarea><div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px"><button type="button" class="btn sm pri" id="rbGo">🤖 Robô responder</button></div>
+   <div id="rbOut"></div></div><div class="mf"><button type="button" class="btn" data-close>Fechar</button></div>`);
+  const c=document.getElementById('rbC');c.scrollTop=c.scrollHeight;
+  $('#rbGo').onclick=()=>{const msg=val('rbIn').trim();if(!msg)return;const r=roboResponder(msg,l);
+    $('#rbOut').innerHTML=`<div class="rb-sug"><div class="k">Resposta do robô <span class="flag">${esc(r.k)}</span>${r.etapa?` <span class="flag grn">vai para ${esc(FUNIL.find(x=>x[0]===r.etapa)[1])}</span>`:''}${r.humano?' <span class="flag amb">avisar um contador</span>':''}</div><textarea class="inp" id="rbTx" rows="6">${esc(r.txt)}</textarea>
+      <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px"><button type="button" class="btn sm" id="rbCp">Copiar</button><button type="button" class="btn sm pri" id="rbEnv">${svg('wa')}Enviar no WhatsApp</button></div></div>`;
+    const salvar=async()=>{const now=agora(),cur=D.leads.get(id)||l;const n=Object.assign({},cur,{conversa:(cur.conversa||[]).concat([{de:'cli',txt:msg,em:now},{de:'rb',txt:val('rbTx'),em:now}]).slice(-60),ultimoContato:now,hist:(cur.hist||[]).concat([{em:now,txt:'Robô respondeu ('+r.k+')'}])});
+      if(r.etapa&&FUNIL.findIndex(x=>x[0]===r.etapa)>FUNIL.findIndex(x=>x[0]===(cur.etapa||'novo')))n.etapa=r.etapa;if(r.humano&&!n.proximo)n.proximo=hoje();await leadPut(id,n)};
+    $('#rbCp').onclick=async()=>{try{await navigator.clipboard.writeText(val('rbTx'))}catch(e){}await salvar();toast('Copiado');roboChat(id)};
+    $('#rbEnv').onclick=async()=>{waAbrir(l.telefone,val('rbTx'));await salvar();roboChat(id)}}}
+function roboBoasVindas(id){const c=roboCfg();if(!c.ligado)return;const l=D.leads.get(id);if(!l||!l.telefone||l.boasVindasEm)return;const ag=waAgentes().find(a=>a.id===(l.origem==='Prospecção'?(cpCfg().ag1||'ab1'):c.boasVindas))||waAgentes()[0];
+  const p=document.createElement('div');p.className='cp-pop';p.id='rbPop';p.innerHTML=`<div class="cp-h">🤖<b>Robô: contato novo no funil</b></div><div class="cp-n">${esc(l.contato||l.nome)}</div><div class="cp-s">${esc(ag.nome)} · já escrito, é só enviar</div><div class="cp-a"><button class="btn sm" id="rbNo">Agora não</button><button class="btn sm pri" id="rbYes">${svg('wa')}Enviar boas-vindas</button></div>`;
+  const old=document.getElementById('rbPop');if(old)old.remove();document.body.appendChild(p);
+  $('#rbNo').onclick=()=>p.remove();$('#rbYes').onclick=async()=>{p.remove();const txt=waTxt(ag.txt,l);waAbrir(l.telefone,txt);const now=agora(),cur=D.leads.get(id);
+    await leadPut(id,Object.assign({},cur,{boasVindasEm:now,seqPasso:l.origem==='Prospecção'?1:(cur.seqPasso||0),seqProx:l.origem==='Prospecção'?addD(hoje(),(cpCfg().seq[0]||{}).dias||3):cur.seqProx,ultimoContato:now,conversa:(cur.conversa||[]).concat([{de:'rb',txt,em:now}]),hist:(cur.hist||[]).concat([{em:now,txt:'Robô enviou boas-vindas'}])}))}}
+const _leadPut0=leadPut;leadPut=async function(id,d){const novo=!D.leads.has(id)&&id[0]!=='_';const r=await _leadPut0(id,d);if(r&&novo)setTimeout(()=>roboBoasVindas(id),400);return r};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-robo],[data-robotg]');if(!t)return;if(t.hasAttribute('data-robo'))roboChat(t.dataset.robo);else{const c=roboCfg();c.ligado=!c.ligado;leadPut('_robo',c)}});
 
 function mobNavHtml(navHtml){const t=document.createElement('div');t.innerHTML=navHtml;const bs=[...t.querySelectorAll('button[data-go]')];const pri=['dashboard','tarefas','agenda','empresas'];
   const out=pri.map(k=>bs.find(b=>b.dataset.go===k)).filter(Boolean).map(b=>{const l=b.querySelector('span:not(.ct)');if(l)l.className='l';return b.outerHTML});
@@ -4279,6 +4340,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-18',data:'18/11/2026',itens:['🎉 Feriados animados: na semana de feriado aparece uma animação temática na Agenda e no Início (Natal com neve, Carnaval com confete…).','🤖 Robô do funil: manda boas-vindas assim que o contato entra e responde o cliente pelo assunto (endereço, preço, abertura, MEI, alvará…).']},
  {id:'2026-11-17b',data:'17/11/2026',itens:['📣 Mensagens de abordagem para chamar clientes novos, com 1º contato, 2º toque e último toque.','🛡️ Campanhas com limite anti-bloqueio: máximo por dia, aquecimento, intervalo aleatório e só em horário comercial.','📄 Alvarás → Importar PDFs: o sistema lê os documentos, acha a empresa e a validade e anexa o arquivo.','🏢 A lista de alvarás agora mostra as empresas sem alvará cadastrado.']},
  {id:'2026-11-17',data:'17/11/2026',itens:['💬 Novo módulo WhatsApp: funil de clientes (arraste entre etapas), agentes com respostas prontas que já falam o endereço do escritório e botão para abrir o WhatsApp ao lado.','⏰ Relógio no topo com contagem até a próxima reunião; clique para o relógio grande. Avisa 15, 5 e 1 min antes.','📅 Google Agenda: conecte pelo relógio e seus compromissos aparecem na Agenda do Gestor.','🔎 Buscar clientes (só Lucas): procura negócios por cidade e ramo e leva para o funil.']},
  {id:'2026-11-16',data:'16/11/2026',itens:['📄 Alvarás: botão Ver abre o documento do Drive aqui mesmo, sem baixar. Toda a equipe enxerga a lista.','🔁 Faltando 45 dias para vencer, o sistema cria sozinho a tarefa de renovação com o checklist.','🏢 Empresa nova aparece no Início de todos por 10 dias.','🧹 Empresas → Dados faltando: preenche o cadastro pela Receita com um clique.','📝 Propostas saem no papel timbrado do escritório.']},
@@ -6581,5 +6643,34 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 .cp-h{display:flex;gap:8px;align-items:center;font-size:12.5px}.cp-h svg{width:16px;height:16px;color:#25D366}.cp-h span{margin-left:auto;color:var(--dim);font-family:var(--f-mono);font-size:11px}
 .cp-n{font:700 17px var(--f-head);margin:8px 0 2px}.cp-s{font-size:12px;color:var(--mut)}.cp-a{display:flex;gap:6px;justify-content:flex-end;margin-top:12px}
 .alv-sem{border-bottom:1px solid var(--line);padding-bottom:6px}.alv-semh{display:flex;gap:8px;align-items:center;padding:12px 16px 4px;font-size:13px}.alv-semh svg{width:16px;height:16px;color:var(--amb)}
+
+.fer-wrap{display:flex;flex-direction:column;gap:8px}
+.fer-b{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:18px;color:#fff;background:linear-gradient(120deg,var(--c1),var(--c2));box-shadow:0 14px 34px -14px var(--c1)}
+.fer-em{font-size:34px;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25));animation:ferBob 2.4s ease-in-out infinite;position:relative;z-index:1}
+.fer-tx{display:flex;flex-direction:column;position:relative;z-index:1}.fer-tx b{font:700 17px var(--f-head);letter-spacing:-.01em}.fer-tx span{font-size:12.5px;opacity:.9;text-transform:none}
+.fer-tag{margin-left:auto;position:relative;z-index:1;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.fer-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fp{position:absolute;top:-30px;font-style:normal;opacity:.9;animation-iteration-count:infinite;animation-timing-function:linear}
+.fa-fall{animation-name:ferFall}.fa-rise{top:auto;bottom:-30px;animation-name:ferRise}.fa-float{animation-name:ferFloat;top:auto;bottom:-20px;opacity:.6}.fa-wave{animation-name:ferWave;top:auto;bottom:-20px}.fa-burst{animation-name:ferBurst;animation-timing-function:ease-out}
+@keyframes ferFall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(160px) rotate(300deg)}}
+@keyframes ferRise{0%{transform:translateY(0)}100%{transform:translateY(-170px) translateX(20px)}}
+@keyframes ferFloat{0%{transform:translateY(0);opacity:0}30%{opacity:.7}100%{transform:translateY(-120px);opacity:0}}
+@keyframes ferWave{0%{transform:translateY(0) rotate(-12deg)}50%{transform:translateY(-60px) rotate(12deg)}100%{transform:translateY(-130px) rotate(-12deg);opacity:0}}
+@keyframes ferBurst{0%{transform:scale(.2);opacity:0}30%{opacity:1}100%{transform:scale(1.8);opacity:0}}
+@keyframes ferBob{50%{transform:translateY(-4px) rotate(-6deg)}}
+.fer-ov .fa-fall{animation-name:ferFallBig}.fer-ov .fa-rise{animation-name:ferRiseBig}.fer-ov .fa-float,.fer-ov .fa-wave{animation-name:ferRiseBig}
+@keyframes ferFallBig{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(110vh) rotate(360deg)}}
+@keyframes ferRiseBig{0%{transform:translateY(0)}100%{transform:translateY(-110vh) translateX(30px)}}
+.fer-ov{position:fixed;inset:0;z-index:400;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--c1) 55%,transparent),rgba(6,8,14,.75));backdrop-filter:blur(3px);display:grid;place-items:center;animation:pdRise .35s backwards;transition:opacity .8s;cursor:pointer}
+.fer-ov.out{opacity:0}.fer-ov .fp.big{font-size:30px!important}
+.fer-card{position:relative;z-index:1;text-align:center;color:#fff;display:flex;flex-direction:column;gap:4px;padding:28px 36px;border-radius:28px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 30px 80px -20px rgba(0,0,0,.6);animation:ferPop .6s cubic-bezier(.2,1.4,.4,1) backwards}
+.fer-card b{font:800 26px var(--f-head);letter-spacing:-.02em}.fer-card span{text-transform:capitalize;opacity:.9}.fer-big{font-size:64px;animation:ferBob 1.6s ease-in-out infinite}
+@keyframes ferPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.fer-dia{box-shadow:inset 0 -3px 0 #E0A040!important;position:relative}.fer-dia::after{content:'🎉';position:absolute;top:2px;right:4px;font-size:11px}
+@media (prefers-reduced-motion:reduce){.fp,.fer-em,.fer-big{animation:none!important}}
+.rb-chat{max-height:42vh;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;background:color-mix(in srgb,#25D366 5%,var(--panel2))}
+.rb-m{max-width:80%;padding:8px 11px;border-radius:14px;font-size:13px;white-space:pre-wrap}.rb-m small{display:block;font-size:10.5px;opacity:.55;margin-top:2px}
+.rb-m.cli{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:4px}.rb-m.rb{align-self:flex-end;background:#D9FDD3;color:#0b1a10;border-bottom-right-radius:4px}
+.rb-vz{font-size:12.5px;color:var(--mut);text-align:center;padding:16px}.rb-sug{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:12px}.rb-sug .k{font-size:12px;color:var(--mut);margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 </style>
 </body></html>
