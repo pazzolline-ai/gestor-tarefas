@@ -4,214 +4,205 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Londe & Rodrigues Assessoria Contábil · Anápolis-GO</title>
-<meta name="description" content="Escritório de contabilidade em Anápolis-GO. Abertura de empresa, contabilidade mensal, folha de pagamento, MEI, alvarás e imposto de renda, com atendimento rápido pelo WhatsApp.">
+<meta name="description" content="Assessoria contábil em Anápolis-GO. Abertura de empresa, contabilidade, planejamento tributário, folha de pagamento, alvarás e imposto de renda.">
 <meta property="og:title" content="Londe & Rodrigues Assessoria Contábil">
-<meta property="og:description" content="Contabilidade em Anápolis-GO: abertura de empresa, impostos, folha, alvarás e IR.">
+<meta property="og:description" content="Assessoria contábil em Anápolis-GO.">
 <meta property="og:image" content="img/og.jpg">
-<meta name="theme-color" content="#1550A8">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-60 -190 1330 1330'%3E%3Cpath fill='%231a5cc0' d='M0 0h145v789h769l74 145H0zM223 0h881v462H223V317h736V145H223zM816 518h166l227 416h-169z'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#0A1F3F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-60 -190 1330 1330'%3E%3Cpath fill='%230A1F3F' d='M0 0h145v789h769l74 145H0zM223 0h881v462H223V317h736V145H223zM816 518h166l227 416h-169z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --azul:#1A5CC0;--azul-esc:#1550A8;--azul-cl:#1C66D2;--indigo:#3D4A92;
-  --tinta:#16213D;--texto:#3B4560;--suave:#6B7591;
-  --fundo:#FFFFFF;--fundo2:#F3F6FB;--linha:#E1E7F0;--card:#FFFFFF;
-  --zap:#1FA855;
-  --r:14px;--max:1160px;
+  --navy:#0A1F3F;--navy2:#0F2A52;--navy3:#163663;
+  --ouro:#B49A5E;--ouro-cl:#D8C38E;--ouro-esc:#947C44;
+  --creme:#F7F4EE;--papel:#FBFAF7;--linha:#E6E0D4;
+  --tinta:#0E1A2E;--texto:#4A5263;--suave:#7A8193;
+  --max:1180px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:84px}
-body{font-family:'DM Sans',system-ui,sans-serif;color:var(--texto);background:var(--fundo);line-height:1.6;font-size:17px;-webkit-font-smoothing:antialiased}
-h1,h2,h3,.marca{font-family:'Raleway',sans-serif;color:var(--tinta);line-height:1.15}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{font-family:'Montserrat',system-ui,sans-serif;font-weight:400;color:var(--texto);background:var(--papel);line-height:1.75;font-size:16px;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;color:var(--tinta);line-height:1.1;letter-spacing:-.005em}
 a{color:inherit}
 img,svg{display:block}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 28px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.kicker{display:flex;align-items:center;gap:14px;font-size:11.5px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--ouro-esc);margin-bottom:22px}
+.kicker::before{content:"";width:36px;height:1px;background:currentColor}
 
 /* topo */
-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
-header.rolou{border-color:var(--linha)}
-.topo{display:flex;align-items:center;justify-content:space-between;height:72px;gap:16px}
-.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
-.logo svg{width:40px;height:auto}
-.logo .marca{display:flex;flex-direction:column;font-weight:500;letter-spacing:.02em;font-size:17px;color:var(--indigo)}
-.logo .marca small{font-size:10.5px;letter-spacing:.32em;font-weight:500;color:var(--indigo);opacity:.85}
-nav ul{display:flex;gap:28px;list-style:none;align-items:center}
-nav a{text-decoration:none;font-weight:500;font-size:15px;color:var(--texto)}
-nav a:hover{color:var(--azul)}
-.btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:999px;font-weight:600;font-size:15.5px;text-decoration:none;border:0;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s,background .15s}
-.btn:hover{transform:translateY(-1px)}
-.btn-zap{background:var(--zap);color:#fff;box-shadow:0 6px 18px -6px rgba(31,168,85,.55)}
-.btn-zap:hover{background:#1a9149}
-.btn-azul{background:var(--azul);color:#fff;box-shadow:0 6px 18px -6px rgba(26,92,192,.6)}
-.btn-azul:hover{background:var(--azul-esc)}
-.btn-linha{background:transparent;color:var(--azul);box-shadow:inset 0 0 0 1.5px var(--azul)}
-.btn svg{width:19px;height:19px}
-.menu-btn{display:none;background:none;border:0;padding:8px;cursor:pointer;color:var(--tinta)}
+header{position:fixed;inset:0 0 auto 0;z-index:20;transition:background .3s,box-shadow .3s}
+header.rolou{background:rgba(10,31,63,.96);backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(180,154,94,.25)}
+.topo{display:flex;align-items:center;justify-content:space-between;height:84px;gap:16px}
+.logo{display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff}
+.logo svg{width:38px;height:auto}
+.logo .marca{display:flex;flex-direction:column;font-weight:500;letter-spacing:.14em;font-size:14.5px;line-height:1.35}
+.logo .marca small{font-size:9px;letter-spacing:.42em;font-weight:400;color:var(--ouro-cl)}
+nav ul{display:flex;gap:34px;list-style:none;align-items:center}
+nav a{text-decoration:none;font-weight:500;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.82);transition:color .2s}
+nav a:hover{color:var(--ouro-cl)}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 28px;font-weight:600;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;border:0;cursor:pointer;font-family:inherit;transition:background .25s,color .25s,box-shadow .25s}
+.btn svg{width:17px;height:17px}
+.btn-ouro{background:var(--ouro);color:var(--navy)}
+.btn-ouro:hover{background:var(--ouro-cl)}
+.btn-fio{color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+.btn-fio:hover{box-shadow:inset 0 0 0 1px var(--ouro-cl);color:var(--ouro-cl)}
+nav .btn{padding:12px 20px;color:var(--navy)}
+nav .btn:hover{color:var(--navy)}
+.menu-btn{display:none;background:none;border:0;padding:8px;cursor:pointer;color:#fff}
 
 /* hero */
-.hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#fff 0%,var(--fundo2) 100%)}
-.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding-top:72px;padding-bottom:88px}
-.selo{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--azul);background:#E6EEFB;padding:7px 14px;border-radius:999px;margin-bottom:22px}
-.selo i{width:7px;height:7px;border-radius:50%;background:var(--azul)}
-.hero h1{font-size:clamp(36px,5vw,58px);font-weight:600;letter-spacing:-.015em;margin-bottom:20px}
-.hero h1 em{font-style:normal;color:var(--azul)}
-.hero p.lead{font-size:19px;max-width:540px;margin-bottom:32px}
-.acoes{display:flex;flex-wrap:wrap;gap:12px}
-.hero-arte{position:relative;display:flex;justify-content:center}
-.hero-arte svg.lr{width:min(100%,400px);height:auto;filter:drop-shadow(0 30px 40px rgba(21,80,168,.18))}
-.hero-arte .lr path{opacity:0;animation:entra .9s cubic-bezier(.2,.7,.2,1) forwards}
-.hero-arte .lr path:nth-child(2){animation-delay:.15s}
-.hero-arte .lr path:nth-child(3){animation-delay:.3s}
-@keyframes entra{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-.flutua{position:absolute;background:#fff;border:1px solid var(--linha);border-radius:12px;padding:11px 15px;font-size:14px;font-weight:600;color:var(--tinta);box-shadow:0 12px 30px -12px rgba(22,33,61,.25);display:flex;align-items:center;gap:9px}
-.flutua b{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#E6EEFB;color:var(--azul)}
-.flutua b svg{width:15px;height:15px}
-.f1{top:6%;left:-2%}.f2{bottom:10%;right:-2%}
-.garantias{display:flex;flex-wrap:wrap;gap:22px;margin-top:34px;font-size:14.5px;color:var(--suave)}
-.garantias span{display:flex;align-items:center;gap:7px}
-.garantias svg{width:17px;height:17px;color:var(--azul)}
+.hero{position:relative;min-height:100vh;min-height:100svh;background:radial-gradient(120% 90% at 85% 20%,var(--navy3) 0%,var(--navy) 60%);color:#C9D2E2;display:flex;align-items:center;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:auto 0 0 0;height:1px;background:linear-gradient(90deg,transparent,var(--ouro),transparent)}
+.hero .wrap{position:relative;z-index:1;width:100%;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;padding-top:130px;padding-bottom:90px}
+.hero h1{color:#fff;font-size:clamp(44px,6.2vw,84px);margin-bottom:28px}
+.hero h1 em{font-style:italic;color:var(--ouro-cl)}
+.hero p.lead{font-size:17px;font-weight:300;max-width:520px;margin-bottom:42px;color:#C3CCDD}
+.hero .kicker{color:var(--ouro-cl)}
+.acoes{display:flex;flex-wrap:wrap;gap:14px}
+.hero-arte{display:flex;justify-content:center}
+.hero-arte svg{width:420px;max-width:100%;height:auto;flex:none}
+.hero-arte path{fill:rgba(180,154,94,.06);stroke:var(--ouro);stroke-width:7;stroke-dasharray:4200;stroke-dashoffset:4200;animation:traco 2.6s cubic-bezier(.45,0,.2,1) forwards}
+.hero-arte path:nth-child(2){animation-delay:.3s}.hero-arte path:nth-child(3){animation-delay:.6s}
+@keyframes traco{to{stroke-dashoffset:0}}
+.numeros{display:flex;gap:44px;margin-top:64px;padding-top:30px;border-top:1px solid rgba(255,255,255,.1)}
+.numeros div{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#93A0B8}
+.numeros strong{display:block;font-family:'Cormorant Garamond';font-weight:500;font-size:30px;letter-spacing:0;text-transform:none;color:#fff;margin-bottom:2px}
 
 /* seções */
-section{padding:96px 0}
-.cab{max-width:640px;margin-bottom:52px}
-.cab .kicker{font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--azul);margin-bottom:12px}
-.cab h2{font-size:clamp(28px,3.4vw,40px);font-weight:600;letter-spacing:-.01em;margin-bottom:14px}
-.centro{margin-left:auto;margin-right:auto;text-align:center}
+section{padding:130px 0}
+.cab{max-width:620px;margin-bottom:70px}
+.cab h2{font-size:clamp(36px,4.4vw,56px);margin-bottom:18px}
+.cab p{font-size:16.5px}
 
-.servicos{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.serv{background:var(--card);border:1px solid var(--linha);border-radius:var(--r);padding:28px;transition:border-color .2s,box-shadow .2s,transform .2s}
-.serv:hover{border-color:#C5D4EE;box-shadow:0 18px 40px -22px rgba(21,80,168,.35);transform:translateY(-2px)}
-.ic{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--azul-esc),var(--azul-cl));color:#fff;display:grid;place-items:center;margin-bottom:18px}
-.ic svg{width:22px;height:22px}
-.serv h3{font-size:20px;font-weight:600;margin-bottom:8px}
-.serv p{font-size:15.5px}
+.servicos{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--linha);border-left:1px solid var(--linha)}
+.serv{padding:44px 38px;border-right:1px solid var(--linha);border-bottom:1px solid var(--linha);position:relative;transition:background .3s}
+.serv::before{content:"";position:absolute;left:0;top:0;height:2px;width:0;background:var(--ouro);transition:width .4s}
+.serv:hover{background:#fff}.serv:hover::before{width:100%}
+.serv .n{font-family:'Cormorant Garamond';font-style:italic;font-size:20px;color:var(--ouro);margin-bottom:22px;display:block}
+.serv h3{font-size:27px;margin-bottom:12px}
+.serv p{font-size:15px}
 
-.publico{background:var(--fundo2)}
-.pub-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.pub{background:#fff;border-radius:var(--r);padding:24px;border:1px solid var(--linha)}
-.pub strong{display:block;font-family:'Raleway';font-size:18px;color:var(--tinta);margin-bottom:6px;font-weight:600}
-.pub span{font-size:15px}
+.publico{background:var(--creme)}
+.publico .wrap{display:grid;grid-template-columns:.9fr 1.1fr;gap:80px;align-items:start}
+.lista{list-style:none}
+.lista li{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;padding:28px 0;border-bottom:1px solid var(--linha)}
+.lista li:first-child{border-top:1px solid var(--linha)}
+.lista strong{font-family:'Cormorant Garamond';font-weight:500;font-size:25px;color:var(--tinta);line-height:1.2}
+.lista span{font-size:15px}
 
-.passos{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;counter-reset:p}
-.passo{position:relative;padding-top:58px}
-.passo::before{counter-increment:p;content:counter(p);position:absolute;top:0;left:0;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--azul);color:var(--azul);font-family:'Raleway';font-weight:600;font-size:18px;display:grid;place-items:center}
-.passo::after{content:"";position:absolute;top:21px;left:54px;right:-16px;height:1.5px;background:linear-gradient(90deg,#BFD0EE,transparent)}
-.passo:last-child::after{display:none}
-.passo h3{font-size:19px;font-weight:600;margin-bottom:6px}
-.passo p{font-size:15.5px}
+.metodo{background:var(--navy);color:#B9C3D6}
+.metodo h2,.metodo h3{color:#fff}
+.metodo .kicker{color:var(--ouro-cl)}
+.passos{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid rgba(255,255,255,.12)}
+.passo{padding:40px 30px 10px 0}
+.passo .n{font-family:'Cormorant Garamond';font-size:58px;line-height:1;color:var(--ouro);display:block;margin-bottom:20px}
+.passo h3{font-size:26px;margin-bottom:10px}
+.passo p{font-size:15px}
 
-.sobre{background:linear-gradient(135deg,#123F86 0%,var(--azul) 100%);color:#DCE6F7}
-.sobre .wrap{display:grid;grid-template-columns:.8fr 1.2fr;gap:56px;align-items:center}
-.sobre h2{color:#fff}
-.sobre .kicker{color:#9FC0F5}
-.sobre-logo{background:#fff;border-radius:20px;padding:20px;box-shadow:0 30px 60px -30px rgba(0,0,0,.5)}
-.sobre-logo img{width:100%;height:auto;border-radius:12px}
-.valores{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
-.valores div{border-top:1px solid rgba(255,255,255,.22);padding-top:14px}
-.valores strong{display:block;color:#fff;font-family:'Raleway';font-weight:600;font-size:17px;margin-bottom:4px}
-.valores span{font-size:15px}
+.sobre .wrap{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}
+.moldura{position:relative;padding:0 26px 26px 0}
+.moldura::after{content:"";position:absolute;inset:26px 0 0 26px;border:1px solid var(--ouro);z-index:0}
+.moldura img{position:relative;z-index:1;width:100%;height:auto;background:#fff;box-shadow:0 40px 70px -40px rgba(10,31,63,.45)}
+.sobre blockquote{font-family:'Cormorant Garamond';font-style:italic;font-size:26px;line-height:1.35;color:var(--tinta);border-left:2px solid var(--ouro);padding-left:24px;margin:30px 0}
+.valores{display:grid;grid-template-columns:1fr 1fr;gap:26px 34px;margin-top:10px}
+.valores strong{display:block;font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--tinta);margin-bottom:6px}
+.valores span{font-size:14.5px}
 
-.faq{max-width:800px;margin:0 auto}
-details{border-bottom:1px solid var(--linha);padding:20px 0}
-summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;font-family:'Raleway';font-weight:600;font-size:18.5px;color:var(--tinta)}
+.duvidas{background:var(--creme)}
+.duvidas .wrap{display:grid;grid-template-columns:.8fr 1.2fr;gap:80px}
+details{border-bottom:1px solid var(--linha);padding:26px 0}
+details:first-child{border-top:1px solid var(--linha)}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:20px;font-family:'Cormorant Garamond';font-weight:500;font-size:24px;color:var(--tinta)}
 summary::-webkit-details-marker{display:none}
-summary::after{content:"+";font-size:26px;line-height:1;color:var(--azul);transition:transform .2s}
-details[open] summary::after{transform:rotate(45deg)}
-details p{margin-top:12px;font-size:16px}
+summary::after{content:"";flex:none;width:12px;height:12px;border-right:1.5px solid var(--ouro);border-bottom:1.5px solid var(--ouro);transform:rotate(45deg) translateY(-4px);transition:transform .25s}
+details[open] summary::after{transform:rotate(-135deg)}
+details p{margin-top:14px;font-size:15.5px;max-width:620px}
 
-.contato{background:var(--fundo2)}
-.contato .wrap{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
-.info{display:grid;gap:14px;margin-top:8px}
-.info a,.info div{display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--linha);border-radius:var(--r);padding:18px 20px;text-decoration:none}
-.info a:hover{border-color:#C5D4EE}
-.info svg{width:22px;height:22px;flex:none;color:var(--azul);margin-top:2px}
-.info strong{display:block;color:var(--tinta);font-weight:600}
-.info span{font-size:15.5px}
-form{background:#fff;border:1px solid var(--linha);border-radius:18px;padding:30px;box-shadow:0 24px 50px -36px rgba(22,33,61,.4)}
-form h3{font-size:22px;font-weight:600;margin-bottom:6px}
-form>p{font-size:15px;margin-bottom:20px;color:var(--suave)}
-.campo{margin-bottom:14px}
-.campo label{display:block;font-size:14px;font-weight:600;color:var(--tinta);margin-bottom:6px}
-.campo input,.campo select,.campo textarea{width:100%;font:inherit;font-size:16px;color:var(--tinta);padding:12px 14px;border:1px solid #CDD6E4;border-radius:10px;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
-.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(26,92,192,.15)}
-.campo textarea{resize:vertical;min-height:90px}
-form .btn{width:100%;justify-content:center;margin-top:6px}
+.contato{background:var(--navy);color:#B9C3D6;position:relative;overflow:hidden}
+.contato h2{color:#fff}.contato .kicker{color:var(--ouro-cl)}
+.contato .wrap{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.info{list-style:none;margin-top:10px}
+.info li{border-top:1px solid rgba(255,255,255,.12);padding:22px 0}
+.info small{display:block;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--ouro-cl);margin-bottom:6px}
+.info a,.info span{font-size:17px;color:#fff;text-decoration:none}
+.info a:hover{color:var(--ouro-cl)}
+form{background:var(--papel);padding:46px;color:var(--texto)}
+form h3{font-size:34px;margin-bottom:6px}
+form>p{font-size:14.5px;margin-bottom:30px;color:var(--suave)}
+.campo{margin-bottom:22px}
+.campo label{display:block;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--tinta);margin-bottom:6px}
+.campo input,.campo select,.campo textarea{width:100%;font:inherit;font-size:16px;color:var(--tinta);padding:10px 0;border:0;border-bottom:1px solid #CFC7B6;background:transparent;outline:none;border-radius:0;transition:border-color .2s}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--ouro)}
+.campo textarea{resize:vertical;min-height:70px}
+form .btn{width:100%;justify-content:center;margin-top:10px;background:var(--navy);color:#fff}
+form .btn:hover{background:var(--navy3)}
 
-footer{background:#0F1C38;color:#97A3BF;padding:46px 0 30px;font-size:14.5px}
+footer{background:#06152C;color:#7D8AA3;padding:56px 0 34px;font-size:13.5px}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:center}
-footer .logo .marca,footer .logo .marca small{color:#fff}
-footer a{text-decoration:none}footer a:hover{color:#fff}
-.rodape-fim{border-top:1px solid rgba(255,255,255,.08);margin-top:28px;padding-top:20px;width:100%;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:13.5px}
+footer a{text-decoration:none}footer a:hover{color:var(--ouro-cl)}
+.rodape-fim{border-top:1px solid rgba(255,255,255,.07);margin-top:30px;padding-top:22px;width:100%;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;letter-spacing:.04em}
 
-.zap-fixo{position:fixed;right:20px;bottom:20px;z-index:30;width:58px;height:58px;border-radius:50%;background:var(--zap);color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px -6px rgba(31,168,85,.6);transition:transform .15s}
-.zap-fixo:hover{transform:scale(1.07)}
-.zap-fixo svg{width:30px;height:30px}
+.zap-fixo{position:fixed;right:22px;bottom:22px;z-index:30;width:56px;height:56px;border-radius:50%;background:var(--ouro);color:var(--navy);display:grid;place-items:center;box-shadow:0 12px 30px -8px rgba(10,31,63,.55);transition:transform .2s,background .2s}
+.zap-fixo:hover{transform:scale(1.06);background:var(--ouro-cl)}
+.zap-fixo svg{width:28px;height:28px}
 
-.rev{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.rev{opacity:0;transform:translateY(24px);transition:opacity .9s ease,transform .9s ease}
 .rev.vis{opacity:1;transform:none}
 
-@media (max-width:960px){
-  .hero .wrap,.sobre .wrap,.contato .wrap{grid-template-columns:1fr}
-  .hero-arte{order:-1}.hero-arte svg.lr{width:220px}
-  .flutua{display:none}
+@media (max-width:980px){
+  .hero .wrap,.publico .wrap,.sobre .wrap,.duvidas .wrap,.contato .wrap{grid-template-columns:1fr;gap:56px}
+  .hero-arte{display:none}
   .servicos{grid-template-columns:1fr 1fr}
-  .pub-grid,.passos{grid-template-columns:1fr 1fr}
-  .passo::after{display:none}
-  .sobre-logo{max-width:340px}
+  .passos{grid-template-columns:1fr 1fr}
+  .moldura{max-width:420px}
 }
 @media (max-width:760px){
-  body{font-size:16px}
-  .wrap{padding:0 16px}
-  section{padding:68px 0}
-  nav{position:fixed;inset:72px 0 auto 0;background:#fff;border-bottom:1px solid var(--linha);padding:10px 16px 20px;display:none}
+  .wrap{padding:0 20px}
+  section{padding:86px 0}
+  .cab{margin-bottom:46px}
+  .topo{height:72px}
+  header{background:rgba(10,31,63,.96)}
+  nav{position:fixed;inset:72px 0 auto 0;background:var(--navy);border-top:1px solid rgba(180,154,94,.25);padding:8px 20px 24px;display:none}
   nav.aberto{display:block}
   nav ul{flex-direction:column;align-items:stretch;gap:0}
-  nav li a{display:block;padding:13px 4px;border-bottom:1px solid var(--linha)}
-  nav li:last-child a{border:0;margin-top:12px;justify-content:center}
+  nav li a{display:block;padding:15px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  nav li:last-child a{border:0;margin-top:14px;justify-content:center}
   .menu-btn{display:block}
-  .hero .wrap{padding-top:40px;padding-bottom:60px;gap:28px}
-  .servicos,.pub-grid,.passos,.valores{grid-template-columns:1fr}
+  .hero .wrap{padding-top:120px;padding-bottom:70px}
   .acoes .btn{flex:1;justify-content:center}
-  form{padding:22px}
+  .numeros{gap:24px;flex-wrap:wrap}
+  .servicos,.passos,.valores{grid-template-columns:1fr}
+  .serv{padding:34px 26px}
+  .lista li{grid-template-columns:1fr;gap:6px}
+  form{padding:30px 22px}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rev{opacity:1;transform:none}.hero-arte .lr path{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rev{opacity:1;transform:none}.hero-arte path{stroke-dashoffset:0}}
 </style>
 </head>
 <body>
 
-<svg class="sr" aria-hidden="true">
-  <defs>
-    <linearGradient id="gLR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1550A8"/><stop offset="1" stop-color="#1C66D2"/></linearGradient>
-    <symbol id="simbolo" viewBox="0 0 1209 934">
-      <path fill="url(#gLR)" d="M0 0h145v789h769l74 145H0z"/>
-      <path fill="url(#gLR)" d="M223 0h881v462H223V317h736V145H223z"/>
-      <path fill="url(#gLR)" d="M816 518h166l227 416h-169z"/>
-    </symbol>
-    <symbol id="i-zap" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91A9.86 9.86 0 0 0 12.04 2Zm5.8 14.1c-.24.68-1.42 1.3-1.95 1.35-.5.05-.97.23-3.27-.68-2.77-1.09-4.52-3.92-4.66-4.1-.13-.18-1.11-1.48-1.11-2.83 0-1.34.7-2 .95-2.28.25-.27.54-.34.72-.34h.52c.17 0 .4-.06.62.47.24.56.8 1.93.87 2.07.07.14.11.3.02.48-.09.18-.14.3-.27.46l-.41.48c-.14.13-.28.28-.12.56.16.27.71 1.18 1.53 1.91 1.05.94 1.94 1.23 2.21 1.37.27.14.43.11.59-.07.16-.18.68-.8.86-1.07.18-.27.36-.23.61-.14.25.09 1.59.75 1.86.89.27.14.45.2.52.32.07.11.07.66-.17 1.33Z"/></symbol>
-  </defs>
-</svg>
+<svg class="sr" aria-hidden="true"><defs>
+  <symbol id="simbolo" viewBox="0 0 1209 934"><path d="M0 0h145v789h769l74 145H0zM223 0h881v462H223V317h736V145H223zM816 518h166l227 416h-169z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91A9.86 9.86 0 0 0 12.04 2Zm5.8 14.1c-.24.68-1.42 1.3-1.95 1.35-.5.05-.97.23-3.27-.68-2.77-1.09-4.52-3.92-4.66-4.1-.13-.18-1.11-1.48-1.11-2.83 0-1.34.7-2 .95-2.28.25-.27.54-.34.72-.34h.52c.17 0 .4-.06.62.47.24.56.8 1.93.87 2.07.07.14.11.3.02.48-.09.18-.14.3-.27.46l-.41.48c-.14.13-.28.28-.12.56.16.27.71 1.18 1.53 1.91 1.05.94 1.94 1.23 2.21 1.37.27.14.43.11.59-.07.16-.18.68-.8.86-1.07.18-.27.36-.23.61-.14.25.09 1.59.75 1.86.89.27.14.45.2.52.32.07.11.07.66-.17 1.33Z"/></symbol>
+</defs></svg>
 
 <header id="topo">
   <div class="wrap topo">
     <a class="logo" href="#inicio" aria-label="Londe & Rodrigues, início">
-      <svg viewBox="0 0 1209 934" aria-hidden="true"><use href="#simbolo"/></svg>
+      <svg viewBox="0 0 1209 934" aria-hidden="true" fill="var(--ouro)"><use href="#simbolo"/></svg>
       <span class="marca">LONDE &amp; RODRIGUES<small>ASSESSORIA CONTÁBIL</small></span>
     </a>
-    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-    </button>
-    <nav id="menu">
-      <ul>
-        <li><a href="#servicos">Serviços</a></li>
-        <li><a href="#como">Como funciona</a></li>
-        <li><a href="#sobre">Sobre</a></li>
-        <li><a href="#duvidas">Dúvidas</a></li>
-        <li><a class="btn btn-zap" href="#" data-zap="Olá! Vim pelo site e gostaria de falar com a Londe & Rodrigues."><svg><use href="#i-zap"/></svg>WhatsApp</a></li>
-      </ul>
-    </nav>
+    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu" aria-expanded="false"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg></button>
+    <nav id="menu"><ul>
+      <li><a href="#servicos">Serviços</a></li>
+      <li><a href="#metodo">Método</a></li>
+      <li><a href="#sobre">O escritório</a></li>
+      <li><a href="#contato">Contato</a></li>
+      <li><a class="btn btn-ouro" href="#" data-zap="Olá! Vim pelo site e gostaria de falar com a Londe & Rodrigues.">Fale conosco</a></li>
+    </ul></nav>
   </div>
 </header>
 
@@ -219,27 +210,21 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
   <section class="hero" style="padding:0">
     <div class="wrap">
       <div>
-        <span class="selo"><i></i>Escritório de contabilidade em Anápolis-GO</span>
-        <h1>A contabilidade da sua empresa <em>em dia</em>, sem dor de cabeça.</h1>
-        <p class="lead">Cuidamos de impostos, folha de pagamento, alvarás e abertura de empresa, com atendimento rápido pelo WhatsApp e gente de verdade do outro lado.</p>
+        <p class="kicker">Assessoria contábil · Anápolis-GO</p>
+        <h1>Números em ordem.<br>Decisões com <em>segurança</em>.</h1>
+        <p class="lead">Contabilidade, planejamento tributário e departamento pessoal para empresas que levam a gestão a sério. Atendimento próximo, prazos cumpridos e clareza em cada número.</p>
         <div class="acoes">
-          <a class="btn btn-zap" href="#" data-zap="Olá! Vim pelo site e quero um orçamento de contabilidade."><svg><use href="#i-zap"/></svg>Pedir orçamento</a>
-          <a class="btn btn-linha" href="#servicos">Ver serviços</a>
+          <a class="btn btn-ouro" href="#" data-zap="Olá! Vim pelo site e gostaria de agendar uma conversa."><svg><use href="#i-zap"/></svg>Agendar conversa</a>
+          <a class="btn btn-fio" href="#servicos">Nossos serviços</a>
         </div>
-        <div class="garantias">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Diagnóstico gratuito</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Troca de contador sem burocracia</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Atendimento local em Anápolis</span>
+        <div class="numeros">
+          <div><strong>Contábil</strong>Fiscal</div>
+          <div><strong>Pessoal</strong>Folha &amp; eSocial</div>
+          <div><strong>Societário</strong>Abertura &amp; alvarás</div>
         </div>
       </div>
       <div class="hero-arte" aria-hidden="true">
-        <svg class="lr" viewBox="0 0 1209 934">
-          <path fill="url(#gLR)" d="M0 0h145v789h769l74 145H0z"/>
-          <path fill="url(#gLR)" d="M223 0h881v462H223V317h736V145H223z"/>
-          <path fill="url(#gLR)" d="M816 518h166l227 416h-169z"/>
-        </svg>
-        <div class="flutua f1"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></b>Guias do mês enviadas</div>
-        <div class="flutua f2"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></b>Prazos sob controle</div>
+        <svg viewBox="-10 -10 1229 954"><path d="M0 0h145v789h769l74 145H0z"/><path d="M223 0h881v462H223V317h736V145H223z"/><path d="M816 518h166l227 416h-169z"/></svg>
       </div>
     </div>
   </section>
@@ -248,82 +233,83 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
     <div class="wrap">
       <div class="cab rev">
         <p class="kicker">Serviços</p>
-        <h2>Tudo o que a sua empresa precisa, num lugar só</h2>
-        <p>Do CNPJ ao balanço: você foca no negócio e a gente cuida da parte chata, dentro do prazo e da lei.</p>
+        <h2>Uma assessoria completa, do CNPJ ao balanço</h2>
+        <p>Você conduz o negócio. Nós cuidamos de tudo o que é contábil, fiscal e trabalhista, com rigor técnico e dentro da lei.</p>
       </div>
-      <div class="servicos">
-        <article class="serv rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div><h3>Abertura de empresa</h3><p>Escolha do tipo de empresa e do regime de impostos, registro na Junta Comercial, CNPJ, inscrições e alvarás.</p></article>
-        <article class="serv rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg></div><h3>Contabilidade mensal</h3><p>Escrituração contábil e fiscal, balanço, SPED, ECD e ECF entregues no prazo, com relatórios que você entende.</p></article>
-        <article class="serv rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></div><h3>Impostos e Simples Nacional</h3><p>Apuração do DAS e dos demais tributos, planejamento para pagar menos imposto de forma legal (Fator R e outros).</p></article>
-        <article class="serv rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.6c2 .7 3.2 2.6 3.5 5.4"/></svg></div><h3>Folha de pagamento</h3><p>Departamento pessoal completo: admissões, folha, férias, rescisões, pró-labore dos sócios, eSocial e DCTFWeb.</p></article>
-        <article class="serv rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div><h3>Alvarás e licenças</h3><p>Alvará de funcionamento, sanitário, CERCON dos bombeiros e renovações acompanhadas para não vencer.</p></article>
-        <article class="serv rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6 8-6s7 2 8 6"/></svg></div><h3>MEI e Imposto de Renda</h3><p>DAS do MEI, declaração anual, desenquadramento quando for a hora de crescer, e IR de pessoa física.</p></article>
+      <div class="servicos rev">
+        <article class="serv"><span class="n">i.</span><h3>Abertura de empresa</h3><p>Estrutura societária, escolha do regime tributário, Junta Comercial, CNPJ, inscrições e licenças.</p></article>
+        <article class="serv"><span class="n">ii.</span><h3>Contabilidade</h3><p>Escrituração contábil e fiscal, balanços, SPED, ECD e ECF, com relatórios gerenciais claros.</p></article>
+        <article class="serv"><span class="n">iii.</span><h3>Planejamento tributário</h3><p>Simples Nacional, Lucro Presumido e Real. Fator R e as estratégias legais para reduzir a carga.</p></article>
+        <article class="serv"><span class="n">iv.</span><h3>Departamento pessoal</h3><p>Admissões, folha, férias, rescisões, pró-labore, eSocial, DCTFWeb e EFD-Reinf.</p></article>
+        <article class="serv"><span class="n">v.</span><h3>Alvarás e licenças</h3><p>Alvará de funcionamento, sanitário e CERCON, com renovações acompanhadas de perto.</p></article>
+        <article class="serv"><span class="n">vi.</span><h3>MEI e pessoa física</h3><p>Rotina do MEI, desenquadramento no momento certo e declaração de Imposto de Renda.</p></article>
       </div>
     </div>
   </section>
 
   <section class="publico">
     <div class="wrap">
-      <div class="cab rev">
-        <p class="kicker">Para quem</p>
-        <h2>Atendemos empresas de todos os tamanhos</h2>
+      <div class="cab rev" style="margin-bottom:0">
+        <p class="kicker">Clientes</p>
+        <h2>Atendimento sob medida para cada perfil</h2>
+        <p>Cada empresa tem sua rotina, seu regime e seus riscos. Montamos o acompanhamento de acordo com o seu momento.</p>
       </div>
-      <div class="pub-grid">
-        <div class="pub rev"><strong>MEI</strong><span>Para quem está começando e quer tudo certinho desde o primeiro mês.</span></div>
-        <div class="pub rev"><strong>Comércio e serviços</strong><span>Simples Nacional e Lucro Presumido, com estoque, notas e folha.</span></div>
-        <div class="pub rev"><strong>Clínicas e consultórios</strong><span>Fator R, equiparação hospitalar, alvará sanitário e CERCON em dia.</span></div>
-        <div class="pub rev"><strong>Holdings e empresas maiores</strong><span>Contabilidade completa, ECD, ECF e apoio às decisões dos sócios.</span></div>
-      </div>
+      <ul class="lista rev">
+        <li><strong>Clínicas e consultórios</strong><span>Fator R, equiparação hospitalar, alvará sanitário e CERCON em dia.</span></li>
+        <li><strong>Comércio e serviços</strong><span>Simples Nacional e Lucro Presumido, com notas, estoque e folha.</span></li>
+        <li><strong>Holdings e grupos</strong><span>Contabilidade completa, ECD, ECF e apoio às decisões dos sócios.</span></li>
+        <li><strong>Novos empreendedores</strong><span>Do MEI à primeira empresa, com tudo estruturado desde o início.</span></li>
+      </ul>
     </div>
   </section>
 
-  <section id="como">
+  <section class="metodo" id="metodo">
     <div class="wrap">
       <div class="cab rev">
-        <p class="kicker">Como funciona</p>
-        <h2>Trocar de contador é mais fácil do que parece</h2>
-        <p>A gente cuida da transição com o escritório anterior. Você não perde nenhum prazo.</p>
+        <p class="kicker">Método</p>
+        <h2>Uma transição tranquila, do primeiro contato à rotina</h2>
+        <p>Se você já tem contador, conduzimos a troca com o escritório anterior. Nenhum prazo fica para trás.</p>
       </div>
-      <div class="passos">
-        <div class="passo rev"><h3>Conversa</h3><p>Você chama no WhatsApp e conta como está a sua empresa hoje.</p></div>
-        <div class="passo rev"><h3>Diagnóstico</h3><p>Analisamos regime, impostos e pendências. Sem custo.</p></div>
-        <div class="passo rev"><h3>Proposta</h3><p>Você recebe um valor fixo mensal, claro e sem surpresas.</p></div>
-        <div class="passo rev"><h3>Transição</h3><p>Pegamos os documentos com o contador antigo e assumimos.</p></div>
+      <div class="passos rev">
+        <div class="passo"><span class="n">01</span><h3>Conversa</h3><p>Entendemos sua empresa, seus objetivos e suas dores.</p></div>
+        <div class="passo"><span class="n">02</span><h3>Diagnóstico</h3><p>Analisamos regime, tributos e pendências, sem custo.</p></div>
+        <div class="passo"><span class="n">03</span><h3>Proposta</h3><p>Honorário mensal fixo, transparente e sem surpresas.</p></div>
+        <div class="passo"><span class="n">04</span><h3>Rotina</h3><p>Assumimos com um responsável dedicado à sua empresa.</p></div>
       </div>
     </div>
   </section>
 
   <section class="sobre" id="sobre">
     <div class="wrap">
-      <div class="sobre-logo rev"><img src="img/logo-completo.jpg" alt="Logo Londe & Rodrigues Assessoria Contábil" width="1200" height="1200" loading="lazy"></div>
+      <div class="moldura rev"><img src="img/logo-completo.jpg" alt="Logo Londe & Rodrigues Assessoria Contábil" width="1200" height="1200" loading="lazy"></div>
       <div class="rev">
-        <div class="cab" style="margin-bottom:0">
-          <p class="kicker">Sobre nós</p>
-          <h2>Londe &amp; Rodrigues Contadores e Associados</h2>
-          <p>Somos um escritório de contabilidade de Anápolis, Goiás. Nossa equipe acompanha cada cliente de perto, com responsáveis definidos para as áreas contábil, fiscal e de pessoal, e um sistema próprio de controle de prazos para que nada fique para trás.</p>
-        </div>
+        <p class="kicker">O escritório</p>
+        <h2 style="font-size:clamp(36px,4.4vw,54px)">Londe &amp; Rodrigues Contadores e Associados</h2>
+        <blockquote>Contabilidade feita de perto, por quem conhece o seu negócio pelo nome.</blockquote>
+        <p style="margin-bottom:34px">Somos um escritório de Anápolis, Goiás. Cada cliente tem responsáveis definidos nas áreas contábil, fiscal e de pessoal, e um controle de prazos próprio garante que nenhuma obrigação fique para trás.</p>
         <div class="valores">
-          <div><strong>Proximidade</strong><span>Você sabe quem cuida da sua empresa e fala direto com essa pessoa.</span></div>
-          <div><strong>Prazo é prazo</strong><span>Guias e obrigações entregues antes do vencimento.</span></div>
-          <div><strong>Clareza</strong><span>Explicamos os números sem “contabilês”.</span></div>
-          <div><strong>Economia legal</strong><span>Buscamos sempre o regime que faz você pagar menos.</span></div>
+          <div><strong>Proximidade</strong><span>Você fala direto com quem cuida da sua empresa.</span></div>
+          <div><strong>Pontualidade</strong><span>Guias e obrigações entregues antes do vencimento.</span></div>
+          <div><strong>Clareza</strong><span>Números explicados sem “contabilês”.</span></div>
+          <div><strong>Economia legal</strong><span>Sempre o regime que faz sentido para você.</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="duvidas">
+  <section class="duvidas" id="duvidas">
     <div class="wrap">
-      <div class="cab centro rev">
-        <p class="kicker">Dúvidas frequentes</p>
-        <h2>Perguntas que a gente sempre ouve</h2>
+      <div class="cab rev">
+        <p class="kicker">Dúvidas</p>
+        <h2>Perguntas frequentes</h2>
+        <p>Não encontrou a sua? Fale com a gente.</p>
       </div>
-      <div class="faq rev">
-        <details><summary>Quanto custa a contabilidade mensal?</summary><p>Depende do regime de impostos, do número de funcionários e do volume de notas. Depois de uma conversa rápida, mandamos uma proposta com valor fixo mensal.</p></details>
-        <details><summary>Já tenho contador. Como faço para trocar?</summary><p>É só falar com a gente. Cuidamos do contato com o escritório anterior, recebemos os documentos e assumimos sem você perder nenhum prazo.</p></details>
-        <details><summary>Vocês atendem só em Anápolis?</summary><p>Nosso escritório fica em Anápolis-GO, mas boa parte do atendimento é digital (WhatsApp, e-mail e envio de documentos online), então atendemos empresas de outras cidades também.</p></details>
-        <details><summary>Quanto tempo leva para abrir uma empresa?</summary><p>Varia conforme a atividade e os órgãos envolvidos (Junta Comercial, Receita, prefeitura e licenças). Na conversa inicial já passamos o prazo estimado para o seu caso.</p></details>
-        <details><summary>Sou MEI e estou faturando mais. E agora?</summary><p>Passar do limite do MEI pode gerar multa. Fazemos o desenquadramento e a migração para microempresa no momento certo, escolhendo o regime mais vantajoso.</p></details>
+      <div class="rev">
+        <details><summary>Quanto custa a assessoria mensal?</summary><p>Depende do regime tributário, do número de funcionários e do volume de notas. Após uma conversa rápida, enviamos uma proposta com honorário mensal fixo.</p></details>
+        <details><summary>Como funciona a troca de contador?</summary><p>Cuidamos do contato com o escritório anterior, recebemos a documentação e assumimos a rotina sem que você perca nenhum prazo.</p></details>
+        <details><summary>Atendem empresas de outras cidades?</summary><p>Sim. O escritório fica em Anápolis-GO, e boa parte do atendimento é digital, por WhatsApp, e-mail e envio de documentos online.</p></details>
+        <details><summary>Quanto tempo leva para abrir uma empresa?</summary><p>Varia conforme a atividade e os órgãos envolvidos. Na primeira conversa já informamos o prazo estimado para o seu caso.</p></details>
+        <details><summary>Sou MEI e estou faturando mais. E agora?</summary><p>Ultrapassar o limite do MEI pode gerar multa. Fazemos o desenquadramento no momento certo e escolhemos o regime mais vantajoso.</p></details>
       </div>
     </div>
   </section>
@@ -331,27 +317,24 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
   <section class="contato" id="contato">
     <div class="wrap">
       <div class="rev">
-        <div class="cab" style="margin-bottom:24px">
-          <p class="kicker">Contato</p>
-          <h2>Vamos conversar?</h2>
-          <p>Chame no WhatsApp, ligue ou passe no escritório.</p>
-        </div>
-        <div class="info">
-          <a href="#" data-zap="Olá! Vim pelo site e gostaria de falar com a Londe & Rodrigues."><svg><use href="#i-zap"/></svg><span><strong>WhatsApp</strong>(62) 98297-8899</span></a>
-          <a href="tel:+5562991829987"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg><span><strong>Telefone</strong>(62) 99182-9987</span></a>
-          <a href="https://maps.google.com/?q=Av.+S-5,+1241+-+Anapolis+City,+Anapolis+-+GO" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span><strong>Endereço</strong>Av. S-5, Nº 1241, Sala 01, Anápolis City, Anápolis-GO</span></a>
-          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span><strong>Horário</strong>Segunda a sexta, em horário comercial</span></div>
-        </div>
+        <p class="kicker">Contato</p>
+        <h2 style="font-size:clamp(36px,4.4vw,56px);margin-bottom:30px">Vamos conversar sobre a sua empresa</h2>
+        <ul class="info">
+          <li><small>WhatsApp</small><a href="#" data-zap="Olá! Vim pelo site e gostaria de falar com a Londe & Rodrigues.">(62) 98297-8899</a></li>
+          <li><small>Telefone</small><a href="tel:+5562991829987">(62) 99182-9987</a></li>
+          <li><small>Endereço</small><a href="https://maps.google.com/?q=Rua+PB-15+Qd+21+Lt+24+Parque+Brasilia+Anapolis+GO" target="_blank" rel="noopener">Rua PB-15, Qd. 21, Lt. 24, Parque Brasília<br>Anápolis-GO · CEP 75.093-700</a></li>
+          <li><small>Atendimento</small><span>Segunda a sexta, em horário comercial</span></li>
+        </ul>
       </div>
       <form id="form" class="rev">
-        <h3>Peça seu orçamento</h3>
-        <p>Preencha e a mensagem abre pronta no WhatsApp.</p>
-        <div class="campo"><label for="fNome">Seu nome</label><input id="fNome" required autocomplete="name"></div>
-        <div class="campo"><label for="fEmp">Empresa (se já tiver)</label><input id="fEmp" autocomplete="organization"></div>
-        <div class="campo"><label for="fServ">Do que você precisa?</label>
-          <select id="fServ"><option>Abrir uma empresa</option><option>Trocar de contador</option><option>Contabilidade mensal</option><option>MEI</option><option>Folha de pagamento</option><option>Alvarás</option><option>Imposto de renda</option><option>Outro assunto</option></select></div>
+        <h3>Solicite uma proposta</h3>
+        <p>Preencha os campos e a mensagem abre pronta no WhatsApp.</p>
+        <div class="campo"><label for="fNome">Nome</label><input id="fNome" required autocomplete="name"></div>
+        <div class="campo"><label for="fEmp">Empresa</label><input id="fEmp" autocomplete="organization" placeholder="Se já tiver"></div>
+        <div class="campo"><label for="fServ">Assunto</label>
+          <select id="fServ"><option>Abrir uma empresa</option><option>Trocar de contador</option><option>Contabilidade mensal</option><option>Planejamento tributário</option><option>Folha de pagamento</option><option>Alvarás</option><option>MEI</option><option>Imposto de renda</option><option>Outro assunto</option></select></div>
         <div class="campo"><label for="fMsg">Mensagem</label><textarea id="fMsg" placeholder="Conte um pouco sobre o seu caso"></textarea></div>
-        <button class="btn btn-zap" type="submit"><svg><use href="#i-zap"/></svg>Enviar pelo WhatsApp</button>
+        <button class="btn" type="submit"><svg><use href="#i-zap"/></svg>Enviar pelo WhatsApp</button>
       </form>
     </div>
   </section>
@@ -359,8 +342,8 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
 
 <footer>
   <div class="wrap">
-    <a class="logo" href="#inicio"><svg viewBox="0 0 1209 934" aria-hidden="true" style="width:36px"><use href="#simbolo"/></svg><span class="marca">LONDE &amp; RODRIGUES<small>ASSESSORIA CONTÁBIL</small></span></a>
-    <div>Av. S-5, Nº 1241, Sala 01 · Anápolis City · Anápolis-GO<br>(62) 98297-8899 · (62) 99182-9987</div>
+    <a class="logo" href="#inicio"><svg viewBox="0 0 1209 934" aria-hidden="true" fill="var(--ouro)" style="width:34px"><use href="#simbolo"/></svg><span class="marca">LONDE &amp; RODRIGUES<small>ASSESSORIA CONTÁBIL</small></span></a>
+    <div>Rua PB-15, Qd. 21, Lt. 24 · Parque Brasília · Anápolis-GO<br>(62) 98297-8899 · (62) 99182-9987</div>
     <div class="rodape-fim"><span>© <span id="ano">2026</span> Londe &amp; Rodrigues Contadores e Associados Ltda.</span><a href="../">Área da equipe</a></div>
   </div>
 </footer>
@@ -368,28 +351,22 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
 <a class="zap-fixo" href="#" data-zap="Olá! Vim pelo site e gostaria de falar com a Londe & Rodrigues." aria-label="Falar no WhatsApp"><svg><use href="#i-zap"/></svg></a>
 
 <script>
-const ZAP='5562982978899';
-const zapUrl=t=>'https://wa.me/'+ZAP+'?text='+encodeURIComponent(t);
+const ZAP='5562982978899',zapUrl=t=>'https://wa.me/'+ZAP+'?text='+encodeURIComponent(t);
 document.querySelectorAll('[data-zap]').forEach(a=>{a.href=zapUrl(a.dataset.zap);a.target='_blank';a.rel='noopener'});
 document.getElementById('form').addEventListener('submit',e=>{
-  e.preventDefault();
-  const v=id=>document.getElementById(id).value.trim();
+  e.preventDefault();const v=id=>document.getElementById(id).value.trim();
   let t='Olá! Vim pelo site.\nNome: '+v('fNome');
   if(v('fEmp'))t+='\nEmpresa: '+v('fEmp');
-  t+='\nPreciso de: '+v('fServ');
-  if(v('fMsg'))t+='\n'+v('fMsg');
+  t+='\nAssunto: '+v('fServ');if(v('fMsg'))t+='\n'+v('fMsg');
   window.open(zapUrl(t),'_blank','noopener');
 });
 document.getElementById('ano').textContent=new Date().getFullYear();
-const menu=document.getElementById('menu'),mb=document.getElementById('menuBtn');
-mb.onclick=()=>{const a=menu.classList.toggle('aberto');mb.setAttribute('aria-expanded',a)};
+const menu=document.getElementById('menu'),mb=document.getElementById('menuBtn'),topo=document.getElementById('topo');
+mb.onclick=()=>mb.setAttribute('aria-expanded',menu.classList.toggle('aberto'));
 menu.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{menu.classList.remove('aberto');mb.setAttribute('aria-expanded',false)}));
-const topo=document.getElementById('topo');
-addEventListener('scroll',()=>topo.classList.toggle('rolou',scrollY>8),{passive:true});
-if('IntersectionObserver' in window){
-  const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');io.unobserve(x.target)}}),{threshold:.12});
-  document.querySelectorAll('.rev').forEach(el=>io.observe(el));
-}else document.querySelectorAll('.rev').forEach(el=>el.classList.add('vis'));
+const rol=()=>topo.classList.toggle('rolou',scrollY>30);addEventListener('scroll',rol,{passive:true});rol();
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('vis');io.unobserve(x.target)}}),{threshold:.12});document.querySelectorAll('.rev').forEach(el=>io.observe(el))}
+else document.querySelectorAll('.rev').forEach(el=>el.classList.add('vis'));
 </script>
 </body>
 </html>
