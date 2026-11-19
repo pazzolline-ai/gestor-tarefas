@@ -4192,7 +4192,7 @@ function nmCard(big){const {e,resto}=nmProx();const sinc=icsUrl()?(ICS_ST==='err
 function nmLembHtml(){const l=nmLemb();return `<div class="nm-lb"><span>🔔 Lembretes automáticos:</span>${[30,15,5].map(v=>`<button type="button" class="${l.includes(v)?'on':''}" data-nmlemb="${v}">${v} min</button>`).join('')}</div>`}
 function clkNext(){const el=document.getElementById('clkNext');if(!el)return;const {e}=nmProx();if(!e){el.innerHTML='<span class="clk-nd">Sem reuniões próximas</span>';return}const ms=e.t-Date.now(),[d,h,m]=nmPartes(ms);
   el.innerHTML=`<div class="clk-k">${ms>0?'Próxima reunião':'Acontecendo agora'}</div><div class="clk-t">${esc(e.titulo)}</div><div class="clk-c">${ms>0?(d?d+'d ':'')+(d||h?h+'h ':'')+m+'min':e.ini}</div><div class="clk-b"><i style="width:${Math.max(3,Math.min(100,100-ms/(24*3600e3)*100))}%"></i></div>`;el.classList.toggle('urg',ms<=15*60e3)}
-function nmTick(){clkNext();document.querySelectorAll('.nm-card[data-nmt]').forEach(c=>{const ms=+c.dataset.nmt-Date.now();const p=nmPartes(ms);c.querySelectorAll('[data-nmc]').forEach(b=>{b.textContent=pad(p[+b.dataset.nmc])});const ft=c.querySelector('[data-nmft]');if(ft)ft.innerHTML=nmFalta(ms);const br=c.querySelector('[data-nmbar]');if(br)br.style.width=Math.max(3,Math.min(100,100-ms/(24*3600e3)*100))+'%';c.classList.toggle('urg',ms<=15*60e3)});
+function nmTick(){document.querySelectorAll('.nm-card[data-nmt]').forEach(c=>{const ms=+c.dataset.nmt-Date.now();const p=nmPartes(ms);c.querySelectorAll('[data-nmc]').forEach(b=>{b.textContent=pad(p[+b.dataset.nmc])});const ft=c.querySelector('[data-nmft]');if(ft)ft.innerHTML=nmFalta(ms);const br=c.querySelector('[data-nmbar]');if(br)br.style.width=Math.max(3,Math.min(100,100-ms/(24*3600e3)*100))+'%';c.classList.toggle('urg',ms<=15*60e3)});
   document.querySelectorAll('[data-nmclk]').forEach(x=>{const n=new Date();x.textContent=pad(n.getHours())+':'+pad(n.getMinutes())})}
 setInterval(nmTick,1000);
 function nmAplicar(){const v=document.getElementById('view');if(!v)return;
@@ -4201,6 +4201,27 @@ function nmAplicar(){const v=document.getElementById('view');if(!v)return;
 document.addEventListener('click',e=>{const t=e.target.closest('[data-nmlemb],[data-nmdet]');if(!t)return;
   if(t.hasAttribute('data-nmlemb')){const v=+t.dataset.nmlemb,l=nmLemb();lsSet(NM_LK,l.includes(v)?l.filter(x=>x!==v):l.concat([v]));document.querySelectorAll('[data-nmlemb="'+v+'"]').forEach(b=>b.classList.toggle('on'));toast(l.includes(v)?'Lembrete de '+v+' min desligado':'Vou avisar '+v+' min antes')}
   else{const r=document.getElementById('relW');if(r)r.remove();UI.agDia=t.dataset.nmdet;UI.agModo='dia';go('agenda')}});
+
+/* ================= Relógio da tela inicial: 3 modelos (Radial, Linha do dia, Contagem) ================= */
+const CLK_MODS=[['radial','Radial'],['linha','Linha do dia'],['contagem','Contagem']];
+function clkModelo(){const m=lsGet('gt.clkModelo','radial');return CLK_MODS.some(x=>x[0]===m)?m:'radial'}
+function clkMin(hm){const [h,m]=String(hm||'0:0').split(':').map(Number);return h*60+(m||0)}
+function clkHtml(){const n=new Date(),hm=pad(n.getHours())+':'+pad(n.getMinutes()),s=n.getSeconds(),md=clkModelo();const {e}=nmProx();const ms=e?e.t-Date.now():0;
+  const dt=n.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
+  if(md==='radial'){const tk=Array.from({length:60},(x,k)=>`<i class="${k<=s?'on':''} ${k%5===0?'m':''}" style="transform:rotate(${k*6}deg)"></i>`).join('');
+    return `<div class="clk-body clk-rad"><div class="rd">${tk}<div class="in"><b>${hm}</b><span>${dt}</span>${e?`<em class="${ms<=15*60e3?'urg':''}">${ms>0?'reunião '+e.ini:'reunião agora'}</em>`:''}</div></div></div>`}
+  if(md==='linha'){const c=agCfg(agPessoa()),a=clkMin(c.ini||'08:00'),b=clkMin(c.fim||'18:00'),now=n.getHours()*60+n.getMinutes(),p=Math.max(0,Math.min(100,(now-a)/(b-a)*100));
+    const hoj=e&&e.data===hoje()?e:null,mp=hoj?Math.max(0,Math.min(100,(clkMin(hoj.ini)-a)/(b-a)*100)):null,mid=pad(Math.floor((a+b)/120))+'h';
+    return `<div class="clk-body clk-lin"><b class="t">${hm}</b><span class="d">${n.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}</span><div class="bar"><i style="width:${p}%"></i>${mp!=null?`<u style="left:${mp}%"></u>`:''}</div><div class="lg"><span>${(c.ini||'08:00').slice(0,2)}h</span><span>${mid}</span><span>${(c.fim||'18:00').slice(0,2)}h</span></div>
+      <div class="nx">${e?`▲ ${esc(e.titulo)} ${e.data===hoje()?'às '+e.ini:'· '+fmtC(e.data)+' '+e.ini}`:'Sem reuniões próximas'}</div></div>`}
+  const [d,h,m,sg]=nmPartes(ms),lk=e&&nmLink(e);
+  return `<div class="clk-body clk-cnt"><div class="k">${hm} · ${dt}</div>${e?`<div class="t">${esc(e.titulo)}</div><div class="cd">${(d?[[d,'dias'],[h,'horas'],[m,'min']]:[[h,'horas'],[m,'min'],[sg,'seg']]).map(([v,l])=>`<div><b>${pad(v)}</b><span>${l}</span></div>`).join('')}</div>${lk?`<a class="go" href="${esc(lk)}" target="_blank" rel="noopener" data-noclk>Entrar às ${e.ini} →</a>`:`<div class="go">${ms>0?'Começa às '+e.ini:'Acontecendo agora'}</div>`}`:'<div class="t">Sem reuniões próximas</div><div class="go" style="opacity:.7">Aproveite para focar nas tarefas</div>'}</div>`}
+function clkRender(){const el=document.querySelector('.clock');if(!el)return;let b=el.querySelector('.clk-host');
+  if(!b){el.innerHTML=`<div class="clk-host"></div><div class="clk-sw" data-noclk>${CLK_MODS.map(([k,l])=>`<button type="button" data-clkm="${k}" title="${l}">${l}</button>`).join('')}</div>`;b=el.querySelector('.clk-host')}
+  b.innerHTML=clkHtml();el.querySelectorAll('[data-clkm]').forEach(x=>x.classList.toggle('on',x.dataset.clkm===clkModelo()));el.dataset.modelo=clkModelo()}
+setInterval(clkRender,1000);setTimeout(clkRender,300);
+document.addEventListener('click',e=>{const t=e.target.closest('[data-clkm]');if(t){e.stopPropagation();e.preventDefault();lsSet('gt.clkModelo',t.dataset.clkm);clkRender();return}
+  if(e.target.closest('[data-noclk]'))e.stopPropagation()},true);
 
 function mobNavHtml(navHtml){const t=document.createElement('div');t.innerHTML=navHtml;const bs=[...t.querySelectorAll('button[data-go]')];const pri=['dashboard','tarefas','agenda','empresas'];
   const out=pri.map(k=>bs.find(b=>b.dataset.go===k)).filter(Boolean).map(b=>{const l=b.querySelector('span:not(.ct)');if(l)l.className='l';return b.outerHTML});
@@ -6846,5 +6867,18 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 .clk-nd{font-size:12px;color:#9aa0b8}
 .clock:hover{border-color:#B07CFF!important}
 .clock #cHM{color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;font:800 34px/1 var(--f-head)!important;letter-spacing:-.02em!important}.clock .dg{justify-content:flex-start!important}.clock .cd{text-align:left!important;align-self:stretch}
+
+.clock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:14px 2px 4px!important;display:block!important;cursor:pointer}.clock::before{display:none!important}
+.clk-body{border-radius:18px;padding:14px;position:relative;overflow:hidden;transition:transform .15s}.clock:hover .clk-body{transform:translateY(-1px)}
+.clk-sw{display:flex;gap:4px;justify-content:center;margin-top:6px}.clk-sw button{all:unset;cursor:pointer;font-size:10.5px;padding:3px 8px;border-radius:999px;color:var(--dim);border:1px solid transparent}.clk-sw button:hover{color:var(--fg)}.clk-sw button.on{color:var(--fg);border-color:var(--line2);background:var(--panel)}
+.clk-rad{background:#0C0F14;color:#fff;display:grid;place-items:center;padding:12px}
+.clk-rad .rd{position:relative;width:170px;height:170px}.clk-rad .rd i{position:absolute;left:84px;top:2px;width:2px;height:6px;border-radius:1px;background:#2b2f39;transform-origin:1px 83px}.clk-rad .rd i.m{height:11px;background:#454b59}.clk-rad .rd i.on{background:#7B5CFF}.clk-rad .rd i.on.m{background:#B07CFF}
+.clk-rad .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.clk-rad .in b{font:800 36px/1 'Inter Tight',Inter,system-ui,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.clk-rad .in span{font-size:11.5px;color:#9aa0ae;margin-top:4px}.clk-rad .in em{font-style:normal;font-size:11px;color:#C9B8FF;margin-top:6px;font-weight:600}.clk-rad .in em.urg{color:#ff8fc8}
+.clk-lin{background:var(--panel);border:1px solid var(--line);color:var(--fg)}.clk-lin .t{display:block;font:800 40px/1 'Inter Tight',Inter,system-ui,sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.clk-lin .d{display:block;font-size:12px;color:var(--mut);margin:4px 0 12px}
+.clk-lin .bar{position:relative;height:9px;border-radius:99px;background:var(--panel2)}.clk-lin .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#3355FF,#7B5CFF)}.clk-lin .bar u{position:absolute;top:-4px;width:4px;height:17px;margin-left:-2px;border-radius:2px;background:#E0607E}
+.clk-lin .lg{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:5px}.clk-lin .nx{font-size:11.5px;color:#E0607E;font-weight:600;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clk-cnt{background:#0C0F14;color:#fff}.clk-cnt .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9aa0ae}.clk-cnt .t{font:700 16px/1.2 'Inter Tight',Inter,system-ui,sans-serif;margin:4px 0 10px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.clk-cnt .cd{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.clk-cnt .cd div{background:#1b1f28;border-radius:10px;padding:7px 0;text-align:center}.clk-cnt .cd b{display:block;font:800 22px 'Inter Tight',Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}.clk-cnt .cd span{font-size:9.5px;color:#9aa0ae}
+.clk-cnt .go{display:block;margin-top:9px;color:#9B85FF;font-size:12px;font-weight:600;text-decoration:none}
 </style>
 </body></html>
