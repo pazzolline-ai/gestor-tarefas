@@ -103,7 +103,8 @@ class Servico:
         except Exception as e:  # noqa: BLE001
             log.warning("Não consegui ler a configuração da tela: %s", e)
         m = self.motor()
-        m.status_robo(proximaExecucao=self.proxima(), servicoAtivo=True)
+        m.status_robo(proximaExecucao=self.proxima(), servicoAtivo=True,
+                      modo="assistido" if self.cfg.modo_assistido else "automatico")
         try:
             backup_diario(self.banco, self.cfg.pasta_backup, dt.date.today())
         except Exception as e:  # noqa: BLE001
@@ -115,7 +116,7 @@ class Servico:
         # botão "Executar agora" da tela
         try:
             for cid, cmd in self.gestor.comandos_pendentes():
-                if cmd.get("acao") != "executar" or self._rodando.locked():
+                if cmd.get("acao") not in ("executar", "assistido") or self._rodando.locked():
                     continue
                 cmd.update(status="em_andamento", inicio=agora())
                 self.gestor.gravar(COL_CMD, cid, cmd)
@@ -124,9 +125,26 @@ class Servico:
         except Exception as e:  # noqa: BLE001
             log.warning("Falha ao ler pedidos da tela: %s", e)
 
+    def assistida(self, somente=None):
+        """Abre a sessão assistida (janela do navegador) no PC do robô."""
+        if not self._rodando.acquire(blocking=False):
+            log.info("Já existe uma rotina em andamento; sessão assistida não aberta.")
+            return None
+        try:
+            from .assistido import SessaoAssistida
+            return SessaoAssistida(self.cfg, self.banco, self.gestor).executar(somente)
+        except Exception:  # noqa: BLE001
+            log.exception("Sessão assistida falhou")
+            return None
+        finally:
+            self._rodando.release()
+
     def _atender(self, cid, cmd):
         somente = cmd.get("empresaIds") or None
-        r = self.executar("manual", somente)
+        if cmd.get("acao") == "assistido":
+            r = self.assistida(somente)
+        else:
+            r = self.executar("manual", somente)
         cmd.update(status="concluido" if r else "erro", fim=agora(), execucaoId=(r or {}).get("id"))
         try:
             self.gestor.gravar(COL_CMD, cid, cmd)

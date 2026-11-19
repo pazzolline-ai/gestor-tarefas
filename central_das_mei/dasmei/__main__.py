@@ -5,6 +5,7 @@
   python -m dasmei testar-trial    emite um DAS de demonstração no ambiente de teste da SERPRO
   python -m dasmei executar        roda a rotina agora (todos os clientes MEI)
   python -m dasmei executar --empresa ID [--empresa ID2]
+  python -m dasmei assistido       abre o PGMEI cliente por cliente; você resolve o captcha, o robô faz o resto
   python -m dasmei servico         serviço em segundo plano (usado pelo Agendador do Windows)
   python -m dasmei status          últimas execuções
   python -m dasmei backup          backup imediato do banco local
@@ -28,6 +29,8 @@ def fabrica_serpro(cfg, seg: Segredos):
     from .serpro import IntegraContador
 
     def criar():
+        if cfg.modo_assistido:
+            return None
         if cfg.serpro_ambiente == "trial":
             return IntegraContador(ambiente="trial", contratante=cfg.contratante_cnpj or "99999999999999",
                                    intervalo_min=cfg.intervalo_min_segundos, timeout=cfg.timeout_segundos)
@@ -73,8 +76,12 @@ def configurar():
     s = getpass.getpass("Senha do usuário Robô DAS (Enter mantém a atual): ")
     if s:
         seg.gravar("gestor_senha", s)
-    print("\n2) SERPRO Integra Contador")
-    cfg.serpro_ambiente = _perg("Ambiente (producao/trial)", cfg.serpro_ambiente, valida=lambda v: v in ("producao", "trial"))
+    print("\n2) Receita Federal")
+    print("   Sem contrato SERPRO Integra Contador o robô trabalha em MODO ASSISTIDO: abre o PGMEI de cada")
+    print("   cliente, você resolve o captcha e gera o DAS, e o robô salva, organiza e atualiza o gestor.")
+    tem = _perg("Tem contrato SERPRO Integra Contador? (s/n)", "s" if cfg.serpro_ambiente == "producao" else "n",
+                valida=lambda v: v.lower() in ("s", "n"))
+    cfg.serpro_ambiente = "producao" if tem.lower() == "s" else "nenhum"
     if cfg.serpro_ambiente == "producao":
         cfg.contratante_cnpj = cnpjmod.limpar(_perg("CNPJ do escritório (contratante)", cfg.contratante_cnpj, valida=cnpjmod.valido))
         cfg.autor_cnpj = cnpjmod.limpar(_perg("CNPJ do autor do pedido (Enter = escritório)", cfg.autor_cnpj or cfg.contratante_cnpj))
@@ -104,6 +111,19 @@ def testar(cfg, seg):
     except Exception as e:  # noqa: BLE001
         ok = False
         print(f"FALHOU: {e}")
+    try:
+        from playwright.sync_api import sync_playwright
+        from .assistido import abrir_navegador
+        print("Navegador (Edge/Chrome)…", end=" ", flush=True)
+        with sync_playwright() as pw:
+            abrir_navegador(pw).close()
+        print("OK")
+    except Exception as e:  # noqa: BLE001
+        ok = False
+        print(f"FALHOU: {e}")
+    if cfg.modo_assistido:
+        print("SERPRO… não contratado: modo assistido (sessão no PGMEI).")
+        return ok
     if cfg.serpro_ambiente == "producao":
         from .serpro import info_certificado
         print("Certificado…", end=" ", flush=True)
@@ -155,6 +175,8 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     for n in ("configurar", "testar", "testar-trial", "servico", "status", "backup"):
         sub.add_parser(n)
+    asi = sub.add_parser("assistido")
+    asi.add_argument("--empresa", action="append", help="id da empresa no gestor (pode repetir)")
     ex = sub.add_parser("executar")
     ex.add_argument("--empresa", action="append", help="id da empresa no gestor (pode repetir)")
     a = ap.parse_args(argv)
@@ -184,6 +206,12 @@ def main(argv=None):
         print(f"Backup salvo em {p}")
         return 0
     banco, gestor = montar(cfg, seg)
+    if a.cmd == "assistido":
+        from .assistido import SessaoAssistida
+        from .relatorio import texto_curto
+        r = SessaoAssistida(cfg, banco, gestor).executar(a.empresa)
+        print(texto_curto(r))
+        return 0
     if a.cmd == "executar":
         from .motor import Motor
         r = Motor(cfg, banco, gestor, fabrica_serpro(cfg, seg)).executar("manual", a.empresa)

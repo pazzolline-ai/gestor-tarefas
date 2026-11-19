@@ -18,7 +18,7 @@ HOJE = dt.date(2026, 11, 19)
 @pytest.fixture
 def cfg(tmp_path, monkeypatch):
     monkeypatch.setenv("DASMEI_HOME", str(tmp_path / "app"))
-    c = Config(contratante_cnpj="11222333000181", pasta_documentos=str(tmp_path / "CENTRAL_DAS_MEI"),
+    c = Config(serpro_ambiente="producao", contratante_cnpj="11222333000181", pasta_documentos=str(tmp_path / "CENTRAL_DAS_MEI"),
                pausa_entre_clientes=(0, 0), max_tentativas=3, limite_falhas_seguidas=3)
     c.rotina = Rotina(meses_retroativos=3)
     return c

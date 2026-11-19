@@ -10,6 +10,7 @@ Usa a mesma tabela `docs` do sistema, então a tela atualiza em tempo real:
   dasmei_execucoes      (escrita)   relatório de cada rotina
   dasmei_robo           (escrita)   'status' (heartbeat) | leitura: 'config'
   dasmei_comandos       (leitura/escrita) pedidos de execução manual pela tela
+  dasmei_pagamentos     (leitura)   pagamentos informados na tela, com comprovante conferido
 """
 from __future__ import annotations
 
@@ -22,6 +23,7 @@ from . import cnpj as cnpjmod
 
 COL_EMPRESAS, COL_DAS = "empresas", "das"
 COL_CLIENTES, COL_EXEC, COL_ROBO, COL_CMD = "dasmei_clientes", "dasmei_execucoes", "dasmei_robo", "dasmei_comandos"
+COL_PAG = "dasmei_pagamentos"   # pagamentos informados na tela (comprovante conferido por uma pessoa)
 
 
 class ErroGestor(Exception):
@@ -75,6 +77,9 @@ class GestorBase:
             atual["emitida"] = dt.datetime.now().strftime("%Y-%m-%dT%H:%M")
         atual["robo"] = info
         self.gravar(COL_DAS, did, atual)
+
+    def pagamentos_manuais(self) -> dict:
+        return {i: d for i, d in self.ler_col(COL_PAG) if isinstance(d, dict) and d.get("data")}
 
     def comandos_pendentes(self):
         return [(i, d) for i, d in self.ler_col(COL_CMD) if isinstance(d, dict) and d.get("status") == "pendente"]

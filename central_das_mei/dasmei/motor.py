@@ -23,6 +23,8 @@ from .banco import Banco, agora
 from .competencia import Competencia, janela, vencimento
 from .config import Config, Rotina
 from .gestor import COL_CLIENTES, COL_EXEC, COL_ROBO, GestorBase
+
+EVID_MANUAL = "Informado na tela"
 from .relatorio import Relatorio
 from .serpro import ErroAutorizacao, ErroCredencial, ErroNegocio, ErroSerpro, ErroTemporario
 from .status import ROTULO, Status, avancar_guia, resumo_cliente
@@ -66,6 +68,8 @@ class Motor:
         self.serpro = None
         self.rel: Relatorio | None = None
         self.eid = None
+        self._rotina = cfg.rotina
+        self._manuais = {}
 
     # ------------------------------------------------------------ utilidades
     def _retry(self, fn, descricao):
@@ -107,7 +111,7 @@ class Motor:
     # ------------------------------------------------------------ lote
     def executar(self, origem="agendada", somente=None) -> dict:
         hoje = self._hoje()
-        rotina = self.rotina()
+        rotina = self._rotina = self.rotina()
         if rotina.pausado and origem == "agendada":
             log.info("Robô pausado pela tela do gestor; rotina agendada não executada.")
             return {"estado": "pausado"}
@@ -124,7 +128,12 @@ class Motor:
         self.status_robo(executando=True, execucaoId=self.eid, progresso={"feitos": 0, "total": len(fila)})
         estado = "concluida"
         try:
-            self.serpro = self._fabrica()
+            self.serpro = self._fabrica()   # None = modo assistido (sem contrato SERPRO)
+            try:
+                self._manuais = self.gestor.pagamentos_manuais()
+            except Exception as e:  # noqa: BLE001
+                log.warning("Pagamentos informados na tela indisponíveis: %s", e)
+                self._manuais = {}
             falhas_seguidas = 0
             pend = self.banco.fila_pendente(self.eid)
             for i, item in enumerate(pend):
@@ -187,7 +196,7 @@ class Motor:
     def processar_cliente(self, item: dict, rotina: Rotina, hoje: dt.date):
         eid, c, nome = item["empresa_id"], item["cnpj"], item.get("nome")
         log.info("Processando %s (%s)", nome, cnpjmod.formatar(c))
-        if not cnpjmod.valido(c) and self.cfg.serpro_ambiente == "producao":
+        if not cnpjmod.valido(c) and self.cfg.serpro_ambiente != "trial":
             msg = "CNPJ ausente ou inválido no cadastro da empresa"
             self.rel.intervencao(item, None, msg)
             self.banco.salvar_cliente(eid, c, nome, Status.EXIGE_INTERVENCAO.value, msg)
@@ -196,7 +205,9 @@ class Motor:
         comps = janela(hoje, rotina.meses_retroativos)
         atual = comps[-1]
         pagamentos, msg_pag = None, None
-        if rotina.consultar_pagamentos:
+        if self.serpro is None:
+            msg_pag = "Modo assistido: pagamento não verificado na Receita"
+        elif rotina.consultar_pagamentos:
             oid = self.banco.iniciar_operacao(self.eid, f"pag:{c}:{hoje}", "consultar_pagamentos", c)
             try:
                 pagamentos = self._retry(lambda: self.serpro.consultar_pagamentos(c, comps[0].primeiro_dia(), hoje),
@@ -225,9 +236,12 @@ class Motor:
                 return
         self.rel.processados += 1
         sts = [x["status"] for x in self.banco.competencias(c) if x["pa"] in {k.pa for k in comps}]
+        if self.serpro is None:
+            sts = [x for x in sts if x != Status.NAO_CONSULTADO.value] or sts
         situacao = resumo_cliente(sts)
         msgs = [x["mensagem"] for x in self.banco.competencias(c) if x["status"] == Status.EXIGE_INTERVENCAO.value and x["mensagem"]]
-        self.banco.salvar_cliente(eid, c, nome, situacao.value, "; ".join(msgs)[:500] or None, consultado=True)
+        self.banco.salvar_cliente(eid, c, nome, situacao.value, "; ".join(msgs)[:500] or None,
+                                  consultado=self.serpro is not None)
         self._publicar_cliente(item, situacao, None, comps)
 
     def _aguardando(self, item, msg):
@@ -248,11 +262,31 @@ class Motor:
     def _processar_competencia(self, item, comp: Competencia, eh_atual, rotina: Rotina, hoje, pagamentos, msg_pag):
         c = item["cnpj"]
         reg = self.banco.competencia(c, comp.pa)
-        if reg and reg["status"] == Status.PAGO_CONFIRMADO.value:
+        venc_legal = vencimento(comp)
+        manual = self._manuais.get(f"{item['empresa_id']}_{comp.iso}")
+        if manual:
+            evid = {"data": manual.get("data"), "valor": manual.get("valor"), "documento": manual.get("documento"),
+                    "evidencia": f"{EVID_MANUAL} por {manual.get('por') or 'usuário'} em {str(manual.get('em') or '')[:16]}"
+                                 f" (comprovante conferido){': ' + manual['obs'] if manual.get('obs') else ''}"}
+            if not (reg and reg["status"] == Status.PAGO_CONFIRMADO.value):
+                self.banco.salvar_competencia(c, comp.pa, Status.PAGO_CONFIRMADO, venc_legal.isoformat(), None, evid)
+                self.banco.auditar("pagamento_informado", c, {"pa": comp.pa, **evid}, self.eid)
+                self.rel.pagos += 1
             return
+        if reg and reg["status"] == Status.PAGO_CONFIRMADO.value:
+            if not str(reg.get("pago_evidencia") or "").startswith(EVID_MANUAL):
+                return
+            # pagamento informado na tela foi desfeito: volta a acompanhar
+            self.banco._x("UPDATE competencias SET pago_em=NULL, pago_valor=NULL, pago_documento=NULL, pago_evidencia=NULL "
+                          "WHERE cnpj=? AND pa=?", (c, comp.pa))
+            self.banco.auditar("pagamento_informado_desfeito", c, {"pa": comp.pa}, self.eid)
         guias = self.banco.guias(c, comp.pa)
         numeros = {g["numero_documento"] for g in guias}
-        venc_legal = vencimento(comp)
+        if self.serpro is None and not eh_atual and not guias:
+            # modo assistido: sem consulta à Receita não dá para afirmar que um mês antigo está em aberto
+            self.banco.salvar_competencia(c, comp.pa, Status.NAO_CONSULTADO, venc_legal.isoformat(),
+                                          "Pagamento não verificado (modo assistido)")
+            return
         if pagamentos is not None:
             evid, suspeita = achar_pagamento(pagamentos, comp, numeros)
             if evid:
@@ -270,7 +304,10 @@ class Motor:
         mensagem = msg_pag
         quer_emitir = (eh_atual and rotina.emitir_competencia_atual) or (st == Status.VENCIDO and rotina.emitir_vencidos)
         ativa = next((g for g in reversed(guias) if not g["substituida"]), None)
-        if quer_emitir and not (ativa and self._guia_valida(ativa, hoje)):
+        if quer_emitir and self.serpro is None and not (ativa and self._guia_valida(ativa, hoje)):
+            mensagem = "Guia a emitir na sessão assistida (PGMEI)"
+            self.rel.aguardando_sessao += 1
+        elif quer_emitir and not (ativa and self._guia_valida(ativa, hoje)):
             chave = f"emitir:{c}:{comp.pa}:{hoje}"
             if self.banco.operacao_concluida(chave):
                 # já emitida hoje e o arquivo sumiu/mudou: não emite de novo, pede revisão
@@ -392,11 +429,22 @@ class Motor:
                                  "validade": g["data_limite"], "total": g["total"], "arquivo": g["arquivo"]} if g else None})
         todas = self.banco.guias(c)
         cli = self.banco.cliente(item["empresa_id"]) or {}
+        hoje_iso = self._hoje().isoformat()
+        precisa = []
+        if comps:
+            ult = comps[-1].iso
+            for x in lst:
+                g = x["guia"]
+                valida = bool(g and g["arquivo"] and (g["validade"] or g["venc"] or "") >= hoje_iso)
+                quer = (x["comp"] == ult and self._rotina.emitir_competencia_atual) or \
+                       (x["status"] == Status.VENCIDO.value and self._rotina.emitir_vencidos)
+                if x["status"] in (Status.PENDENTE.value, Status.VENCIDO.value) and quer and not valida:
+                    precisa.append(x["comp"])
         doc = {"empresaId": item["empresa_id"], "cnpj": c, "nome": item.get("nome"),
                "situacao": situacao.value, "situacaoTxt": ROTULO[situacao], "mensagem": mensagem or cli.get("mensagem"),
                "ultimaConsulta": cli.get("ultima_consulta"), "atualizadoEm": agora(),
                "guiasEmitidas": len(todas), "guiasBaixadas": sum(1 for g in todas if g["status"] == Status.GUIA_BAIXADA.value),
                "pendentes": [x["comp"] for x in lst if x["status"] == Status.PENDENTE.value],
                "vencidos": [x["comp"] for x in lst if x["status"] == Status.VENCIDO.value],
-               "competencias": lst, "execucaoId": self.eid}
+               "competencias": lst, "precisaGuia": precisa, "execucaoId": self.eid}
         self._publicar(COL_CLIENTES, item["empresa_id"], doc)

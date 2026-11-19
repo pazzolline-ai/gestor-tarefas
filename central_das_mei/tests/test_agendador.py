@@ -71,3 +71,30 @@ def test_uma_instancia_so():
         assert a is not None and trava_instancia() is None
     finally:
         a.close()
+
+
+def test_servico_abre_sessao_assistida_pelo_pedido_da_tela(cfg, banco, gestor, fabrica, monkeypatch):
+    import time
+    from dasmei import assistido
+    chamadas = []
+
+    class Falsa:
+        def __init__(self, *a, **k):
+            pass
+
+        def executar(self, somente=None):
+            chamadas.append(somente)
+            return {"id": "sessao-1"}
+    monkeypatch.setattr(assistido, "SessaoAssistida", Falsa)
+    gestor.gravar("dasmei_comandos", "c9", {"acao": "assistido", "status": "pendente", "empresaIds": ["e1"]})
+    s = Servico(cfg, banco, gestor, fabrica)
+    s.sched.start(paused=True)
+    try:
+        s.ciclo()
+        for _ in range(100):
+            if gestor.ler_doc("dasmei_comandos", "c9")["status"] == "concluido":
+                break
+            time.sleep(0.05)
+    finally:
+        s.sched.shutdown(wait=False)
+    assert chamadas == [["e1"]] and gestor.ler_doc("dasmei_comandos", "c9")["execucaoId"] == "sessao-1"

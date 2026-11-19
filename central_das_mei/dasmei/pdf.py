@@ -24,7 +24,8 @@ class DadosPdf:
     paginas: int = 0
     texto_legivel: bool = False
     cnpj: str | None = None
-    periodo: str | None = None          # AAAA-MM
+    periodo: str | None = None          # AAAA-MM (primeiro encontrado)
+    periodos: list = field(default_factory=list)   # todos os períodos citados no PDF
     vencimento: str | None = None       # AAAA-MM-DD
     valor_total: float | None = None
     numero_documento: str | None = None
@@ -65,10 +66,12 @@ def ler(dados: bytes) -> DadosPdf:
     m = re.search(r"\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}", t)
     if m:
         r.cnpj = cnpjmod.limpar(m.group())
-    m = re.search(r"(?i)(" + "|".join(MESES_TXT + ["marco"]) + r")\s*/\s*(\d{4})", t)
-    if m:
+    for m in re.finditer(r"(?i)(" + "|".join(MESES_TXT + ["marco"]) + r")\s*/\s*(\d{4})", t):
         nome = m.group(1).lower().replace("marco", "março")
-        r.periodo = f"{m.group(2)}-{MESES_TXT.index(nome) + 1:02d}"
+        p = f"{m.group(2)}-{MESES_TXT.index(nome) + 1:02d}"
+        if p not in r.periodos:
+            r.periodos.append(p)
+    r.periodo = r.periodos[0] if r.periodos else None
     m = re.search(r"(?i)(?:pagar este documento at[ée]|data de vencimento|vencimento)\D{0,40}?(\d{2}/\d{2}/\d{4})", t)
     if m:
         r.vencimento = _data(m.group(1))

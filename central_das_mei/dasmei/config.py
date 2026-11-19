@@ -64,7 +64,7 @@ class Config:
     supabase_url: str = "https://nhrbbsgmipkwqeqqkgjj.supabase.co"
     supabase_anon_key: str = ""
     email_robo: str = ""
-    serpro_ambiente: str = "producao"          # "producao" ou "trial"
+    serpro_ambiente: str = "nenhum"            # "nenhum" (modo assistido), "producao" ou "trial"
     contratante_cnpj: str = ""                 # CNPJ do escritório (contratou na Loja SERPRO)
     autor_cnpj: str = ""                       # quem pede os dados (normalmente o próprio escritório)
     certificado_pfx: str = ""                  # e-CNPJ A1 do escritório (.pfx/.p12)
@@ -75,6 +75,10 @@ class Config:
     limite_falhas_seguidas: int = 5            # disjuntor: portal fora do ar
     pasta_documentos: str = r"C:\CENTRAL_DAS_MEI"
     rotina: Rotina = field(default_factory=Rotina)
+
+    @property
+    def modo_assistido(self) -> bool:
+        return self.serpro_ambiente == "nenhum"
 
     @property
     def pasta_sistema(self) -> Path:
@@ -105,7 +109,7 @@ def carregar(caminho: Path | None = None) -> Config:
         supabase_url=g.get("supabase_url", Config.supabase_url),
         supabase_anon_key=g.get("supabase_anon_key", ""),
         email_robo=g.get("email_robo", ""),
-        serpro_ambiente=s.get("ambiente", "producao"),
+        serpro_ambiente=s.get("ambiente", "nenhum"),
         contratante_cnpj=s.get("contratante_cnpj", ""),
         autor_cnpj=s.get("autor_cnpj", "") or s.get("contratante_cnpj", ""),
         certificado_pfx=s.get("certificado_pfx", ""),
@@ -114,8 +118,8 @@ def carregar(caminho: Path | None = None) -> Config:
         pasta_documentos=pa.get("documentos", Config.pasta_documentos),
     )
     cfg.rotina = Rotina().mesclar(rb)
-    if cfg.serpro_ambiente not in ("producao", "trial"):
-        raise ValueError("serpro.ambiente deve ser 'producao' ou 'trial'")
+    if cfg.serpro_ambiente not in ("nenhum", "producao", "trial"):
+        raise ValueError("serpro.ambiente deve ser 'nenhum', 'producao' ou 'trial'")
     return cfg
 
 
@@ -128,7 +132,7 @@ supabase_anon_key = "{supabase_anon_key}"
 email_robo = "{email_robo}"
 
 [serpro]
-ambiente = "{serpro_ambiente}"          # "producao" ou "trial" (teste da SERPRO)
+ambiente = "{serpro_ambiente}"          # "nenhum" = modo assistido (sem contrato SERPRO) | "producao" | "trial"
 contratante_cnpj = "{contratante_cnpj}"
 autor_cnpj = "{autor_cnpj}"
 certificado_pfx = '{certificado_pfx}'

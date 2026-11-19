@@ -15,6 +15,7 @@ class Relatorio:
         self.inicio = agora()
         self.processados = self.consultas_ok = self.guias_emitidas = self.pdfs_baixados = 0
         self.pendentes = self.vencidos = self.pagos = self.tentativas_extras = self.avisos_gestor = 0
+        self.aguardando_sessao = 0
         self.erros, self.aguardando_l, self.revisao_l, self.intervencao_l, self.alertas = [], [], [], [], []
 
     @staticmethod
@@ -47,7 +48,7 @@ class Relatorio:
             "consultas_ok": self.consultas_ok,
             "guias_emitidas": self.guias_emitidas, "pdfs_baixados": self.pdfs_baixados,
             "competencias_pendentes": self.pendentes, "das_vencidos": self.vencidos,
-            "pagamentos_confirmados": self.pagos,
+            "pagamentos_confirmados": self.pagos, "guias_para_sessao_assistida": self.aguardando_sessao,
             "aguardando_autenticacao_n": len(self.aguardando_l), "aguardando_autenticacao": self.aguardando_l,
             "erros_n": len(self.erros), "erros": self.erros,
             "revisao_n": len(self.revisao_l) + len(self.intervencao_l),

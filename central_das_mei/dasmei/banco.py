@@ -86,7 +86,13 @@ class Banco:
 
     # ---------- execuções e fila ----------
     def execucao_aberta(self):
-        return self.um("SELECT * FROM execucoes WHERE estado='em_andamento' ORDER BY inicio DESC LIMIT 1")
+        """Rotina automática interrompida (sessões assistidas não são retomadas sozinhas)."""
+        return self.um("SELECT * FROM execucoes WHERE estado='em_andamento' AND origem<>'assistida' "
+                       "ORDER BY inicio DESC LIMIT 1")
+
+    def fechar_assistidas_abertas(self):
+        self._x("UPDATE execucoes SET estado='interrompida', fim=? WHERE estado='em_andamento' AND origem='assistida'",
+                (agora(),))
 
     def nova_execucao(self, origem: str, itens: list[dict]) -> str:
         eid = novo_id()

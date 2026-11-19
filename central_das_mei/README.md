@@ -1,134 +1,147 @@
-# Central de DAS MEI — robô fiscal
+# Central de DAS MEI: robô fiscal
 
-Robô que roda no PC do escritório e, todo dia (padrão 07:00), para **todos os clientes MEI** cadastrados no Gestor de Tarefas:
+Robô que roda no PC do escritório, cuida dos DAS de **todos os clientes MEI** cadastrados no Gestor de Tarefas e mostra tudo na tela **Fiscal › Central de DAS MEI**.
 
-1. consulta os **pagamentos oficiais** na Receita (PAGTOWEB) das competências acompanhadas;
-2. marca cada competência como **Pago confirmado**, **Pendente** ou **Vencido**;
-3. **emite o DAS** pelo PGMEI quando autorizado e ainda não existir guia válida;
-4. **valida e baixa o PDF**, confere CNPJ/período/vencimento/valor e organiza em `CENTRAL_DAS_MEI\CNPJ\ANO\MÊS\`;
-5. atualiza a tela **Fiscal › Central de DAS MEI** do gestor e o painel "Guias DAS-MEI" do Início;
-6. gera um **relatório** (tela + arquivo HTML/JSON) e sinaliza quem precisa de ação humana, **sem parar os demais**.
+Ele funciona de dois jeitos:
 
-O acesso é pela **API oficial Integra Contador (SERPRO/Receita Federal)**, sem raspagem de tela, sem contornar captcha e sem usar senha gov.br de cliente.
+| | **Modo assistido** (padrão, gratuito) | **Modo automático** (com contrato SERPRO) |
+|---|---|---|
+| Como acessa a Receita | abre o **PGMEI oficial** no Edge/Chrome do PC | API oficial **Integra Contador** (SERPRO) |
+| Captcha "não sou um robô" | **uma pessoa resolve** (o robô nunca mexe no captcha) | não existe |
+| O que a pessoa faz | resolve o captcha e gera o DAS (uns 20 a 30 s por cliente) | nada |
+| O que o robô faz | preenche o CNPJ, captura o PDF, confere, arquiva, atualiza o gestor e abre o próximo cliente | tudo, sozinho, às 07:00 |
+| Confirmar pagamento | alguém informa na tela, depois de conferir o comprovante | consulta oficial PAGTOWEB |
+| Custo | nenhum | cobrança por consulta/guia (Loja SERPRO) |
 
-> **Guia emitida ou baixada não significa guia paga.** "Pago confirmado" só aparece com a evidência da consulta oficial de pagamentos.
+A mudança de modo é só configuração: tudo do modo automático já está pronto para quando o escritório contratar.
+
+> **Guia emitida ou baixada não significa guia paga.** "Pago confirmado" só aparece com a consulta oficial da Receita ou quando alguém informa na tela que conferiu o comprovante (fica registrado quem e quando).
 
 ---
 
-## 1. O que o escritório precisa ter (uma vez)
+## 1. Instalação no PC do escritório
 
-| Item | Onde conseguir |
-|---|---|
-| Contrato **Integra Contador** na Loja SERPRO (gera *Consumer Key* e *Consumer Secret*) | loja.serpro.gov.br, com o e-CNPJ do escritório |
-| **Certificado e-CNPJ A1** do escritório (arquivo `.pfx` + senha) | certificadora ICP-Brasil |
-| **Procuração eletrônica** de cada MEI para o CNPJ do escritório, com os serviços do PGMEI e de consulta de pagamentos | o cliente concede no e-CAC (ou o escritório solicita) |
-| Usuário próprio do robô no gestor: **Equipe › Usuários › novo usuário "Robô DAS"** (papel comum, nada de diretoria) | no próprio gestor |
-| PC com Windows 10/11 que fique ligado de manhã, com **Python 3.11+** | python.org (marcar "Add python.exe to PATH") |
+Precisa de:
+- Windows 10/11;
+- Python 3.11 ou mais novo (python.org, marcando "Add python.exe to PATH");
+- Microsoft Edge (já vem no Windows).
 
-Custos: cada consulta de pagamentos e cada guia emitida é uma chamada cobrada pelo contrato SERPRO. Com a rotina diária, o robô **não emite de novo** guia que ainda é válida e **não consulta** competência já confirmada como paga. Para reduzir chamadas, dá para escolher na tela só os dias úteis ou menos meses retroativos.
+1. No gestor, crie o usuário do robô: **Equipe › Usuários › novo usuário "Robô DAS"** (papel comum).
+2. Copie esta pasta `central_das_mei` para o PC (por exemplo `C:\CentralDasMei`).
+3. Dê dois cliques em **`instalar.bat`**. Ele:
+   - cria o ambiente Python e instala tudo;
+   - pergunta e-mail e senha do Robô DAS, se há contrato SERPRO (responda **n**) e a pasta dos documentos (padrão `C:\CENTRAL_DAS_MEI`);
+   - testa o login no gestor e a abertura do navegador;
+   - protege a pasta dos documentos (só o usuário, Administradores e Sistema);
+   - cria no **Agendador de Tarefas do Windows** o serviço que inicia com o Windows e o "garantir" diário às 06:40.
+4. Abra o gestor em **Fiscal › Central de DAS MEI**. O ponto verde mostra "Robô ativo no PC … · modo assistido".
 
-Clientes **sem procuração** aparecem como **Aguardando autenticação**, com a orientação do que pedir. Os outros continuam normalmente.
+A chave pública (anon) do Supabase é a mesma do `index.html` do sistema (`SB_KEY`). Senhas vão para o **Cofre de Credenciais do Windows**; o `config.toml` (em `%LOCALAPPDATA%\CentralDasMei`) não guarda nenhuma.
 
-## 2. Instalação no PC do escritório
+## 2. Rotina do mês (modo assistido)
 
-1. Baixe esta pasta `central_das_mei` para o PC (por exemplo `C:\CentralDasMei`).
-2. Dê dois cliques em **`instalar.bat`**. Ele:
-   - cria o ambiente Python e instala as dependências;
-   - pergunta os dados (e-mail e senha do usuário Robô DAS, CNPJ do escritório, caminho do `.pfx`, Consumer Key/Secret, senha do certificado, pasta dos documentos);
-   - testa tudo (`testar`): login no gestor, validade do certificado e autenticação na SERPRO;
-   - protege a pasta dos documentos (só o usuário atual, Administradores e Sistema);
-   - cria no **Agendador de Tarefas do Windows** duas tarefas: iniciar o serviço ao entrar no Windows e um "garantir" diário às 06:40, que acorda o PC da suspensão se o hardware permitir.
-3. Abra o gestor em **Fiscal › Central de DAS MEI**. O ponto verde mostra "Robô ativo no PC …".
+1. Todo dia às 07:00 o robô atualiza a situação de cada cliente: quem precisa da guia do mês, o que está pendente ou vencido, e os pagamentos informados.
+2. Na tela, clique em **Abrir sessão assistida**. Também dá para usar o `sessao_assistida.bat` no PC do robô.
+3. No PC do robô o PGMEI abre já com o CNPJ do primeiro cliente e uma **barra preta de instruções** embaixo. Para cada cliente:
+   1. resolva o "não sou um robô" e clique em **Continuar**;
+   2. vá em **Emitir Guia de Pagamento (DAS)**, escolha o ano, marque o mês e clique em **Apurar/Gerar DAS** e depois em **Imprimir/Visualizar PDF**;
+   3. o robô pega o PDF sozinho, confere o CNPJ, lê período, vencimento, valor e número, salva em `CENTRAL_DAS_MEI\CNPJ\ANO\MÊS\` e **vai para o próximo cliente**.
+4. Botões da barra:
+   - **Emitir outro mês deste cliente**, para gerar mais de um mês;
+   - **Pular cliente**;
+   - **Próximo cliente**;
+   - **Encerrar sessão**.
 
-A chave pública (anon) do Supabase é a mesma que já está no `index.html` do sistema (`SB_KEY`).
+Se você gerar o PDF de outro CNPJ por engano, o robô recusa e não salva nada. Só entram na fila os clientes que ainda não têm guia válida do mês e não têm pagamento informado.
 
-**Onde ficam os segredos:** senha do robô, Consumer Key/Secret e senha do certificado vão para o **Cofre de Credenciais do Windows** (protegido pelo login do usuário). O arquivo `config.toml` (em `%LOCALAPPDATA%\CentralDasMei`) não guarda nenhuma senha.
+Para **informar pagamento**: abra o cliente na Central, clique em **Informar pagamento**, escolha competência, data e valor (opcional). Use depois de conferir o comprovante ou o "Pago" que o próprio PGMEI mostra. Dá para desfazer. O robô aplica na rotina seguinte.
 
-## 3. Primeiro uso, com segurança
+## 3. Tela do gestor
 
-1. `executar_agora.bat` não é o primeiro passo. Antes, teste a ligação com a SERPRO no **ambiente de demonstração**, com dados fictícios da própria SERPRO e sem custo:
-   ```
-   .venv\Scripts\python -m dasmei testar-trial
-   ```
-   Isso emite o DAS de demonstração, valida o PDF e salva em `CENTRAL_DAS_MEI\_SISTEMA\teste_trial_DAS.pdf`.
-2. Antes de ligar a rotina para todos, **pause a rotina** (tela › Rotina › "Pausar a rotina automática") e processe **um cliente autorizado**: abra o cliente na Central e clique em **"Processar só este cliente agora"**. Confira o PDF na pasta e os dados na tela.
-3. Estando tudo certo, desmarque "Pausar" e deixe a rotina automática trabalhar.
+- Indicadores:
+  - clientes MEI, consultados e não consultados;
+  - guias emitidas e baixadas, e quem **precisa de guia**;
+  - competências pendentes e DAS vencidos;
+  - aguardando autenticação e erros;
+  - última e próxima execução.
+- **Precisa de você**: o que exige ação humana.
+- Tabela de clientes com filtros e busca. Em **Detalhes**, cada competência mostra situação, vencimento, guia (número, valor, até quando pagar, caminho do PDF) e pagamento, com a evidência.
+- **Rotina** (gestores): horário, dias, meses acompanhados, emitir mês/vencidos, pausar.
+- **Histórico** e **relatórios** de cada execução e sessão.
 
-## 4. Uso no dia a dia (pela tela do gestor)
+Quem entra no robô: empresas com **regime "MEI"**, não inativas e com "Emite guia DAS-MEI todo mês" marcado. Cadastre o cliente uma vez em Empresas.
 
-- **Executar agora**: o robô começa em até 1 minuto, mesmo fora do horário.
-- **Rotina** (gestores): horário, dias da semana, quantos meses para trás, emitir o mês, emitir vencidos, consultar pagamentos, pausar. O robô aplica as mudanças em até 1 minuto.
-- **Detalhes do cliente**: cada competência com situação, vencimento, guia (número, valor, até quando pode ser paga, caminho do PDF) e pagamento confirmado com a evidência. Ali também ficam "Processar só este cliente" e "Tirar do robô".
-- **Precisa de você**: clientes aguardando autenticação, com erro ou que exigem intervenção.
-- **Histórico de execuções** e **Último relatório**: totais, pendências, erros e operações para revisar.
-
-Quem entra no robô: empresas do cadastro com **regime "MEI"**, não inativas e com "Emite guia DAS-MEI todo mês" marcado. Cadastre o cliente uma vez em Empresas e pronto.
-
-## 5. Situações
+## 4. Situações
 
 | Situação | Significado |
 |---|---|
-| Não consultado | o robô ainda não passou por este cliente |
-| Consultado / Em dia | todas as competências acompanhadas estão com pagamento confirmado |
-| DAS emitido → DAS disponível para download → Guia baixada | ciclo do documento: recebido da Receita → PDF validado → arquivado com SHA-256 |
-| Pendente | competência a pagar, ainda no prazo |
-| Vencido | passou do vencimento legal (dia 20, ou o próximo dia útil) sem pagamento confirmado |
-| Pago confirmado | a consulta oficial de pagamentos mostrou a arrecadação (data, valor e documento registrados) |
-| Aguardando autenticação | falta procuração eletrônica do cliente (ou ela não cobre os serviços) |
-| Erro de consulta | falha temporária mesmo após novas tentativas; o robô tenta de novo na próxima rotina |
-| Exige intervenção humana | a Receita recusou o pedido, o PDF veio inválido ou divergente, o cadastro está sem CNPJ, ou há pagamento sem identificação clara |
+| Não consultado | ainda não verificado. No modo assistido, meses antigos ficam assim até alguém informar o pagamento |
+| Consultado / Em dia | as competências acompanhadas estão com pagamento confirmado |
+| DAS emitido → disponível → Guia baixada | ciclo do documento: recebido → PDF validado → arquivado com SHA-256 |
+| Pendente | a pagar, no prazo |
+| Vencido | passou do vencimento (dia 20, ou o próximo dia útil) sem pagamento confirmado |
+| Pago confirmado | consulta oficial ou pagamento informado com comprovante (com registro de quem informou) |
+| Aguardando autenticação | (modo automático) falta a procuração eletrônica do cliente |
+| Erro de consulta | falha temporária; o robô tenta de novo |
+| Exige intervenção humana | PDF inválido ou divergente, cadastro sem CNPJ, recusa da Receita, pagamento sem identificação clara |
 
-## 6. Como o robô se protege
+## 5. Proteções
 
-- **Um cliente por vez**, com pausa entre clientes e um intervalo mínimo entre chamadas à SERPRO.
-- **Novas tentativas** só para falhas temporárias (rede, 429, 5xx), com espera crescente.
-- **Portal fora do ar**: depois de 5 clientes seguidos com falha, a rotina é interrompida e **retomada automaticamente** a cada 30 min, do ponto onde parou. Se o PC desligar no meio da rotina, ela também é retomada.
-- **Credenciais do escritório** (certificado vencido, chave errada): a rotina para e avisa, em vez de errar 300 vezes.
+- **Um cliente por vez**: o erro de um não para os outros.
 - **Sem duplicidade**:
-  - cada operação tem identificador único;
-  - nenhuma guia é emitida de novo enquanto a anterior for válida e o arquivo estiver íntegro (hash);
-  - a mesma guia não é emitida duas vezes no mesmo dia;
-  - o mesmo número de documento nunca é registrado duas vezes.
+  - operações com identificador único;
+  - o mesmo PDF ou número de documento não é registrado duas vezes;
+  - não emite de novo guia ainda válida.
 - **Nunca sobrescreve**: arquivo igual é reaproveitado; arquivo diferente com o mesmo nome vira `_v2`.
-- **Lista fechada de serviços**: só `PGMEI/GERARDASPDF21` (emitir DAS) e `PAGTOWEB/PAGAMENTOS71` (consultar pagamentos). Nada que declare, transmita ou altere dados.
+- **Validação do PDF**: estrutura, CNPJ do cliente, período, vencimento e valor.
 - **LGPD**:
-  - os PDFs ficam só no PC do escritório, em pasta com acesso restrito;
+  - PDFs só no PC do escritório, em pasta restrita;
   - o gestor recebe apenas o resumo;
-  - os logs mascaram tokens e senhas;
-  - o certificado é aberto em memória e o temporário cifrado é apagado com sobrescrita;
+  - logs sem senhas ou tokens;
   - backup diário do banco local (30 dias) em `CENTRAL_DAS_MEI\_SISTEMA\backups`;
-  - auditoria de cada ação no banco local.
+  - auditoria de cada ação.
+- O robô **não** declara, transmite ou altera nada na Receita.
+
+## 6. Quando contratar o SERPRO (modo automático)
+
+1. Contrate o **Integra Contador** na Loja SERPRO para receber *Consumer Key* e *Consumer Secret*.
+2. Tenha o **e-CNPJ A1** do escritório (`.pfx`).
+3. Peça a cada MEI a **procuração eletrônica no e-CAC** para o CNPJ do escritório.
+4. Rode `instalar.bat` de novo e responda **s** para o contrato SERPRO.
+5. Rode `python -m dasmei testar-trial` para emitir um DAS de demonstração da SERPRO, sem custo.
+6. Teste um cliente com **Processar só este cliente agora**.
+
+A partir daí o robô consulta pagamentos e emite tudo sozinho às 07:00. Para limitar o custo, ele não reemite guia válida nem consulta mês já pago.
 
 ## 7. Comandos
 
 ```
 python -m dasmei configurar     # refazer a configuração
-python -m dasmei testar         # gestor + certificado + SERPRO
-python -m dasmei testar-trial   # DAS de demonstração da SERPRO (sem custo)
-python -m dasmei executar [--empresa ID]
+python -m dasmei testar         # gestor + navegador (+ certificado e SERPRO, se contratado)
+python -m dasmei assistido [--empresa ID]
+python -m dasmei executar [--empresa ID]   # rotina (atualiza situação; no modo automático emite)
 python -m dasmei status         # últimas execuções
 python -m dasmei backup
 python -m dasmei servico        # o que o Agendador do Windows executa
 ```
-Logs: `%LOCALAPPDATA%\CentralDasMei\logs\dasmei.log`. Para remover as tarefas automáticas: `desinstalar.bat` (não apaga documentos nem histórico).
+- Logs: `%LOCALAPPDATA%\CentralDasMei\logs\dasmei.log`.
+- `desinstalar.bat` remove as tarefas automáticas, sem apagar documentos nem histórico.
+- O PC precisa estar **ligado e com o usuário conectado** (a tela pode estar bloqueada).
 
-## 8. Requisitos e limites
+E-mail e WhatsApp do relatório estão **preparados, mas desligados** (`dasmei/notificacoes.py`).
 
-- O PC precisa estar **ligado e com o usuário conectado** (a tela pode estar bloqueada) na hora da rotina. O Cofre de Credenciais do Windows só abre para o usuário logado.
-- E-mail e WhatsApp do relatório estão **preparados, mas desligados** (`dasmei/notificacoes.py`). O texto já sai pronto; falta ligar um canal autorizado.
-- O robô não recalcula benefícios, não declara a DASN-SIMEI e não altera nada na Receita.
-
-## 9. Testes automatizados
+## 8. Testes automatizados
 
 ```
 pip install pytest
 python -m pytest -q
 ```
-São 75 testes com dados fictícios e uma SERPRO simulada. Cobrem:
-- CNPJ e competências/vencimentos;
-- regras de status;
-- validação e leitura de PDF;
-- pastas sem sobrescrita;
-- formato exato dos pedidos à API e classificação de erros;
-- lote completo, idempotência, retomada após queda, pagamento confirmado só com evidência;
-- cliente sem procuração, PDF inválido, botão "Executar agora", agendamento e backup.
+São 82 testes com dados fictícios. Cobrem:
+- regras de CNPJ, vencimentos e status;
+- PDFs e pastas;
+- formato exato dos pedidos à API SERPRO e erros, lote completo, idempotência e retomada;
+- **sessão assistida** num navegador real contra um PGMEI simulado: PDF visualizado e baixado, PDF de outro CNPJ recusado, barra de instruções;
+- rotina sem SERPRO, pagamento informado e desfeito;
+- agendamento e pedidos vindos da tela.
+
+O PGMEI de verdade não pôde ser acessado no ambiente onde o robô foi construído. **Antes do uso em produção, faça a primeira sessão assistida com 1 ou 2 clientes e confira os PDFs salvos.** Se a Receita mudar o nome do campo de CNPJ, a barra pede para digitar o CNPJ; todo o resto continua funcionando.
