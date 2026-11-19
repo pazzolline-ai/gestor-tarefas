@@ -1514,10 +1514,11 @@ html[data-cad='0'] [data-eq-edit],html[data-cad='0'] [data-eq-desl],html[data-ca
     <div class="wsw" role="tablist" aria-label="Espaço de trabalho"><button data-ws="escritorio" role="tab">Escritório</button><button data-ws="pessoal" role="tab"><svg class="lk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Lucas</button></div>
     <div class="mods" id="mods" aria-label="Módulos"></div>
     <nav class="nav" id="nav"></nav>
-    <div class="clock" aria-label="Relógio">
+    <div class="clock" aria-label="Relógio" data-relogio role="button" tabindex="0" title="Abrir o relógio de reuniões">
       
       <div class="dg"><span id="cHM">--:--</span><span id="cS" class="cs">--</span></div>
       <div class="cd" id="cDate"></div>
+      <div class="clk-nx" id="clkNext"></div>
       
     </div>
     <div class="side-foot" id="sideFoot"></div>
@@ -4189,7 +4190,9 @@ function nmCard(big){const {e,resto}=nmProx();const sinc=icsUrl()?(ICS_ST==='err
    <div class="nm-bt">${lk?`<a class="nm-go" href="${esc(lk)}" target="_blank" rel="noopener">${cam}Participar da Reunião</a>`:`<span class="nm-go off">${cam}Sem link da reunião</span>`}<button type="button" class="nm-det" data-nmdet="${esc(e.data)}">📅 Ver Detalhes</button></div></div>
    ${resto.length&&!big?`<div class="nm-prox"><div class="nm-ph"><b>Próximas Reuniões</b><button type="button" class="nm-all" data-go="agenda">Ver todas →</button></div>${resto.map((x,i)=>`<button type="button" class="nm-it" data-nmdet="${esc(x.data)}"><span class="dot" style="background:${['#A55BFF','#3D8BFF','#2FC27A'][i%3]}"></span><b>${esc(x.titulo)}</b><small>${x.data===hoje()?'Hoje':x.data===addD(hoje(),1)?'Amanhã':toD(x.data).toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','')+', '+fmtC(x.data)} · ${x.ini}</small><span class="ch">›</span></button>`).join('')}</div>`:''}`}
 function nmLembHtml(){const l=nmLemb();return `<div class="nm-lb"><span>🔔 Lembretes automáticos:</span>${[30,15,5].map(v=>`<button type="button" class="${l.includes(v)?'on':''}" data-nmlemb="${v}">${v} min</button>`).join('')}</div>`}
-function nmTick(){document.querySelectorAll('.nm-card[data-nmt]').forEach(c=>{const ms=+c.dataset.nmt-Date.now();const p=nmPartes(ms);c.querySelectorAll('[data-nmc]').forEach(b=>{b.textContent=pad(p[+b.dataset.nmc])});const ft=c.querySelector('[data-nmft]');if(ft)ft.innerHTML=nmFalta(ms);const br=c.querySelector('[data-nmbar]');if(br)br.style.width=Math.max(3,Math.min(100,100-ms/(24*3600e3)*100))+'%';c.classList.toggle('urg',ms<=15*60e3)});
+function clkNext(){const el=document.getElementById('clkNext');if(!el)return;const {e}=nmProx();if(!e){el.innerHTML='<span class="clk-nd">Sem reuniões próximas</span>';return}const ms=e.t-Date.now(),[d,h,m]=nmPartes(ms);
+  el.innerHTML=`<div class="clk-k">${ms>0?'Próxima reunião':'Acontecendo agora'}</div><div class="clk-t">${esc(e.titulo)}</div><div class="clk-c">${ms>0?(d?d+'d ':'')+(d||h?h+'h ':'')+m+'min':e.ini}</div><div class="clk-b"><i style="width:${Math.max(3,Math.min(100,100-ms/(24*3600e3)*100))}%"></i></div>`;el.classList.toggle('urg',ms<=15*60e3)}
+function nmTick(){clkNext();document.querySelectorAll('.nm-card[data-nmt]').forEach(c=>{const ms=+c.dataset.nmt-Date.now();const p=nmPartes(ms);c.querySelectorAll('[data-nmc]').forEach(b=>{b.textContent=pad(p[+b.dataset.nmc])});const ft=c.querySelector('[data-nmft]');if(ft)ft.innerHTML=nmFalta(ms);const br=c.querySelector('[data-nmbar]');if(br)br.style.width=Math.max(3,Math.min(100,100-ms/(24*3600e3)*100))+'%';c.classList.toggle('urg',ms<=15*60e3)});
   document.querySelectorAll('[data-nmclk]').forEach(x=>{const n=new Date();x.textContent=pad(n.getHours())+':'+pad(n.getMinutes())})}
 setInterval(nmTick,1000);
 function nmAplicar(){const v=document.getElementById('view');if(!v)return;
@@ -6829,5 +6832,19 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 @media (max-width:760px){.ag-w.has-nm{grid-template-columns:1fr}.ag-nm{grid-template-columns:1fr}.nm-cd b{font-size:26px}.nm-bt{grid-template-columns:1fr}}
 .dash-nm{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;align-items:start}.dash-nm .nm-prox{margin-top:0}@media(max-width:900px){.dash-nm{grid-template-columns:1fr}}
 .rel-in{background:none!important;box-shadow:none!important;padding:0!important;width:min(560px,94vw)!important;text-align:left!important}.nm-card.big{padding:24px}.nm-card.big .nmc-t{font-size:30px}.nm-card.big .nm-cd b{font-size:46px}
+
+.clock{position:relative;overflow:hidden;cursor:pointer;margin:14px 2px 4px!important;padding:16px 14px 14px!important;border-radius:20px!important;border:1.5px solid rgba(140,108,255,.5)!important;background:radial-gradient(130% 100% at 0% 0%,#2a1f63 0%,#14112b 60%,#0e0d1c 100%)!important;box-shadow:0 16px 40px -18px rgba(110,80,255,.6)!important;align-items:stretch!important;gap:2px!important;color:#EEF0FA;text-align:left}
+.clock::before{content:'';position:absolute;inset:-40% -40% auto auto;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(176,124,255,.35),transparent 70%);pointer-events:none}
+.clock svg,.clock .an,.clock .dial{display:none!important}
+.clock .dg{display:flex!important;align-items:baseline;gap:3px;font:800 34px/1 var(--f-head)!important;letter-spacing:-.03em;color:#fff!important;font-variant-numeric:tabular-nums}
+.clock .dg .cs{font-size:15px!important;font-weight:700;color:#B9A6FF!important;opacity:1!important}
+.clock .cd{font-size:12px!important;color:#BFC3D9!important;text-transform:capitalize;margin-bottom:8px}
+.clk-nx{border-top:1px solid rgba(255,255,255,.1);padding-top:10px;display:flex;flex-direction:column;gap:3px}
+.clk-k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9aa0b8}.clk-t{font-size:13px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clk-c{font:800 20px var(--f-head);color:#C9B8FF;letter-spacing:-.02em}.clk-nx.urg .clk-c{color:#ffb4e6}
+.clk-b{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px}.clk-b i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7B5CFF,#B07CFF)}
+.clk-nd{font-size:12px;color:#9aa0b8}
+.clock:hover{border-color:#B07CFF!important}
+.clock #cHM{color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;font:800 34px/1 var(--f-head)!important;letter-spacing:-.02em!important}.clock .dg{justify-content:flex-start!important}.clock .cd{text-align:left!important;align-self:stretch}
 </style>
 </body></html>
