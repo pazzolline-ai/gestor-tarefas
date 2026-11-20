@@ -1,0 +1,30 @@
+name: Robô Central de DAS MEI
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['central_das_mei/**', '.github/workflows/robo-das.yml']
+permissions:
+  contents: write
+jobs:
+  pacote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Testes
+        working-directory: central_das_mei
+        run: |
+          pip install -q -r requirements.txt pytest
+          python -m pytest -q --ignore=tests/test_assistido.py
+      - name: Montar pacote para Windows
+        run: git archive --format=zip --prefix=CentralDasMei/ -o CentralDasMei.zip HEAD:central_das_mei
+      - name: Publicar na página de downloads
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: robo-das-mei
+          name: Central de DAS MEI (robô para o PC do escritório)
+          body: Baixe CentralDasMei.zip, descompacte em C:\CentralDasMei e dê dois cliques em instalar.bat. Manual no README.md dentro do pacote.
+          files: CentralDasMei.zip
+          make_latest: false
