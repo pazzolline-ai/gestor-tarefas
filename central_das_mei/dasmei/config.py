@@ -61,6 +61,8 @@ class Rotina:
 
 @dataclass
 class Config:
+    modo_gestor: str = "supabase"              # "supabase" (Gestor de Tarefas) ou "local" (versão separada)
+    porta_web: int = 8777                      # tela da versão separada (só neste PC)
     supabase_url: str = "https://nhrbbsgmipkwqeqqkgjj.supabase.co"
     supabase_anon_key: str = ""
     email_robo: str = ""
@@ -75,6 +77,10 @@ class Config:
     limite_falhas_seguidas: int = 5            # disjuntor: portal fora do ar
     pasta_documentos: str = r"C:\CENTRAL_DAS_MEI"
     rotina: Rotina = field(default_factory=Rotina)
+
+    @property
+    def versao_separada(self) -> bool:
+        return self.modo_gestor == "local"
 
     @property
     def modo_assistido(self) -> bool:
@@ -106,6 +112,8 @@ def carregar(caminho: Path | None = None) -> Config:
         d = tomllib.load(f)
     g, s, pa, rb = d.get("gestor", {}), d.get("serpro", {}), d.get("pastas", {}), d.get("rotina", {})
     cfg = Config(
+        modo_gestor=g.get("modo", "supabase"),
+        porta_web=int(g.get("porta_web", 8777)),
         supabase_url=g.get("supabase_url", Config.supabase_url),
         supabase_anon_key=g.get("supabase_anon_key", ""),
         email_robo=g.get("email_robo", ""),
@@ -120,6 +128,8 @@ def carregar(caminho: Path | None = None) -> Config:
     cfg.rotina = Rotina().mesclar(rb)
     if cfg.serpro_ambiente not in ("nenhum", "producao", "trial"):
         raise ValueError("serpro.ambiente deve ser 'nenhum', 'producao' ou 'trial'")
+    if cfg.modo_gestor not in ("supabase", "local"):
+        raise ValueError("gestor.modo deve ser 'supabase' ou 'local'")
     return cfg
 
 
@@ -127,6 +137,8 @@ MODELO = """# Central de DAS MEI — configuração do robô
 # Senhas e chaves NÃO ficam aqui: ficam no Cofre de Credenciais do Windows.
 
 [gestor]
+modo = "{modo_gestor}"          # "supabase" = integrado ao Gestor de Tarefas | "local" = versão separada
+porta_web = {porta_web}           # tela da versão separada: http://127.0.0.1:{porta_web}
 supabase_url = "{supabase_url}"
 supabase_anon_key = "{supabase_anon_key}"
 email_robo = "{email_robo}"

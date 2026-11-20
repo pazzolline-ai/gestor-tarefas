@@ -66,6 +66,11 @@ class Servico:
         self._assinatura = None
         self._ultima_retomada = 0.0
         self.parar = threading.Event()
+        self._acordar = threading.Event()
+
+    def acordar(self):
+        """Faz o ciclo rodar já (usado pela tela local ao pedir uma execução)."""
+        self._acordar.set()
 
     def motor(self):
         return Motor(self.cfg, self.banco, self.gestor, self.fabrica)
@@ -157,7 +162,8 @@ class Servico:
         try:
             while not self.parar.is_set():
                 self.ciclo()
-                self.parar.wait(self.intervalo)
+                self._acordar.wait(self.intervalo)
+                self._acordar.clear()
         finally:
             self.sched.shutdown(wait=False)
             try:

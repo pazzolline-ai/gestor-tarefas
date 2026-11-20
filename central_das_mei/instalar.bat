@@ -32,5 +32,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0windows\registrar_tare
 if errorlevel 1 ( echo Falha ao criar a tarefa no Agendador do Windows. & pause & exit /b 1 )
 echo.
 echo Pronto! O robo inicia sozinho ao entrar no Windows e roda a rotina no horario configurado (padrao 07:00).
+echo Versao separada: use o atalho "Central de DAS MEI" na area de trabalho.
 echo Acompanhe pela tela "Central de DAS MEI" no Gestor de Tarefas.
 pause

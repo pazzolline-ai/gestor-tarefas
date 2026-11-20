@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Central de DAS MEI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e0a040'/%3E%3Ctext x='16' y='22' font-size='15' font-family='Arial' font-weight='700' text-anchor='middle' fill='%23141414'%3EDAS%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--panel2:#f7f8fa;--line:#e3e6ea;--fg:#16191d;--mut:#5d6672;--dim:#98a0aa;--acc:#16191d;--acc-ink:#fff;
+ --red:#c8382c;--red-soft:#fbe7e5;--amb:#a35f00;--amb-soft:#fdf0dc;--grn:#18794e;--grn-soft:#e2f4ea;--gold:#e0a040;
+ --f-ui:'Segoe UI',system-ui,-apple-system,sans-serif;--f-mono:'Cascadia Mono',Consolas,ui-monospace,monospace;--shadow:0 10px 30px rgba(0,0,0,.12)}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1014;--panel:#161a20;--panel2:#1c2129;--line:#2a3039;--fg:#e8ebef;--mut:#a3acb8;--dim:#6c7582;--acc:#e8ebef;--acc-ink:#0e1014;
+ --red:#ff7b6e;--red-soft:#3a1d1a;--amb:#f2b45a;--amb-soft:#352812;--grn:#5fd49a;--grn-soft:#14301f;--shadow:0 10px 30px rgba(0,0,0,.5)}}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--f-ui)}
+button,input,select{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
+.top .in{max-width:1280px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{display:flex;gap:10px;align-items:center}.logo i{width:34px;height:34px;border-radius:9px;background:var(--gold);color:#141414;display:grid;place-items:center;font:700 12px var(--f-ui);font-style:normal}
+.logo b{display:block;font-size:16px}.logo span{font-size:12px;color:var(--mut)}
+.tabs{display:flex;gap:4px;margin-left:8px}.tabs button{all:unset;cursor:pointer;padding:7px 12px;border-radius:8px;color:var(--mut);font-weight:500}.tabs button.on{background:var(--panel2);color:var(--fg)}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 13px;cursor:pointer;font-weight:500;white-space:nowrap}
+a.btn{text-decoration:none;color:inherit;display:inline-block}a.btn.sm{line-height:1.6}
+.btn:hover{background:var(--panel2)}.btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}.btn.sm{padding:4px 10px;font-size:12.5px}.btn.ghost{border-color:transparent;background:transparent}
+.btn:focus-visible,.tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+main{max-width:1280px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ph{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 16px}.ph h2{font-size:15px;margin:0}
+.robo{display:inline-flex;gap:7px;align-items:center;font-size:12.5px;color:var(--mut)}.robo i{width:9px;height:9px;border-radius:50%;background:var(--dim)}.robo.on i{background:var(--grn);box-shadow:0 0 0 3px var(--grn-soft)}.robo.off i{background:var(--red)}
+.k{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border-top:1px solid var(--line)}
+.k>div{padding:12px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.k b{display:block;font:600 22px var(--f-mono)}.k span{font-size:12px;color:var(--mut)}
+.k .red b{color:var(--red)}.k .amb b{color:var(--amb)}.k .grn b{color:var(--grn)}
+.flag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--panel2);color:var(--mut);border:1px solid var(--line);white-space:nowrap;display:inline-block}
+.flag.red{background:var(--red-soft);color:var(--red);border-color:transparent}.flag.amb{background:var(--amb-soft);color:var(--amb);border-color:transparent}.flag.grn{background:var(--grn-soft);color:var(--grn);border-color:transparent}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%}th{font-size:12px;color:var(--mut);font-weight:500;text-align:left;padding:8px 16px;border-top:1px solid var(--line)}
+td{padding:10px 16px;border-top:1px solid var(--line);vertical-align:middle}tr.click{cursor:pointer}tr.click:hover td{background:var(--panel2)}
+.mono{font-family:var(--f-mono);font-size:12.5px}.nw{white-space:nowrap}.mut{color:var(--mut)}.small{font-size:12px}
+.cp{display:inline-flex;flex-wrap:wrap;gap:3px}
+.al{display:flex;gap:10px;align-items:flex-start;padding:10px 16px;border-top:1px solid var(--line)}.al>div{flex:1;min-width:0}.al small{display:block;color:var(--mut)}
+.inp,.sel{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:7px 10px;width:100%}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.empty{padding:28px 16px;text-align:center;color:var(--mut)}
+.note{font-size:12.5px;color:var(--mut);line-height:1.5;padding:0 4px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.md{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto}.md.wide{width:min(980px,100%)}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}.mh h3{margin:0;font-size:16px}
+.mb{padding:16px 18px}.mf{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fd{display:flex;flex-direction:column;gap:5px}.fd.full{grid-column:1/-1}.fd label{font-size:12px;font-weight:500;color:var(--mut)}
+.chk{display:flex;gap:7px;align-items:flex-start}.fd.chk{flex-direction:row}
+.path{font-family:var(--f-mono);font-size:11px;color:var(--mut);word-break:break-all}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--acc);color:var(--acc-ink);padding:10px 16px;border-radius:10px;box-shadow:var(--shadow);z-index:60;opacity:0;transition:.25s;pointer-events:none;max-width:calc(100% - 32px)}#toast.on{opacity:1}
+@media (max-width:700px){.fg{grid-template-columns:1fr}.tabs{margin-left:0}.al{flex-wrap:wrap}.al>div{flex-basis:100%;order:2}th,td{padding:8px 10px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <div class="logo"><i>DAS</i><div><b>Central de DAS MEI</b><span>robô fiscal do escritório</span></div></div>
+  <nav class="tabs" role="tablist"><button data-tab="central" class="on" role="tab">Central</button><button data-tab="clientes" role="tab">Clientes</button><button data-tab="historico" role="tab">Histórico</button></nav>
+  <span class="sp"></span><span id="topo"></span>
+</div></header>
+<main id="app"><div class="panel"><div class="empty">Carregando…</div></div></main>
+<div id="modal"></div><div id="toast" role="status"></div>
+<script>
+"use strict";
+const ST={nao_consultado:['Não consultado',''],consultado:['Em dia','grn'],das_emitido:['DAS emitido','amb'],das_disponivel:['DAS disponível','amb'],guia_baixada:['Guia baixada','grn'],pendente:['Pendente','amb'],vencido:['Vencido','red'],pago_confirmado:['Pago confirmado','grn'],aguardando_autenticacao:['Aguardando autenticação','red'],erro_consulta:['Erro de consulta','red'],exige_intervencao:['Exige intervenção humana','red'],fora:['Fora do robô','']};
+const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const DIAS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+let E=null,TAB='central',F='',Q='',QC='';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=s=>{if(!s)return '—';const p=String(s).slice(0,10).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s};
+const dh=s=>s?fmt(s)+' '+String(s).slice(11,16):'—';
+const comp=c=>{if(!c)return '';const [a,m]=c.split('-');return MESES[+m-1]+'/'+a};
+const brl=v=>v==null||v===''?'—':(+v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const cnpjF=v=>{const d=String(v||'').replace(/\D/g,'');return d.length===14?d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5'):(v||'')};
+const hojeISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),3200)}
+function flag(st){const s=ST[st]||[st||'—',''];return `<span class="flag ${s[1]}">${esc(s[0])}</span>`}
+async function api(rota,dados,bruto){const r=await fetch(rota,{method:'POST',headers:bruto?{'X-DM':'1'}:{'X-DM':'1','Content-Type':'application/json'},body:bruto||JSON.stringify(dados||{})});
+  let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.erro)throw new Error(j.erro||('erro '+r.status));return j}
+async function carregar(){try{const r=await fetch('/api/estado',{cache:'no-store'});if(r.status===401){$('#app').innerHTML='<div class="panel"><div class="empty">Sessão expirada. Abra pelo atalho “Central de DAS MEI”.</div></div>';return}E=await r.json();if(!$('#modal').innerHTML)render()}catch(e){}}
+function robo(){const s=E.robo.status||{};if(!s.online)return {s,vivo:false};return {s,vivo:Date.now()-Date.parse(s.online)<3*60e3&&s.servicoAtivo!==false}}
+function lista(){const exc=new Set(E.robo.config.excluidos||[]);return E.empresas.filter(e=>e.regime==='MEI'&&!e.inativa).map(e=>{const c=E.clientes[e.id]||null;const fora=e.guiaMensal===false||exc.has(e.id);return {id:e.id,e,c,fora,st:fora?'fora':c?c.situacao:'nao_consultado'}}).sort((a,b)=>(a.e.fantasia||a.e.razao||'').localeCompare(b.e.fantasia||b.e.razao||'','pt'))}
+function pedido(){return (E.comandos||[])[0]||null}
+function topo(){const {s,vivo}=robo();const asst=E.modo==='assistido';const p=pedido();
+  const st=s.online?(vivo?`<span class="robo on"><i></i>Robô ativo${s.executando&&s.progresso?` · ${s.progresso.feitos}/${s.progresso.total}`:''} · ${asst?'modo assistido':'automático'}</span>`:`<span class="robo off"><i></i>Robô parado desde ${dh(s.online)}</span>`):'<span class="robo"><i></i>Robô iniciando…</span>';
+  const bts=p?`<span class="flag amb">${p.status==='em_andamento'?(p.acao==='assistido'?'Sessão assistida aberta…':'Robô trabalhando…'):'Pedido na fila…'}</span>`:`${asst?'<button class="btn pri" data-a="asst">Abrir sessão assistida</button>':''}<button class="btn ${asst?'':'pri'}" data-a="run">${asst?'Atualizar situação':'Executar agora'}</button>`;
+  $('#topo').innerHTML=`<span style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">${st}${E.robo.config.pausado?'<span class="flag red">Rotina pausada</span>':''}${bts}<button class="btn" data-a="cfg">Rotina</button></span>`}
+function compsCel(c){if(!c)return '<span class="mut">—</span>';const v=c.vencidos||[],p=c.pendentes||[];if(!v.length&&!p.length)return '<span class="mut">nenhuma</span>';return `<span class="cp">${v.map(x=>`<span class="flag red">${esc(comp(x))}</span>`).join('')}${p.map(x=>`<span class="flag amb">${esc(comp(x))}</span>`).join('')}</span>`}
+function linhas(l){const q=norm(Q);const f=l.filter(x=>(!F||(F==='atencao'?['aguardando_autenticacao','erro_consulta','exige_intervencao'].includes(x.st):F==='guia'?!x.fora&&x.c&&(x.c.precisaGuia||[]).length:x.st===F))&&(!q||norm([x.e.fantasia,x.e.razao,x.e.cnpj].join(' ')).includes(q)));
+  if(!f.length)return `<tr><td colspan="7"><div class="empty">${E.empresas.length?'Nenhum cliente neste filtro.':'Nenhum cliente cadastrado. Vá em <b>Clientes</b> para cadastrar ou importar uma planilha.'}</div></td></tr>`;
+  return f.map(x=>`<tr class="click" data-det="${esc(x.id)}"><td><b>${esc(x.e.fantasia||x.e.razao)}</b>${x.e.fantasia&&x.e.razao?`<div class="small mut">${esc(x.e.razao)}</div>`:''}</td><td class="mono nw">${esc(cnpjF(x.e.cnpj))}</td><td class="mono nw">${x.c?dh(x.c.ultimaConsulta):'—'}</td><td>${compsCel(x.c)}</td><td class="mono" style="text-align:center">${x.c?(x.c.guiasEmitidas||0):0}</td><td>${flag(x.st)}</td><td><button class="btn ghost sm" data-det="${esc(x.id)}">Detalhes</button></td></tr>`).join('')}
+function vCentral(){const l=lista(),at=l.filter(x=>!x.fora),cs=at.map(x=>x.c).filter(Boolean),sum=f=>cs.reduce((a,c)=>a+(f(c)||0),0),cnt=s=>at.filter(x=>x.st===s).length;
+  const cons=at.filter(x=>x.c&&x.c.ultimaConsulta).length,asst=E.modo==='assistido',nG=at.filter(x=>x.c&&(x.c.precisaGuia||[]).length).length;const {s}=robo();const u=E.execucoes[0];
+  const k=[['Clientes MEI',at.length,''],['Consultados',cons,'grn'],['Ainda não consultados',at.length-cons,'amb'],['Guias emitidas',sum(c=>c.guiasEmitidas),''],['Guias baixadas',sum(c=>c.guiasBaixadas),'grn'],...(asst?[['Precisam de guia',nG,'amb']]:[]),['Competências pendentes',sum(c=>(c.pendentes||[]).length),'amb'],['DAS vencidos',sum(c=>(c.vencidos||[]).length),'red'],['Aguardando autenticação',cnt('aguardando_autenticacao'),'red'],['Erros de processamento',cnt('erro_consulta')+cnt('exige_intervencao'),'red'],['Última execução',u?dh(u.fim):'—',''],['Próxima execução',s.proximaExecucao?dh(s.proximaExecucao):'—','']];
+  const al=at.filter(x=>['aguardando_autenticacao','erro_consulta','exige_intervencao'].includes(x.st));
+  const ch=(f,t,n)=>`<button class="btn sm ${F===f?'pri':'ghost'}" data-f="${f}">${t} <small>${n}</small></button>`;
+  return `<section class="panel"><div class="ph"><h2>Visão geral</h2></div><div class="k">${k.map(([l,n,c])=>`<div class="${n&&c?c:''}"><b>${n}</b><span>${l}</span></div>`).join('')}</div></section>
+  ${al.length?`<section class="panel"><div class="ph"><h2>Precisa de você</h2><span class="flag red">${al.length}</span></div>${al.map(x=>`<div class="al">${flag(x.st)}<div><b>${esc(x.e.fantasia||x.e.razao)}</b> <span class="mono mut">${esc(cnpjF(x.e.cnpj))}</span><small>${esc((x.c&&x.c.mensagem)||'')}</small></div><button class="btn ghost sm" data-det="${esc(x.id)}">Abrir</button></div>`).join('')}</section>`:''}
+  <section class="panel"><div class="ph"><div class="chips">${ch('','Todos',at.length)}${ch('atencao','Precisa de atenção',al.length)}${asst?ch('guia','Precisam de guia',nG):''}${ch('vencido','Vencidos',cnt('vencido'))}${ch('pendente','Pendentes',cnt('pendente'))}${ch('consultado','Em dia',cnt('consultado'))}${ch('nao_consultado','Não consultados',cnt('nao_consultado'))}${ch('fora','Fora do robô',l.length-at.length)}</div><span class="sp"></span><input class="inp" id="q" placeholder="Buscar cliente ou CNPJ" value="${esc(Q)}" style="max-width:240px"></div>
+  <div class="tw"><table><thead><tr><th>Nome empresarial</th><th>CNPJ</th><th>Última consulta</th><th>Competências pendentes</th><th>Guias emitidas</th><th>Situação</th><th></th></tr></thead><tbody id="tb">${linhas(l)}</tbody></table></div></section>
+  ${asst?`<p class="note"><b>Modo assistido:</b> em “Abrir sessão assistida” o PGMEI abre neste PC, cliente por cliente, com o CNPJ preenchido. Você resolve o “não sou um robô” e gera o DAS; o robô salva o PDF em ${esc(E.pasta)}, organiza e atualiza esta tela.</p>`:''}
+  <p class="note">Guia emitida ou baixada <b>não</b> significa guia paga. “Pago confirmado” só aparece com a consulta oficial da Receita ou quando alguém informa o pagamento depois de conferir o comprovante.</p>`}
+function vClientes(){const q=norm(QC);const l=E.empresas.filter(e=>!q||norm([e.fantasia,e.razao,e.cnpj,e.responsavel].join(' ')).includes(q)).sort((a,b)=>(a.inativa-b.inativa)||(a.fantasia||a.razao||'').localeCompare(b.fantasia||b.razao||'','pt'));
+  return `<section class="panel"><div class="ph"><h2>Clientes MEI</h2><span class="flag">${E.empresas.filter(e=>!e.inativa).length} ativos</span><span class="sp"></span><input class="inp" id="qc" placeholder="Buscar" value="${esc(QC)}" style="max-width:200px"><button class="btn" data-a="imp">Importar planilha</button><button class="btn pri" data-a="novo">Novo cliente</button><input type="file" id="arq" accept=".csv,.xlsx" hidden></div>
+  <div class="tw"><table><thead><tr><th>Cliente</th><th>CNPJ</th><th>Responsável</th><th>WhatsApp</th><th>DAS todo mês</th><th></th></tr></thead><tbody>${l.length?l.map(e=>`<tr class="click" data-ed="${esc(e.id)}" style="${e.inativa?'opacity:.55':''}"><td><b>${esc(e.fantasia||e.razao)}</b>${e.fantasia&&e.razao?`<div class="small mut">${esc(e.razao)}</div>`:''}${e.inativa?' <span class="flag">inativo</span>':''}</td><td class="mono nw">${esc(cnpjF(e.cnpj))}</td><td>${esc(e.responsavel||'—')}</td><td class="mono nw">${esc(e.whatsapp||'—')}</td><td>${e.guiaMensal===false?'<span class="flag">não</span>':'<span class="flag grn">sim</span>'}</td><td><button class="btn ghost sm" data-ed="${esc(e.id)}">Editar</button></td></tr>`).join(''):`<tr><td colspan="6"><div class="empty">Nenhum cliente ainda. Cadastre um por um ou importe uma planilha (CSV ou Excel) com as colunas <b>CNPJ</b> e <b>Nome</b> (opcionais: Nome fantasia, WhatsApp, Responsável, E-mail).</div></td></tr>`}</tbody></table></div></section>
+  <p class="note">Cadastre o cliente uma vez: o robô acompanha todos os ativos com “DAS todo mês”. Importar a mesma planilha de novo atualiza quem já existe (pelo CNPJ), sem duplicar.</p>`}
+function vHistorico(){const h=E.execucoes;return `<section class="panel"><div class="ph"><h2>Histórico de execuções</h2></div>${h.length?`<div class="tw"><table><thead><tr><th>Início</th><th>Origem</th><th>Situação</th><th>Processados</th><th>Guias</th><th>PDFs</th><th>Erros</th><th>Revisar</th><th></th></tr></thead><tbody>${h.map(x=>`<tr><td class="mono nw">${dh(x.inicio)}</td><td>${esc(x.origem)}</td><td><span class="flag ${x.estado==='concluida'?'grn':x.estado==='abortada'?'red':'amb'}">${esc(x.estado)}</span></td><td class="mono">${x.processados||0}/${x.total_clientes||0}</td><td class="mono">${x.guias_emitidas||0}</td><td class="mono">${x.pdfs_baixados||0}</td><td class="mono">${x.erros_n||0}</td><td class="mono">${x.revisao_n||0}</td><td><a class="btn ghost sm" href="/relatorio/${encodeURIComponent(x.id)}" target="_blank" rel="noopener">Relatório</a></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Nenhuma execução ainda.</div>'}</section>`}
+function render(){if(!E)return;topo();document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
+  const foco=document.activeElement&&document.activeElement.id,pos=foco&&document.activeElement.selectionStart;
+  $('#app').innerHTML=TAB==='clientes'?vClientes():TAB==='historico'?vHistorico():vCentral();
+  if(foco==='q'||foco==='qc'){const el=$('#'+foco);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}}
+function modal(h,wide){$('#modal').innerHTML=`<div class="ov" data-ov><div class="md ${wide?'wide':''}" role="dialog" aria-modal="true">${h}</div></div>`;const f=$('#modal input:not([type=hidden]):not([type=checkbox]),#modal select');if(f)f.focus()}
+function fechar(){$('#modal').innerHTML='';render()}
+const mh=t=>`<div class="mh"><h3>${t}</h3><button class="btn ghost sm" data-x aria-label="Fechar">✕</button></div>`;
+function waLink(e,g){const n=String(e.whatsapp||'').replace(/\D/g,'');if(n.length<10)return '';const tel=n.length<=11?'55'+n:n;
+  const msg=`Olá${e.responsavel?' '+e.responsavel.split(' ')[0]:''}! Segue a guia do DAS-MEI de ${comp(g.comp)}, no valor de ${brl(g.guia.total)}, para pagamento até ${fmt(g.guia.validade||g.guia.venc)}. O PDF vai em seguida.`;
+  return `<a class="btn ghost sm" href="https://wa.me/${tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>`}
+function pagCel(id,x){const k=id+'_'+x.comp,m=E.pagamentos[k];
+  if(x.pago){const man=String(x.pago.evidencia||'').startsWith('Informado na tela');return `<b style="color:var(--grn)">${fmt(x.pago.data)}</b>${x.pago.valor!=null?' · '+brl(x.pago.valor):''}<div class="small mut">${esc(x.pago.evidencia||'')}</div>${man&&m?`<button class="btn ghost sm" data-pdel="${esc(k)}">Desfazer</button>`:''}`}
+  if(m)return `<span class="flag grn">Informado</span><div class="small mut">${fmt(m.data)} por ${esc(m.por||'')} · entra na próxima atualização</div><button class="btn ghost sm" data-pdel="${esc(k)}">Desfazer</button>`;
+  return '<span class="mut">não confirmado</span>'}
+function det(id){const e=E.empresas.find(x=>x.id===id);if(!e)return;const c=E.clientes[id];const exc=(E.robo.config.excluidos||[]).includes(id);const asst=E.modo==='assistido';
+  const rows=(c&&c.competencias||[]).slice().reverse().map(x=>{const g=x.guia;return `<tr><td class="nw">${esc(comp(x.comp))}</td><td>${flag(x.status)}${x.mensagem?`<div class="small mut">${esc(x.mensagem)}</div>`:''}</td><td class="mono nw">${fmt(x.venc)}</td>
+   <td>${g?`${flag(g.status)}<div class="mono small">${esc(g.documento||'')} · ${brl(g.total)}${g.validade?` · pagar até ${fmt(g.validade)}`:''}</div>${g.arquivo?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px"><a class="btn sm" href="/arquivo?caminho=${encodeURIComponent(g.arquivo)}" target="_blank" rel="noopener">Abrir PDF</a><button class="btn ghost sm" data-pasta="${esc(g.arquivo)}">Abrir pasta</button>${waLink(e,x)}</div>`:''}`:'<span class="mut">sem guia</span>'}</td><td>${pagCel(id,x)}</td></tr>`}).join('');
+  modal(`${mh(esc(e.fantasia||e.razao))}<div class="mb"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><span class="mono">${esc(cnpjF(e.cnpj))}</span>${flag(exc||e.guiaMensal===false?'fora':c?c.situacao:'nao_consultado')}<span class="small mut">Última consulta: ${c?dh(c.ultimaConsulta):'nunca'}</span></div>
+   ${c&&c.mensagem?`<div class="al" style="border:0;padding:0 0 10px"><span class="flag red">Atenção</span><div>${esc(c.mensagem)}</div></div>`:''}
+   ${rows?`<div class="tw"><table><thead><tr><th>Competência</th><th>Situação</th><th>Vencimento</th><th>Guia</th><th>Pagamento</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<div class="empty">Ainda sem informações deste cliente.</div>'}
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${!exc&&e.guiaMensal!==false?`<button class="btn pri sm" data-um="${esc(id)}">${asst?'Abrir PGMEI deste cliente':'Processar só este cliente'}</button>`:''}<button class="btn sm" data-pag="${esc(id)}">Informar pagamento</button><button class="btn ghost sm" data-excl="${esc(id)}">${exc?'Incluir de volta no robô':'Tirar do robô'}</button><button class="btn ghost sm" data-ed="${esc(id)}">Editar cadastro</button></div></div>`,true)}
+function form(id){const e=id?E.empresas.find(x=>x.id===id):{guiaMensal:true};
+  modal(`${mh(id?'Editar cliente':'Novo cliente')}<form id="fe"><div class="mb"><div class="fg">
+   <div class="fd"><label for="f_cnpj">CNPJ</label><input class="inp" id="f_cnpj" value="${esc(cnpjF(e.cnpj))}" required inputmode="numeric" placeholder="00.000.000/0000-00"></div>
+   <div class="fd"><label for="f_resp">Responsável</label><input class="inp" id="f_resp" value="${esc(e.responsavel||'')}"></div>
+   <div class="fd full"><label for="f_razao">Nome empresarial (razão social)</label><input class="inp" id="f_razao" value="${esc(e.razao||'')}"></div>
+   <div class="fd full"><label for="f_fant">Nome fantasia</label><input class="inp" id="f_fant" value="${esc(e.fantasia||'')}"></div>
+   <div class="fd"><label for="f_wa">WhatsApp</label><input class="inp" id="f_wa" value="${esc(e.whatsapp||'')}" inputmode="tel" placeholder="(62) 99999-9999"></div>
+   <div class="fd"><label for="f_mail">E-mail</label><input class="inp" id="f_mail" type="email" value="${esc(e.email||'')}"></div>
+   <label class="chk fd full"><input type="checkbox" id="f_das" ${e.guiaMensal!==false?'checked':''}> <span>Emite DAS-MEI todo mês (entra no robô)</span></label>
+   ${id?`<label class="chk fd full"><input type="checkbox" id="f_ina" ${e.inativa?'checked':''}> <span>Cliente inativo / baixado</span></label>`:''}
+   <div class="fd full small mut" id="f_err" role="alert"></div></div></div>
+   <div class="mf"><button type="button" class="btn ghost" data-x>Cancelar</button><button class="btn pri">Salvar</button></div></form>`);
+  $('#fe').onsubmit=async ev=>{ev.preventDefault();const v=i=>$(i)?$(i).value.trim():'';
+    try{await api('/api/empresa',{id:id||null,cnpj:v('#f_cnpj'),razao:v('#f_razao'),fantasia:v('#f_fant'),responsavel:v('#f_resp'),whatsapp:v('#f_wa'),email:v('#f_mail'),guiaMensal:$('#f_das').checked,inativa:$('#f_ina')?$('#f_ina').checked:false});
+      await carregar();fechar();toast('Cliente salvo')}catch(e){$('#f_err').textContent=e.message;$('#f_err').style.color='var(--red)'}}}
+function cfgModal(){const c=E.robo.config;const ck=(id,v,t,s)=>`<label class="chk"><input type="checkbox" id="${id}" ${v?'checked':''}> <span>${t}${s?`<br><small class="mut">${s}</small>`:''}</span></label>`;
+  modal(`${mh('Rotina do robô')}<form id="fc"><div class="mb"><div class="fg">
+   <div class="fd"><label for="c_h">Horário</label><input class="inp" type="time" id="c_h" value="${esc(c.horario)}" required></div>
+   <div class="fd"><label for="c_m">Meses acompanhados</label><input class="inp" type="number" min="1" max="60" id="c_m" value="${+c.meses_retroativos||12}"></div>
+   <div class="fd full"><label>Dias da semana</label><div class="chips">${DIAS.map((d,i)=>`<label class="chk"><input type="checkbox" class="c_d" value="${i}" ${(c.dias_semana||[]).includes(i)?'checked':''}> ${d}</label>`).join('')}</div></div>
+   <div class="fd full">${ck('c_ea',c.emitir_competencia_atual,'Guia do mês (competência anterior, vence dia 20)')}</div>
+   <div class="fd full">${ck('c_ev',c.emitir_vencidos,'Emitir guia atualizada de competências vencidas','modo automático (SERPRO)')}</div>
+   <div class="fd full">${ck('c_cp',c.consultar_pagamentos,'Consultar pagamentos na Receita','modo automático (SERPRO)')}</div>
+   <div class="fd full">${ck('c_p',c.pausado,'Pausar a rotina automática')}</div>
+   <div class="fd full small" id="c_err" role="alert" style="color:var(--red)"></div></div></div>
+   <div class="mf"><button type="button" class="btn ghost" data-x>Cancelar</button><button class="btn pri">Salvar</button></div></form>`);
+  $('#fc').onsubmit=async ev=>{ev.preventDefault();const dias=[...document.querySelectorAll('.c_d:checked')].map(i=>+i.value);
+    try{await api('/api/config',{horario:$('#c_h').value,meses_retroativos:+$('#c_m').value,dias_semana:dias,emitir_competencia_atual:$('#c_ea').checked,emitir_vencidos:$('#c_ev').checked,consultar_pagamentos:$('#c_cp').checked,pausado:$('#c_p').checked});await carregar();fechar();toast('Rotina salva')}catch(e){$('#c_err').textContent=e.message}}}
+function pagModal(id){const e=E.empresas.find(x=>x.id===id);const d=new Date();const cs=[];for(let i=1;i<=12;i++){const x=new Date(d.getFullYear(),d.getMonth()-i,1);cs.push(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'))}
+  modal(`${mh('Informar pagamento')}<form id="fp"><div class="mb"><p class="note" style="margin:0 0 12px"><b>${esc(e.fantasia||e.razao)}</b> · ${esc(cnpjF(e.cnpj))}<br>Use depois de <b>conferir o comprovante</b> (ou o “Pago” no PGMEI). Fica registrado quem informou.</p><div class="fg">
+   <div class="fd"><label for="p_c">Competência</label><select class="sel" id="p_c">${cs.map(c=>`<option value="${c}">${esc(comp(c))}</option>`).join('')}</select></div>
+   <div class="fd"><label for="p_d">Data do pagamento</label><input class="inp" type="date" id="p_d" value="${hojeISO()}" required></div>
+   <div class="fd"><label for="p_v">Valor (opcional)</label><input class="inp" id="p_v" inputmode="decimal" placeholder="81,05"></div>
+   <div class="fd"><label for="p_o">Observação</label><input class="inp" id="p_o"></div></div></div>
+   <div class="mf"><button type="button" class="btn ghost" data-x>Cancelar</button><button class="btn pri">Confirmar pagamento</button></div></form>`);
+  $('#fp').onsubmit=async ev=>{ev.preventDefault();const v=parseFloat($('#p_v').value.replace(/\./g,'').replace(',','.'));
+    try{await api('/api/pagamento',{empresaId:id,comp:$('#p_c').value,data:$('#p_d').value,valor:isFinite(v)?v:null,obs:$('#p_o').value});await carregar();fechar();toast('Pagamento informado. Vale na próxima atualização (ou clique em Atualizar situação).')}catch(e){toast(e.message)}}}
+async function pedir(acao,ids){if(acao==='assistido'&&!confirm('A janela do PGMEI vai abrir neste PC. Você resolve o “não sou um robô” de cada cliente e gera o DAS; o robô faz o resto. Abrir agora?'))return;
+  try{await api('/api/comando',{acao,empresaIds:ids||null});toast(acao==='assistido'?'Abrindo o PGMEI…':'Robô começando…');carregar()}catch(e){toast(e.message)}}
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-tab],[data-a],[data-f],[data-det],[data-ed],[data-x],[data-ov],[data-um],[data-pag],[data-pdel],[data-excl],[data-pasta]');if(!t)return;
+  if(t.hasAttribute('data-ov')&&ev.target!==t)return;
+  const d=t.dataset;if(t.tagName==='A')return;ev.preventDefault();
+  if(d.tab){TAB=d.tab;render()}else if(d.f!=null){F=d.f;render()}else if(d.det)det(d.det);else if(d.ed)form(d.ed);
+  else if('x' in d||'ov' in d)fechar();else if(d.um){$('#modal').innerHTML='';pedir(E.modo==='assistido'?'assistido':'executar',[d.um])}
+  else if(d.pag)pagModal(d.pag);
+  else if(d.pdel){if(!confirm('Desfazer o pagamento informado?'))return;try{await api('/api/pagamento/apagar',{id:d.pdel});await carregar();fechar();toast('Desfeito')}catch(e){toast(e.message)}}
+  else if(d.excl){const ex=new Set(E.robo.config.excluidos||[]);ex.has(d.excl)?ex.delete(d.excl):ex.add(d.excl);try{await api('/api/config',{excluidos:[...ex]});await carregar();fechar();toast(ex.has(d.excl)?'Cliente tirado do robô':'Cliente de volta no robô')}catch(e){toast(e.message)}}
+  else if(d.pasta){try{const r=await api('/api/abrir',{caminho:d.pasta});toast('Pasta: '+r.pasta)}catch(e){toast(e.message)}}
+  else if(d.a==='run')pedir('executar');else if(d.a==='asst')pedir('assistido');else if(d.a==='cfg')cfgModal();else if(d.a==='novo')form(null);else if(d.a==='imp')$('#arq').click()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modal').innerHTML)fechar()});
+document.addEventListener('input',e=>{if(e.target.id==='q'){Q=e.target.value;const tb=$('#tb');if(tb)tb.innerHTML=linhas(lista())}if(e.target.id==='qc'){QC=e.target.value;render()}});
+document.addEventListener('change',async e=>{if(e.target.id!=='arq'||!e.target.files[0])return;const f=e.target.files[0];
+  try{const r=await api('/api/importar?nome='+encodeURIComponent(f.name),null,await f.arrayBuffer());await carregar();
+    toast(`Importação: ${r.novos} novos, ${r.atualizados} atualizados${r.erros.length?`, ${r.erros.length} com erro`:''}`);if(r.erros.length)modal(`${mh('Linhas não importadas')}<div class="mb small">${r.erros.map(esc).join('<br>')}</div>`)}catch(x){toast(x.message)}e.target.value=''});
+carregar();setInterval(carregar,4000);
+</script>
+</body>
+</html>

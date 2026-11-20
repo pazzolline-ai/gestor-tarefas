@@ -7,6 +7,7 @@
   python -m dasmei executar --empresa ID [--empresa ID2]
   python -m dasmei assistido       abre o PGMEI cliente por cliente; você resolve o captcha, o robô faz o resto
   python -m dasmei servico         serviço em segundo plano (usado pelo Agendador do Windows)
+  python -m dasmei abrir           versão separada: liga o serviço (se preciso) e abre a tela no navegador
   python -m dasmei status          últimas execuções
   python -m dasmei backup          backup imediato do banco local
 """
@@ -46,6 +47,9 @@ def fabrica_serpro(cfg, seg: Segredos):
 def montar(cfg, seg):
     from .gestor import GestorSupabase
     banco = Banco(cfg.banco)
+    if cfg.versao_separada:
+        from .local import GestorLocal
+        return banco, GestorLocal(banco)
     gestor = GestorSupabase(cfg.supabase_url, cfg.supabase_anon_key, cfg.email_robo, seg.exigir("gestor_senha"))
     return banco, gestor
 
@@ -69,13 +73,20 @@ def configurar():
     except FileNotFoundError:
         cfg = cfgmod.Config()
     print("=== Central de DAS MEI — configuração ===\n")
-    print("1) Gestor de Tarefas (usuário próprio do robô, criado em Equipe › Usuários)")
-    cfg.supabase_url = _perg("URL do Supabase", cfg.supabase_url)
-    cfg.supabase_anon_key = _perg("Chave pública (anon) do Supabase", cfg.supabase_anon_key)
-    cfg.email_robo = _perg("E-mail do usuário Robô DAS", cfg.email_robo)
-    s = getpass.getpass("Senha do usuário Robô DAS (Enter mantém a atual): ")
-    if s:
-        seg.gravar("gestor_senha", s)
+    print("1) Onde a Central vai funcionar")
+    print("   s = integrada ao Gestor de Tarefas (tela Fiscal › Central de DAS MEI)")
+    print("   n = versão separada (programa próprio neste PC, com cadastro de clientes próprio)")
+    integ = _perg("Integrar ao Gestor de Tarefas? (s/n)", "s" if cfg.modo_gestor == "supabase" else "n",
+                  valida=lambda v: v.lower() in ("s", "n"))
+    cfg.modo_gestor = "supabase" if integ.lower() == "s" else "local"
+    if cfg.modo_gestor == "supabase":
+        print("   Use o usuário próprio do robô, criado em Equipe › Usuários.")
+        cfg.supabase_url = _perg("URL do Supabase", cfg.supabase_url)
+        cfg.supabase_anon_key = _perg("Chave pública (anon) do Supabase", cfg.supabase_anon_key)
+        cfg.email_robo = _perg("E-mail do usuário Robô DAS", cfg.email_robo)
+        s = getpass.getpass("Senha do usuário Robô DAS (Enter mantém a atual): ")
+        if s:
+            seg.gravar("gestor_senha", s)
     print("\n2) Receita Federal")
     print("   Sem contrato SERPRO Integra Contador o robô trabalha em MODO ASSISTIDO: abre o PGMEI de cada")
     print("   cliente, você resolve o captcha e gera o DAS, e o robô salva, organiza e atualiza o gestor.")
@@ -101,7 +112,7 @@ def configurar():
 
 def testar(cfg, seg):
     ok = True
-    print("Gestor…", end=" ", flush=True)
+    print("Cadastro local…" if cfg.versao_separada else "Gestor…", end=" ", flush=True)
     try:
         banco, gestor = montar(cfg, seg)
         aptos, probl = gestor.clientes_mei()
@@ -170,10 +181,39 @@ def testar_trial(cfg):
     return True
 
 
+def abrir_tela(cfg):
+    """Versão separada: garante o serviço rodando e abre a tela local no navegador padrão."""
+    import subprocess
+    import time
+    import webbrowser
+    from .web import obter_token
+    if not cfg.versao_separada:
+        print("Esta instalação está integrada ao Gestor de Tarefas: use a tela Fiscal › Central de DAS MEI.")
+        return 1
+
+    def no_ar():
+        import socket
+        with socket.socket() as s:
+            s.settimeout(0.5)
+            return s.connect_ex(("127.0.0.1", cfg.porta_web)) == 0
+    if not no_ar():
+        exe = Path(sys.executable)
+        pyw = exe.with_name("pythonw.exe")
+        cmd = [str(pyw if pyw.exists() else exe), "-m", "dasmei", "servico"]
+        flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+        subprocess.Popen(cmd, cwd=str(Path(__file__).resolve().parents[1]), creationflags=flags, close_fds=True)
+        for _ in range(40):
+            if no_ar():
+                break
+            time.sleep(0.25)
+    webbrowser.open(f"http://127.0.0.1:{cfg.porta_web}/?t={obter_token(cfg.pasta_sistema)}")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="dasmei", description=f"Central de DAS MEI {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for n in ("configurar", "testar", "testar-trial", "servico", "status", "backup"):
+    for n in ("configurar", "testar", "testar-trial", "servico", "status", "backup", "abrir"):
         sub.add_parser(n)
     asi = sub.add_parser("assistido")
     asi.add_argument("--empresa", action="append", help="id da empresa no gestor (pode repetir)")
@@ -188,6 +228,8 @@ def main(argv=None):
         print(e)
         return 2
     logmod.configurar(cfg.pasta_sistema)
+    if a.cmd == "abrir":
+        return abrir_tela(cfg)
     seg = Segredos()
     if a.cmd == "testar":
         return 0 if testar(cfg, seg) else 1
@@ -224,7 +266,11 @@ def main(argv=None):
         if not trava:
             logging.getLogger("dasmei").info("O serviço já está rodando neste computador.")
             return 0
-        Servico(cfg, banco, gestor, fabrica_serpro(cfg, seg)).rodar()
+        s = Servico(cfg, banco, gestor, fabrica_serpro(cfg, seg))
+        if cfg.versao_separada:
+            from .web import ServidorWeb
+            ServidorWeb(cfg, gestor, porta=cfg.porta_web, acordar=s.acordar).iniciar()
+        s.rodar()
         return 0
 
 

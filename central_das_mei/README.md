@@ -15,6 +15,17 @@ Ele funciona de dois jeitos:
 
 A mudança de modo é só configuração: tudo do modo automático já está pronto para quando o escritório contratar.
 
+E pode ser usado de dois lugares:
+
+| | **Integrado ao Gestor de Tarefas** | **Versão separada** |
+|---|---|---|
+| Tela | Fiscal › Central de DAS MEI, no gestor (qualquer PC ou celular da equipe) | programa próprio no PC do robô: atalho **"Central de DAS MEI"** na área de trabalho |
+| Cadastro de clientes | o de Empresas do gestor (regime "MEI") | cadastro próprio na aba **Clientes**: um por um ou **importando planilha** (CSV/Excel) |
+| Onde ficam os dados | Supabase do gestor (resumo) + banco local | só no PC (banco local), nada vai para a internet |
+| Extras | atalho no painel "Guias DAS-MEI" do Início | **Abrir PDF**, **Abrir pasta** e **WhatsApp** com a mensagem pronta em cada guia |
+
+Na instalação, a pergunta "Integrar ao Gestor de Tarefas? (s/n)" escolhe. Para ter as duas, instale a pasta duas vezes em PCs (ou usuários do Windows) diferentes. No mesmo usuário roda só uma, porque o serviço tem trava de instância única.
+
 > **Guia emitida ou baixada não significa guia paga.** "Pago confirmado" só aparece com a consulta oficial da Receita ou quando alguém informa na tela que conferiu o comprovante (fica registrado quem e quando).
 
 ---
@@ -37,6 +48,20 @@ Precisa de:
 4. Abra o gestor em **Fiscal › Central de DAS MEI**. O ponto verde mostra "Robô ativo no PC … · modo assistido".
 
 A chave pública (anon) do Supabase é a mesma do `index.html` do sistema (`SB_KEY`). Senhas vão para o **Cofre de Credenciais do Windows**; o `config.toml` (em `%LOCALAPPDATA%\CentralDasMei`) não guarda nenhuma.
+
+### Versão separada
+
+1. Rode `instalar.bat` e responda **n** em "Integrar ao Gestor de Tarefas?". Não precisa de usuário no gestor.
+2. Abra pelo atalho **Central de DAS MEI** na área de trabalho (ou `abrir_central.bat`). O navegador abre a tela em `http://127.0.0.1:8777`.
+3. Na aba **Clientes**, cadastre os MEI ou clique em **Importar planilha**:
+   - a primeira linha deve ter a coluna **CNPJ** e o nome (Razão social, Nome ou Cliente);
+   - opcionais: Nome fantasia, WhatsApp/Telefone, Responsável, E-mail;
+   - importar de novo atualiza pelo CNPJ, sem duplicar.
+4. O resto é igual: sessão assistida, rotina, relatórios, informar pagamento. Em cada guia há **Abrir PDF**, **Abrir pasta** e **WhatsApp**, este último com a mensagem pronta para o cliente; o PDF você anexa.
+
+Segurança da versão separada:
+- a tela só abre neste PC (127.0.0.1) e só com a chave que o atalho usa (cookie protegido);
+- PDFs e pastas só são abertos se estiverem dentro de `CENTRAL_DAS_MEI`.
 
 ## 2. Rotina do mês (modo assistido)
 
@@ -123,6 +148,7 @@ python -m dasmei executar [--empresa ID]   # rotina (atualiza situação; no mod
 python -m dasmei status         # últimas execuções
 python -m dasmei backup
 python -m dasmei servico        # o que o Agendador do Windows executa
+python -m dasmei abrir          # versão separada: abre a tela local
 ```
 - Logs: `%LOCALAPPDATA%\CentralDasMei\logs\dasmei.log`.
 - `desinstalar.bat` remove as tarefas automáticas, sem apagar documentos nem histórico.
@@ -136,12 +162,13 @@ E-mail e WhatsApp do relatório estão **preparados, mas desligados** (`dasmei/n
 pip install pytest
 python -m pytest -q
 ```
-São 82 testes com dados fictícios. Cobrem:
+São 92 testes com dados fictícios. Cobrem:
 - regras de CNPJ, vencimentos e status;
 - PDFs e pastas;
 - formato exato dos pedidos à API SERPRO e erros, lote completo, idempotência e retomada;
 - **sessão assistida** num navegador real contra um PGMEI simulado: PDF visualizado e baixado, PDF de outro CNPJ recusado, barra de instruções;
 - rotina sem SERPRO, pagamento informado e desfeito;
-- agendamento e pedidos vindos da tela.
+- agendamento e pedidos vindos da tela;
+- versão separada: cadastro, importação CSV/Excel sem duplicar, chave de acesso da tela, proteção contra CSRF e contra abrir arquivos fora da pasta.
 
 O PGMEI de verdade não pôde ser acessado no ambiente onde o robô foi construído. **Antes do uso em produção, faça a primeira sessão assistida com 1 ou 2 clientes e confira os PDFs salvos.** Se a Receita mudar o nome do campo de CNPJ, a barra pede para digitar o CNPJ; todo o resto continua funcionando.

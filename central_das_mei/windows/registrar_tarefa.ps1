@@ -33,5 +33,18 @@ if ($docs -and (Test-Path $docs)) {
   icacls "$docs" /inheritance:r /grant:r "${usuario}:(OI)(CI)F" "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" | Out-Null
   Write-Host "Pasta protegida: $docs"
 }
+# Versao separada: atalho "Central de DAS MEI" na area de trabalho (abre a tela local)
+$modo = & (Join-Path $Pasta '.venv\Scripts\python.exe') -c "from dasmei import config; print(config.carregar().modo_gestor)"
+if ($modo -eq 'local') {
+  $atalho = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Central de DAS MEI.lnk'
+  $ws = New-Object -ComObject WScript.Shell
+  $lnk = $ws.CreateShortcut($atalho)
+  $lnk.TargetPath = $py
+  $lnk.Arguments = '-m dasmei abrir'
+  $lnk.WorkingDirectory = $Pasta
+  $lnk.Description = 'Central de DAS MEI'
+  $lnk.Save()
+  Write-Host "Atalho criado: $atalho"
+}
 Start-ScheduledTask -TaskName 'Central de DAS MEI'
 Write-Host 'Tarefas criadas e servico iniciado.'
