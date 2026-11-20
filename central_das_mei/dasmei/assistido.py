@@ -72,7 +72,18 @@ def abrir_navegador(pw):
             return pw.chromium.launch(channel=canal, headless=False)
         except Exception:  # noqa: BLE001
             continue
-    return pw.chromium.launch(headless=False)
+    try:
+        return pw.chromium.launch(headless=False)
+    except Exception:  # noqa: BLE001
+        # sem Edge/Chrome utilizáveis: baixa o navegador próprio do Playwright (uma vez só)
+        import subprocess
+        import sys
+        log.info("Edge/Chrome indisponíveis; baixando navegador próprio (uma vez só)…")
+        r = subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], capture_output=True, text=True)
+        if r.returncode != 0:
+            raise RuntimeError("Não encontrei Edge nem Chrome e não consegui baixar um navegador. "
+                               "Instale o Google Chrome ou rode: .venv\\Scripts\\python -m playwright install chromium") from None
+        return pw.chromium.launch(headless=False)
 
 
 class SessaoAssistida:
@@ -309,7 +320,8 @@ class SessaoAssistida:
                 falhas_abrir = 0
             except Exception as e:  # noqa: BLE001
                 falhas_abrir += 1
-                self.rel.erro(item, f"PGMEI não abriu: {e.__class__.__name__}")
+                motivo = str(e).splitlines()[0][:160] if str(e) else e.__class__.__name__
+                self.rel.erro(item, f"PGMEI não abriu (sem internet ou site da Receita fora do ar): {motivo}")
                 self.banco.fila_marcar(self.eid, item["empresa_id"], "erro", "PGMEI não abriu")
                 if falhas_abrir >= 3:
                     self.rel.alerta("geral", None, "O PGMEI não abriu 3 vezes seguidas: portal fora do ar ou sem internet.")
