@@ -4286,7 +4286,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 .dm-cp{display:inline-flex;flex-wrap:wrap;gap:3px}.dm-cp .flag{font-family:var(--f-mono)}
 .dm-al{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:13px}.dm-al small{display:block;color:var(--mut)}
 .dm-path{font-family:var(--f-mono);font-size:11px;color:var(--mut);word-break:break-all}
-.dm-dias{display:flex;gap:6px;flex-wrap:wrap}.dm-nw{white-space:nowrap}@media (max-width:600px){.dm-al{flex-wrap:wrap}.dm-al>div{flex-basis:100%}}.dm-note{font-size:12px;color:var(--mut);line-height:1.5}
+.dm-dias{display:flex;gap:6px;flex-wrap:wrap}.dm-nw{white-space:nowrap}@media (max-width:600px){.dm-al{flex-wrap:wrap}.dm-al>div{flex:1 1 100%!important;order:2}}.dm-note{font-size:12px;color:var(--mut);line-height:1.5}
 </style>`);
 function dmLigar(){if(DM.on||mode!=='db'||!db)return;DM.on=true;
   [['dasmei_clientes','cli'],['dasmei_execucoes','exec'],['dasmei_robo','robo'],['dasmei_comandos','cmd'],['dasmei_pagamentos','pm']].forEach(([c,k])=>{
