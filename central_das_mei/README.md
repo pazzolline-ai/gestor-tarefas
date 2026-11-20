@@ -68,7 +68,7 @@ Segurança da versão separada:
 1. Todo dia às 07:00 o robô atualiza a situação de cada cliente: quem precisa da guia do mês, o que está pendente ou vencido, e os pagamentos informados.
 2. Na tela, clique em **Abrir sessão assistida**. Também dá para usar o `sessao_assistida.bat` no PC do robô.
 3. No PC do robô o PGMEI abre já com o CNPJ do primeiro cliente e uma **barra preta de instruções** embaixo. Para cada cliente:
-   1. resolva o "não sou um robô" e clique em **Continuar**;
+   1. o CNPJ já vem preenchido: clique em **Continuar**. Se o PGMEI mostrar o desafio de imagens do hCaptcha, resolva;
    2. vá em **Emitir Guia de Pagamento (DAS)**, escolha o ano, marque o mês e clique em **Apurar/Gerar DAS** e depois em **Imprimir/Visualizar PDF**;
    3. o robô pega o PDF sozinho, confere o CNPJ, lê período, vencimento, valor e número, salva em `CENTRAL_DAS_MEI\CNPJ\ANO\MÊS\` e **vai para o próximo cliente**.
 4. Botões da barra:
@@ -171,4 +171,4 @@ São 92 testes com dados fictícios. Cobrem:
 - agendamento e pedidos vindos da tela;
 - versão separada: cadastro, importação CSV/Excel sem duplicar, chave de acesso da tela, proteção contra CSRF e contra abrir arquivos fora da pasta.
 
-O PGMEI de verdade não pôde ser acessado no ambiente onde o robô foi construído. **Antes do uso em produção, faça a primeira sessão assistida com 1 ou 2 clientes e confira os PDFs salvos.** Se a Receita mudar o nome do campo de CNPJ, a barra pede para digitar o CNPJ; todo o resto continua funcionando.
+A abertura do PGMEI real foi testada (campo de CNPJ preenchido e barra de instruções exibida). A emissão do DAS de verdade depende do captcha e de um CNPJ real, então **faça a primeira sessão assistida com 1 ou 2 clientes e confira os PDFs salvos.** Se a Receita mudar o nome do campo de CNPJ, a barra pede para digitar o CNPJ; todo o resto continua funcionando.

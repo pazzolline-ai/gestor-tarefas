@@ -311,7 +311,7 @@ class SessaoAssistida:
             self._acao, self._capturas = None, []
             alvo = ", ".join(k.texto for k in item["alvo"]) or "o mês que precisar"
             self._ui = {"titulo": f"cliente {i + 1} de {total}", "nome": item.get("nome"), "cnpj": formatar(item["cnpj"]),
-                        "instrucao": f"1) Resolva o “não sou um robô” e clique em Continuar. 2) Emitir Guia de Pagamento (DAS) "
+                        "instrucao": f"1) Clique em Continuar (se o PGMEI pedir o desafio de imagens do hCaptcha, resolva). 2) Emitir Guia de Pagamento (DAS) "
                                      f"→ ano → marque {alvo} → Apurar/Gerar DAS → Imprimir/Visualizar PDF. "
                                      "O robô salva o PDF sozinho.",
                         "msg": "", "msgTipo": "", "botoes": ["pular", "parar"]}
