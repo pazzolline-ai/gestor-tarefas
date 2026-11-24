@@ -30,6 +30,8 @@ trocas = [
     ("sb.channel('presenca'", "sb.channel('presenca-controle'", 1),
     ("GT.fn=async(acao,body)=>{", "GT.fn=async(acao,body)=>{throw new Error('" + MSG + "');", 1),
     ("GT.linkAgenda=async(novo)=>{", "GT.linkAgenda=async(novo)=>{throw new Error('O link da agenda fica no Gestor de Tarefas.');", 1),
+    # app de celular próprio do Controle
+    ("gestor-tarefas/releases/download/app-android/Gestor-de-Tarefas.apk", "gestor-tarefas/releases/download/app-android-controle/Controle-Lucas.apk", 1),
     # nome
     ("<title>Gestor de Tarefas</title>", "<title>Controle Lucas</title>", 1),
     ("mk.app_nome||'Gestor de Tarefas'", "mk.app_nome||'Controle Lucas'", 2),
