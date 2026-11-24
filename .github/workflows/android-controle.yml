@@ -1,0 +1,69 @@
+name: App Controle Lucas para Android
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['mobile/**', 'controle/**', '.github/workflows/android-controle.yml']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      VER: 1.0.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Montar projeto Android
+        working-directory: mobile
+        run: |
+          # Controle Lucas: mesmo app do Gestor, abrindo o endereço do Controle
+          sed -i 's#"appId": "[^"]*"#"appId": "br.com.pazolline.controlelucas"#; s#"appName": "[^"]*"#"appName": "Controle Lucas"#; s#gestor-tarefas/"#gestor-tarefas/controle/"#' capacitor.config.json
+          sed -i 's#Gestor de Tarefas#Controle Lucas#; s#gestor-tarefas/#gestor-tarefas/controle/#' www/index.html
+          cat capacitor.config.json
+          sed -i "s/__VER__/${VER}/" capacitor.config.json
+          npm install --no-audit --no-fund
+          npx cap add android
+          cp ../icon-512.png /tmp/icon.png
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            for f in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              [ -f android/app/src/main/res/mipmap-$d/$f.png ] && cp /tmp/icon.png android/app/src/main/res/mipmap-$d/$f.png || true
+            done
+          done
+          mkdir -p android/app/src/main/res/drawable && cp /tmp/icon.png android/app/src/main/res/drawable/ic_stat_icon.png
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"${VER}\"/" android/app/build.gradle
+          npx cap sync android
+      - name: Gerar APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon -q
+      - name: Assinar APK
+        env: { KS: '${{ secrets.ANDROID_KEYSTORE }}', PW: '${{ secrets.ANDROID_KEY_PASS }}' }
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          $BT/zipalign -f 4 mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk /tmp/al.apk
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > /tmp/gt.jks
+            $BT/apksigner sign --ks /tmp/gt.jks --ks-pass env:PW --key-pass env:PW --ks-key-alias gestor --out Controle-Lucas.apk /tmp/al.apk
+            rm /tmp/gt.jks
+          else
+            P=$(openssl rand -hex 12)
+            keytool -genkeypair -keystore /tmp/tmp.jks -alias gestor -keyalg RSA -keysize 2048 -validity 10000 -storepass "$P" -keypass "$P" -dname "CN=Londe e Rodrigues, O=Londe e Rodrigues, C=BR"
+            $BT/apksigner sign --ks /tmp/tmp.jks --ks-pass pass:$P --key-pass pass:$P --ks-key-alias gestor --out Controle-Lucas.apk /tmp/al.apk
+            rm /tmp/tmp.jks
+          fi
+          $BT/apksigner verify Controle-Lucas.apk
+      - name: Publicar na página de downloads
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-android-controle
+          name: Controle Lucas para Android ${{ env.VER }}
+          body: App do Controle Lucas para Android. Baixe Controle-Lucas.apk no celular e instale.
+          files: Controle-Lucas.apk
+          make_latest: false
+      - name: Avisar os usuários
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: gh workflow run site.yml --ref main -R ${{ github.repository }}
