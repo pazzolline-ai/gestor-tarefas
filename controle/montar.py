@@ -31,10 +31,10 @@ trocas = [
     ("GT.fn=async(acao,body)=>{", "GT.fn=async(acao,body)=>{throw new Error('" + MSG + "');", 1),
     ("GT.linkAgenda=async(novo)=>{", "GT.linkAgenda=async(novo)=>{throw new Error('O link da agenda fica no Gestor de Tarefas.');", 1),
     # nome
-    ("<title>Gestor de Tarefas</title>", "<title>Controle</title>", 1),
-    ("mk.app_nome||'Gestor de Tarefas'", "mk.app_nome||'Controle'", 2),
+    ("<title>Gestor de Tarefas</title>", "<title>Controle Lucas</title>", 1),
+    ("mk.app_nome||'Gestor de Tarefas'", "mk.app_nome||'Controle Lucas'", 2),
     ("mk.app_sub||'Londe & Rodrigues'", "mk.app_sub||'Lucas Pazolline'", 1),
-    ("o.app_nome||'Gestor de Tarefas'", "o.app_nome||'Controle'", 2),
+    ("o.app_nome||'Gestor de Tarefas'", "o.app_nome||'Controle Lucas'", 2),
     ("o.app_sub||'Londe & Rodrigues'", "o.app_sub||'Lucas Pazolline'", 2),
     # módulo Pró-labore e folha
     ("['financeiro','Financeiro','money']];", "['financeiro','Financeiro','money'],['folha','Pró-labore e folha','money']];", 1),
