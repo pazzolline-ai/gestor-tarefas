@@ -4740,6 +4740,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-24b',data:'24/11/2026',itens:['📱 Menu Todas as telas do celular alinhado: cada módulo virou uma linha inteira e as telas dele aparecem em grade logo abaixo ao abrir.']},
  {id:'2026-11-24',data:'24/11/2026',itens:['🎯 Novo Gerador de leads (Comercial, só Lucas): busca empresas no Google Maps por qualquer ramo e cidade, com nota e avaliações, e continua com o OpenStreetMap. O botão Completar entra no site de cada empresa e traz e-mail, WhatsApp, Instagram/Facebook/LinkedIn e os dados do CNPJ (situação, porte, Simples/MEI e sócios). Dá para exportar a lista em planilha e mandar para o funil com tudo nas observações.']},
  {id:'2026-11-20',data:'20/11/2026',itens:['⬅️ Botão voltar no celular: o voltar do aparelho (ou o gesto) agora fecha a janela aberta ou volta para a tela anterior, em vez de sair do sistema. Também há uma seta ‹ no topo e nas janelas. No app Android, instale a nova versão do app quando o sistema avisar.']},
  {id:'2026-11-19c',data:'19/11/2026',itens:['🤖 Nova Central de DAS MEI (Fiscal): o robô instalado no PC do escritório acompanha todos os clientes MEI. Na sessão assistida ele abre o PGMEI cliente por cliente com o CNPJ preenchido; você resolve o “não sou um robô” e gera o DAS, e o robô salva o PDF organizado por CNPJ/ano/mês e atualiza a tela. Dá para informar pagamento com comprovante conferido.']},
@@ -6992,6 +6993,15 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
   .pd-hero h2{font-size:30px}
   .pd-ch .seg{flex:1 1 100%}.pd-ch .seg button{flex:1}
   .mob-all .ct{border-radius:999px;min-width:20px;height:20px;line-height:20px;font-size:11px;padding:0 6px;text-align:center;font-family:var(--f-ui)}
+  .mob-all .nav-grp,.mob-all .nav-solo{grid-column:1/-1}
+  .mob-all .nav-grp{display:flex;flex-direction:column;gap:8px;margin:0}
+  .mob-all .nav-grp>.nav-gh,.mob-all .nav-solo{flex-direction:row;justify-content:flex-start;align-items:center;gap:12px;min-height:54px;width:100%;box-sizing:border-box;padding:0 18px;font-size:14.5px;text-align:left}
+  .mob-all .nav-gh span,.mob-all .nav-solo span{flex:1}
+  .mob-all .nav-gh .chev{width:16px;height:16px}
+  .mob-all .nav-gb{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 6px 8px;padding:0 0 0 10px}
+  .mob-all .nav-grp.open .nav-gb{display:grid}
+  .mob-all .nav-gb button .nav-n{position:absolute;right:10px;bottom:8px;margin:0}
+  .mob-all .nav-gh .nav-n,.mob-all .nav-solo .nav-n{position:static;margin:0}
   #modFilter{display:none}
   .pd-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pd-st:nth-child(3){border-left:0}
