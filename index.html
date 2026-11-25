@@ -4827,27 +4827,39 @@ document.addEventListener('input',e=>{if(e.target.id==='mnQ'){UIMN.q=e.target.va
 /* ---------- Rotinas mensais por cliente (config/rotinas) ---------- */
 const ROT_PADRAO={ativo:false};
 let ROT=null;function rotConf(){return ROT||ROT_PADRAO}
-function rotLigar(){if(rotLigar.on||mode!=='db'||!db)return;rotLigar.on=true;try{db.doc('config/rotinas').onSnapshot(s=>{ROT=s.exists?s.data():null;setTimeout(rotAuto,3000)},()=>{})}catch(e){}}
+function rotLigar(){if(rotLigar.on||mode!=='db'||!db)return;rotLigar.on=true;try{db.doc('config/rotinas').onSnapshot(s=>{ROT=s.exists?s.data():null;setTimeout(rotAuto,3000);setTimeout(dasmeiRotAuto,3500)},()=>{})}catch(e){}}
 const slug=x=>norm(x).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 function rotLista(comp){const [y,m]=comp.split('-').map(Number);const ant=new Date(y,m-2,1),compTxt=pad(ant.getMonth()+1)+'/'+ant.getFullYear();const out=[];
   const obs=obLista().filter(o=>o.ativo!==false&&(o.regimes||[]).length&&(o.per==='mensal'||(o.per==='anual'&&o.regra&&o.regra.tipo&&pzCalc(o.regra,comp+'-01').slice(0,7)===comp)));
-  D.empresas.forEach((e,eid)=>{if(!e||e.inativa)return;const cats=obs.filter(o=>o.regimes.includes(e.regime)).map(o=>o.nome);cats.forEach(cat=>{if(norm(cat)==='das-mei'&&e.guiaMensal===false)return;
+  D.empresas.forEach((e,eid)=>{if(!e||e.inativa)return;const cats=obs.filter(o=>o.regimes.includes(e.regime)).map(o=>o.nome);cats.forEach(cat=>{if(norm(cat)==='das-mei')return;
     const id='r'+comp.replace('-','')+'-'+slug(eid)+'-'+slug(cat);if(TALL.has(id))return;const rg=pzRegra(cat);
-    const ob=obDe(cat);out.push({id,t:{modulo:(ob&&ob.dep)||'fiscal',titulo:cat+(ob&&ob.per==='anual'?' · '+y:' · competência '+compTxt),categoria:cat,empresaId:eid,responsavel:e.respInterno||'',solicitante:'Rotina mensal',departamento:'',prazo:rg?pzCalc(rg,comp+'-01'):'',prioridade:'media',status:'afazer',descricao:'',obs:'',origem:'rotina',criadoEm:agora(),criadoPor:'Rotina mensal',hist:[{em:agora(),tipo:'criada',txt:'Criada automaticamente pela rotina mensal',por:'Sistema'}]}})})});return out}
+    const ob=obDe(cat);out.push({id,t:{modulo:(ob&&ob.dep)||'fiscal',titulo:cat+(ob&&ob.per==='anual'?' · '+y:' · competência '+compTxt),categoria:cat,empresaId:eid,responsavel:e.respInterno||'',solicitante:'Rotina mensal',departamento:'',prazo:rg?pzCalc(rg,comp+'-01'):'',prioridade:'media',status:'afazer',descricao:'',obs:'',origem:'rotina',criadoEm:agora(),criadoPor:'Rotina mensal',hist:[{em:agora(),tipo:'criada',txt:'Criada automaticamente pela rotina mensal',por:'Sistema'}]}})})});if(rotConf().dasmei!==false){const di=dasmeiRotItem(comp);if(di)out.push(di)}return out}
 async function rotGerar(comp){const l=rotLista(comp);let n=0;for(const x of l){const ck=pzCheck(x.t.categoria);if(ck&&ck.length)x.t.check=ck.map(txt=>({txt,ok:false}));
     TALL.set(x.id,x.t);D.tarefas.set(x.id,x.t);TN.eu.set(x.id,Date.now());try{await C('tarefas').doc(x.id).set(x.t);n++}catch(e){TALL.delete(x.id);D.tarefas.delete(x.id)}}
   render();return n}
 async function rotAuto(){const c=rotConf();if(!c.ativo||mode!=='db'||WS==='pessoal'||!GT.gestor()||!loaded.tarefas||!loaded.empresas)return;const comp=hoje().slice(0,7);const k='gt.rot.'+comp;if(lsGet(k,false))return;lsSet(k,true);
   const n=await rotGerar(comp);if(n)toast('🔁 '+plural(n,'tarefa mensal criada','tarefas mensais criadas')+' para este mês')}
+function dasmeiRotItem(comp){const ob=obDe('DAS-MEI');if(!ob)return null;
+  const meis=[...D.empresas.entries()].filter(([id,e])=>e&&e.regime==='MEI'&&e.guiaMensal!==false&&!e.inativa);if(!meis.length)return null;
+  const id='dasmei-rot-'+comp.replace('-','');if(TALL.has(id))return null;
+  const [y,m]=comp.split('-').map(Number);const ant=new Date(y,m-2,1);const compPrev=pad(ant.getMonth()+1)+'/'+ant.getFullYear();
+  const rg=pzRegra('DAS-MEI');
+  return {id,t:{modulo:ob.dep||'fiscal',titulo:'DAS-MEI · competência '+compPrev,categoria:'DAS-MEI',empresaId:'',responsavel:ob.respInterno||'',solicitante:'Rotina mensal',departamento:'',prazo:rg?pzCalc(rg,comp+'-01'):'',prioridade:'media',status:'afazer',descricao:'Emitir no PGMEI, enviar ao cliente pelo WhatsApp e marcar o pagamento das guias dos '+meis.length+' clientes MEI. Faça tudo na tela Fiscal › Guias DAS-MEI.',obs:'',origem:'rotina',criadoEm:agora(),criadoPor:'Rotina mensal',hist:[{em:agora(),tipo:'criada',txt:'Criada automaticamente pela rotina mensal do DAS-MEI',por:'Sistema'}]}}}
+async function dasmeiRotAuto(){if(mode!=='db'||WS==='pessoal'||!loaded.tarefas||!loaded.empresas||rotConf().dasmei===false)return;
+  const comp=hoje().slice(0,7);const k='gt.dasrot.'+comp;if(lsGet(k,false))return;lsSet(k,true);
+  const x=dasmeiRotItem(comp);if(!x)return;
+  TALL.set(x.id,x.t);D.tarefas.set(x.id,x.t);TN.eu.set(x.id,Date.now());
+  try{await C('tarefas').doc(x.id).set(x.t);render();toast('🔁 Rotina do DAS-MEI criada para este mês')}catch(e){TALL.delete(x.id);D.tarefas.delete(x.id)}}
 function rotModal(){if(!GT.gestor())return;const c=rotConf();const comp=hoje().slice(0,7);
   const obs=obLista().filter(o=>o.ativo!==false&&(o.regimes||[]).length);
   openModal(`${mh('Rotinas mensais por cliente')}<div class="mb"><div style="font-size:12.5px;color:var(--mut)">Todo dia 1º o sistema cria as tarefas das obrigações que têm regimes marcados, para cada empresa ativa daquele regime (mensais todo mês; anuais no mês do vencimento). O responsável é o "Responsável no escritório" da empresa. Nunca cria a mesma tarefa duas vezes. Para escolher o que entra, edite em <b>Obrigações</b>.</div>
     <div>${obs.length?`<ul style="margin:0;padding-left:18px;font-size:13px">${obs.map(o=>`<li><b>${esc(o.nome)}</b> · ${esc(PERS[o.per]||'')} · ${esc(o.regimes.join(', '))}</li>`).join('')}</ul>`:'<div class="gd-msg">Nenhuma obrigação com regime marcado.</div>'}</div>
-    <label class="chk"><input type="checkbox" id="rtOn" ${c.ativo?'checked':''}> <b>Ligar a criação automática todo dia 1º</b></label><div id="rtPrev" style="font-size:12.5px"></div></div>
+    <label class="chk"><input type="checkbox" id="rtOn" ${c.ativo?'checked':''}> <b>Ligar a criação automática todo dia 1º</b></label>
+    <label class="chk"><input type="checkbox" id="rtDas" ${c.dasmei!==false?'checked':''}> <b>Rotina mensal do DAS-MEI</b> · cria uma tarefa por competência (ligada à tela Guias DAS-MEI), mesmo com a rotina geral desligada</label><div id="rtPrev" style="font-size:12.5px"></div></div>
     <div class="mf"><button type="button" class="btn" onclick="this.dispatchEvent(new CustomEvent('gt-ir',{bubbles:true,detail:'obrigacoes'}))">Abrir Obrigações</button><button type="button" class="btn" id="rtVer">Ver quantas seriam criadas</button><button type="button" class="btn pri" id="rtSalvar">Salvar</button></div>`,true);
   $('#rtVer').onclick=()=>{const l=rotLista(comp);$('#rtPrev').innerHTML=l.length?`Para ${comp.slice(5)}/${comp.slice(0,4)}: <b>${plural(l.length,'tarefa nova','tarefas novas')}</b>. <button type="button" class="btn sm pri" id="rtJa">Criar agora</button>`:'Nenhuma tarefa nova para este mês.';
-    const b=document.getElementById('rtJa');if(b)b.onclick=()=>{const on=$('#rtOn').checked;confirmBox(`Criar <b>${l.length}</b> tarefas agora?`,'Criar',async()=>{await db.doc('config/rotinas').set({ativo:on});ROT={ativo:on};lsSet('gt.rot.'+comp,true);const n=await rotGerar(comp);closeModal();toast(plural(n,'tarefa criada','tarefas criadas'))})}};
-  $('#rtSalvar').onclick=async()=>{const o={ativo:$('#rtOn').checked};try{await db.doc('config/rotinas').set(o);ROT=o;closeModal();toast(o.ativo?'Rotinas ligadas':'Rotinas desligadas')}catch(e){toast('Só gestor e diretoria podem alterar.')}};
+    const b=document.getElementById('rtJa');if(b)b.onclick=()=>{const on=$('#rtOn').checked,das=$('#rtDas').checked;confirmBox(`Criar <b>${l.length}</b> tarefas agora?`,'Criar',async()=>{await db.doc('config/rotinas').set({ativo:on,dasmei:das});ROT={ativo:on,dasmei:das};lsSet('gt.rot.'+comp,true);lsSet('gt.dasrot.'+comp,true);const n=await rotGerar(comp);closeModal();toast(plural(n,'tarefa criada','tarefas criadas'))})}};
+  $('#rtSalvar').onclick=async()=>{const o={ativo:$('#rtOn').checked,dasmei:$('#rtDas').checked};try{await db.doc('config/rotinas').set(o);ROT=o;if(o.dasmei)setTimeout(dasmeiRotAuto,300);closeModal();toast('Rotinas salvas')}catch(e){toast('Só gestor e diretoria podem alterar.')}};
 }
 /* ---------- Tempo gasto ---------- */
 const minTxt=m=>{m=Math.round(m||0);return m<60?m+' min':Math.floor(m/60)+'h'+(m%60?' '+pad(m%60):'')};
