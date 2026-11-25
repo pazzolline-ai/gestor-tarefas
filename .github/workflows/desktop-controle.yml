@@ -1,0 +1,59 @@
+name: Programa Controle Lucas para Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['desktop/**', '.github/workflows/desktop-controle.yml']
+permissions:
+  contents: write
+  actions: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Preparar versão do Controle
+        shell: bash
+        run: |
+          cp -r desktop desktop-ctl
+          node -e "
+            const fs=require('fs');
+            let m=fs.readFileSync('desktop-ctl/main.js','utf8');
+            m=m.replace(\"https://pazzolline-ai.github.io/gestor-tarefas/'\",\"https://pazzolline-ai.github.io/gestor-tarefas/controle/'\")
+               .replace(/title: 'Gestor de Tarefas'/,\"title: 'Controle Lucas'\")
+               .replace(\"tray.setToolTip('Gestor de Tarefas')\",\"tray.setToolTip('Controle Lucas')\")
+               .replace(\"setAppUserModelId('br.com.londerodrigues.gestor')\",\"setAppUserModelId('br.com.lucas.controle')\");
+            if(!m.includes('/gestor-tarefas/controle/'))throw new Error('URL não trocada');
+            fs.writeFileSync('desktop-ctl/main.js',m);
+            const p=JSON.parse(fs.readFileSync('desktop-ctl/package.json','utf8'));
+            p.name='controle-lucas';p.productName='Controle Lucas';p.description='Controle Lucas';
+            p.build.appId='br.com.lucas.controle';p.build.productName='Controle Lucas';
+            p.build.win.artifactName='Controle-Lucas-Instalador.exe';p.build.nsis.shortcutName='Controle Lucas';
+            fs.writeFileSync('desktop-ctl/package.json',JSON.stringify(p,null,2));
+          "
+      - name: Instalar
+        working-directory: desktop-ctl
+        run: npm install --no-audit --no-fund
+      - name: Gerar instalador
+        working-directory: desktop-ctl
+        run: npm run dist
+      - name: Ler versão
+        id: v
+        shell: bash
+        run: echo "ver=$(node -p "require('./desktop-ctl/package.json').version")" >> $GITHUB_OUTPUT
+      - name: Publicar na página de downloads
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: programa-windows-controle
+          name: Controle Lucas para Windows ${{ steps.v.outputs.ver }}
+          body: Instalador do Controle Lucas para Windows. Baixe o arquivo Controle-Lucas-Instalador.exe e execute.
+          files: desktop-ctl/dist/Controle-Lucas-Instalador.exe
+          make_latest: false
+      - name: Republicar o site com a nova versão
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run site.yml --ref main -R ${{ github.repository }}
