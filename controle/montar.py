@@ -28,7 +28,7 @@ trocas = [
     ("{event:'*',schema:'public',table:'docs'}", "{event:'*',schema:'public',table:'docs',filter:'org_id=eq.00000000-0000-0000-0000-000000000000'}", 1),
     ("canalOk=st==='SUBSCRIBED'", "canalOk=false", 1),
     ("sb.channel('presenca'", "sb.channel('presenca-controle'", 1),
-    ("GT.fn=async(acao,body)=>{", "GT.fn=async(acao,body)=>{throw new Error('" + MSG + "');", 1),
+    ("GT.fn=async(acao,body)=>{", "GT.fn=async(acao,body)=>{body=Object.assign({app:'controle'},body||{});", 1),
     ("GT.linkAgenda=async(novo)=>{", "GT.linkAgenda=async(novo)=>{throw new Error('O link da agenda fica no Gestor de Tarefas.');", 1),
     # app de celular próprio do Controle
     ("releases/latest/download/Gestor-de-Tarefas-Instalador.exe", "releases/download/programa-windows-controle/Controle-Lucas-Instalador.exe", 1),
