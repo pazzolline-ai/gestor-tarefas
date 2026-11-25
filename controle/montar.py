@@ -31,6 +31,7 @@ trocas = [
     ("GT.fn=async(acao,body)=>{", "GT.fn=async(acao,body)=>{throw new Error('" + MSG + "');", 1),
     ("GT.linkAgenda=async(novo)=>{", "GT.linkAgenda=async(novo)=>{throw new Error('O link da agenda fica no Gestor de Tarefas.');", 1),
     # app de celular próprio do Controle
+    ("releases/latest/download/Gestor-de-Tarefas-Instalador.exe", "releases/download/programa-windows-controle/Controle-Lucas-Instalador.exe", 1),
     ("gestor-tarefas/releases/download/app-android/Gestor-de-Tarefas.apk", "gestor-tarefas/releases/download/app-android-controle/Controle-Lucas.apk", 1),
     # nome
     ("<title>Gestor de Tarefas</title>", "<title>Controle Lucas</title>", 1),

@@ -37,7 +37,8 @@ jobs:
           sed -i "s/__BUILD__/${GITHUB_SHA}/" site/controle/index.html
           cp sw.js icon-*.png controle/manifest.webmanifest site/controle/
           AC=$(gh api repos/${{ github.repository }}/releases/tags/app-android-controle --jq .name 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 0.0.0)
-          echo "{\"site\":\"${GITHUB_SHA}\",\"programa\":\"${PC}\",\"android\":\"${AC}\"}" > site/controle/version.json
+          PCC=$(gh api repos/${{ github.repository }}/releases/tags/programa-windows-controle --jq .name 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 1.0.0)
+          echo "{\"site\":\"${GITHUB_SHA}\",\"programa\":\"${PCC}\",\"android\":\"${AC}\"}" > site/controle/version.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
