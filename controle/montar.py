@@ -44,9 +44,9 @@ trocas = [
     ("propostas:vPropostas}[UI.view]", "propostas:vPropostas,folha:vFolha}[UI.view]", 1),
     ("['dp','Depto. Pessoal','#4f8fe8',['@dp']]", "['dp','Depto. Pessoal','#4f8fe8',['@dp','folha']]", 1),
     ("const titles={dashboard:['Início',''],", "const titles={dashboard:['Início',''],folha:['Pró-labore e folha','Recibos de pró-labore e de colaboradores, com INSS, IRRF e FGTS do mês'],", 1),
-    ("agcfg:new Map()};", "agcfg:new Map(),folha:new Map()};", 1),
-    ("agcfg:false};", "agcfg:false,folha:false};", 1),
-    ("'compromissos','agcfg','leads']", "'compromissos','agcfg','leads','folha']", None),
+    ("agcfg:new Map(),irpf:new Map()};", "agcfg:new Map(),irpf:new Map(),folha:new Map()};", 1),
+    ("agcfg:false,irpf:false};", "agcfg:false,irpf:false,folha:false};", 1),
+    ("'compromissos','agcfg','leads','irpf']", "'compromissos','agcfg','leads','irpf','folha']", None),
     ("\nboot();\n})();", "\n" + folha + "\nboot();\n})();", 1),
 ]
 for de, para, n in trocas:

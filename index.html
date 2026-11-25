@@ -1930,7 +1930,7 @@ more:'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="
 wa:'<path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 1c-1-.5-1.5-1-2-2l1-1-1-2z"/>'
 };
 const svg=(k,s)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
-const VIEWS=[['dashboard','Início','home'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['protocolos','Protocolos','rel'],['crm','CRM','chat'],['whats','WhatsApp','wa'],['prospec','Gerador de leads','search'],['propostas','Propostas','prop'],['simples','Calculadora do Simples','money'],['dasmei','Guias DAS-MEI','rel'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
+const VIEWS=[['dashboard','Início','home'],['mural','Mural','mural'],['tarefas','Tarefas','task'],['cobrancas','Cobranças','bell'],['agenda','Agenda','cal'],['empresas','Empresas','bld'],['alvaras','Alvarás','shield'],['protocolos','Protocolos','rel'],['crm','CRM','chat'],['whats','WhatsApp','wa'],['prospec','Gerador de leads','search'],['propostas','Propostas','prop'],['simples','Calculadora do Simples','money'],['dasmei','Guias DAS-MEI','rel'],['irpf','Imposto de Renda','money'],['equipe','Equipe','team'],['rendimento','Rendimento','perf'],['relatorios','Relatórios','rel'],['carga','Carga de trabalho','perf'],['reembolso','Reembolso','car'],['obrigacoes','Obrigações','cal'],['manual','Manual e sugestões','msg'],['financeiro','Financeiro','money']];
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -1949,12 +1949,13 @@ const plural=(n,s,p)=>n+' '+(n===1?s:p);
 const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 const DSEM=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
 function maskCNPJ(v){const d=String(v||'').replace(/\D/g,'').slice(0,14);if(d.length<14)return v||'';return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5')}
+function maskCPF(v){const d=String(v||'').replace(/\D/g,'').slice(0,11);if(d.length<11)return v||'';return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4')}
 function lsGet(k,def){try{const v=localStorage.getItem(k);return v==null?def:JSON.parse(v)}catch(e){return def}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 
 /* ---------- Estado ---------- */
 let TALL=new Map();
-const D={tarefas:new Map(),empresas:new Map(),contatos:new Map(),equipe:new Map(),pagamentos:new Map(),das:new Map(),avisos:new Map(),rendimento:new Map(),chat:new Map(),alvaras:new Map(),propostas:new Map(),compromissos:new Map(),agcfg:new Map()};
+const D={tarefas:new Map(),empresas:new Map(),contatos:new Map(),equipe:new Map(),pagamentos:new Map(),das:new Map(),avisos:new Map(),rendimento:new Map(),chat:new Map(),alvaras:new Map(),propostas:new Map(),compromissos:new Map(),agcfg:new Map(),irpf:new Map()};
 const UI={
   view:'dashboard', empresaId:null,
   resp:lsGet('cs.resp',''), mod:(m=>MODL[m]?m:'')(lsGet('cs.mod','')), modo:lsGet('cs.modo','lista'),
@@ -1964,7 +1965,7 @@ const UI={
 };
 let MEFULL='', ME_AV='', ME_COR='', UROOM=null, UAPI=null;
 let db=null, UID=null, WS='escritorio', UNSUB=[], mode='loading', ME='Gestor', canWrite=true, mcp=null, isOwner=false;
-const loaded={tarefas:false,empresas:false,contatos:false,equipe:false,pagamentos:false,das:false,avisos:false,rendimento:false,chat:false,alvaras:false,propostas:false,compromissos:false,agcfg:false};
+const loaded={tarefas:false,empresas:false,contatos:false,equipe:false,pagamentos:false,das:false,avisos:false,rendimento:false,chat:false,alvaras:false,propostas:false,compromissos:false,agcfg:false,irpf:false};
 
 /* ---------- Persistência ---------- */
 async function boot(){
@@ -1985,7 +1986,7 @@ async function boot(){
   }else{
     mode='local';
     const s=lsGet('cs.local',{tarefas:{},empresas:{},contatos:{},equipe:{},pagamentos:{},das:{}});
-    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
+    ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads','irpf'].forEach(c=>{D[c]=new Map(Object.entries(s[c]||{}));loaded[c]=true});
     rbAssinar();
     render();
   }
@@ -1993,9 +1994,9 @@ async function boot(){
 function C(name){return WS==='pessoal'&&UID?db.doc('data/users/'+UID+'/pessoal').collection(name):db.collection(name)}
 function assinar(){
   UNSUB.forEach(f=>{try{f()}catch(e){}});UNSUB=[];
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(col=>{D[col]=new Map();loaded[col]=false});
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads','irpf'].forEach(col=>{D[col]=new Map();loaded[col]=false});
   const ws=WS;
-  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(col=>{
+  ['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads','irpf'].forEach(col=>{
     UNSUB.push(C(col).onSnapshot(snap=>{
       if(ws!==WS)return;
       const m=new Map();snap.docs.forEach(d=>{if(d.exists)m.set(d.id,d.data())});
@@ -2075,7 +2076,7 @@ function trocarWS(ws,liberado){
   assinar.semeado=false;assinar();if(ws==='pessoal')carregarPix();go('dashboard');
   toast(ws==='pessoal'?'Espaço do Lucas':'Escritório');
 }
-function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
+function persistLocal(){const o={};['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads','irpf'].forEach(c=>o[c]=Object.fromEntries(D[c]));lsSet('cs.local',o)}
 async function put(col,id,data){
   const clean=JSON.parse(JSON.stringify(data));if(col==='tarefas')TN.eu.set(id,Date.now());
   if(col==='tarefas'&&!TALL.has(id)&&!D.tarefas.has(id)&&!clean.criadoPor){clean.criadoPor=meuNome();if(UID)clean.criadoUid=UID}
@@ -2977,7 +2978,7 @@ function chatPos(fq){const b=document.getElementById('chatMsgs');if(b)b.scrollTo
 }
 
 /* ---------- Backup ---------- */
-const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads'];
+const BK_COLS=['tarefas','empresas','contatos','equipe','pagamentos','das','avisos','rendimento','chat','alvaras','propostas','compromissos','agcfg','leads','irpf'];
 function backupDados(){const o={app:'gestor-de-tarefas',versao:2,geradoEm:new Date().toISOString(),por:meuNome(),colecoes:{}};
   BK_COLS.forEach(c=>{o.colecoes[c]=Object.fromEntries(c==='tarefas'?TALL:D[c])});
   try{o.colecoes.viagens=Object.fromEntries(RB.viagens||new Map());o.colecoes.veiculos=Object.fromEntries(RB.veiculos||new Map());o.reembolsoCfg=RB.cfg||null}catch(e){}
@@ -3075,7 +3076,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   const n=cobrarList().filter(t=>!t._i.cobradoHoje).length;
   const nFin=WS==='pessoal'?finAtrasados().length:0;const nRb=rbPendN();
   const NGRP={dashboard:'Visão geral',tarefas:'Trabalho',empresas:'Clientes',equipe:'Gestão'};
-  telasLigar();const navHtml=VIEWS.filter(([k])=>!telaOculta(k)&&(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')&&(k!=='protocolos'||WS!=='pessoal')&&(k!=='dasmei'||(WS!=='pessoal'&&mode==='db'))&&(k!=='prospec'||prSouLucas())).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
+  telasLigar();const navHtml=VIEWS.filter(([k])=>!telaOculta(k)&&(k!=='financeiro'||WS==='pessoal')&&(k!=='reembolso'||WS!=='pessoal')&&(k!=='mural'||WS!=='pessoal')&&(k!=='chat'||(WS!=='pessoal'&&mode==='db'))&&(k!=='rendimento'||WS!=='pessoal')&&(k!=='carga'||(WS!=='pessoal'&&mode==='db'&&GT.gestor()))&&(k!=='obrigacoes'||(WS!=='pessoal'&&mode==='db'))&&(k!=='alvaras'||WS!=='pessoal')&&(k!=='protocolos'||WS!=='pessoal')&&(k!=='dasmei'||(WS!=='pessoal'&&mode==='db'))&&(k!=='irpf'||(WS!=='pessoal'&&mode==='db'))&&(k!=='prospec'||prSouLucas())).map(([k,l,ic])=>`${NGRP[k]?`<div class="nav-g">${NGRP[k]}</div>`:''}<button class="${(UI.view===k||(UI.view==='empresa'&&k==='empresas'))?'on':''}" data-go="${k}">${svg(ic)}<span>${l}</span>${k==='cobrancas'&&n?`<span class="ct">${n}</span>`:''}${k==='financeiro'&&WS==='pessoal'&&nFin?`<span class="ct">${nFin}</span>`:''}${k==='reembolso'&&nRb?`<span class="ct">${nRb}</span>`:''}${k==='chat'&&chatNaoLidas()?`<span class="ct">${chatNaoLidas()}</span>`:''}${k==='rendimento'&&rdMeusAlertas()?`<span class="ct">${rdMeusAlertas()}</span>`:''}${k==='alvaras'&&alvAlerta().length?`<span class="ct" style="background:var(--amb);color:#1a1200">${alvAlerta().length}</span>`:''}${k==='mural'&&muralNovos()?`<span class="ct" style="background:var(--acc);color:var(--acc-ink)">${muralNovos()}</span>`:''}</button>`).join('');
   const navG=WS==='pessoal'?navHtml:navAgrupar(navHtml);$('#nav').innerHTML=navG;UI.navHtml=navG;$('#mobNav').innerHTML=mobNavHtml(navG);
   const d=new Date();
   $('#sideFoot').innerHTML=`${WS==='pessoal'?'<button class="btn sm" data-bloquear style="align-self:flex-start">Bloquear espaço Lucas</button>':''}<span id="gDot">${gDotTxt()}</span>${mode==='db'&&ME?`<div class="side-me">${aviHtml(ME_AV,meuNome(),'')}<span>${esc(meuNome())}</span></div>`:''}${onlineHtml()}<span>${mode==='db'?'Dados compartilhados':'Modo local'}</span>`;
@@ -3086,13 +3087,13 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   $('#mods').hidden=WS!=='pessoal';$('#modFilter').innerHTML='<option value="">Todos os módulos</option>'+MODS.map(([k,l])=>`<option value="${k}" ${UI.mod===k?'selected':''}>${l}</option>`).join('');
   const rs=responsaveis();
   $('#respFilter').innerHTML='<option value="">Todos os responsáveis</option>'+rs.map(r=>`<option ${UI.resp===r?'selected':''}>${esc(r)}</option>`).join('');
-  const titles={dashboard:['Início',''],dasmei:['Guias DAS-MEI','Controle manual das guias do mês dos clientes MEI'],protocolos:['Protocolos','Pedidos em andamento nos órgãos (Junta, Prefeitura, Bombeiros, Vigilância…)'],simples:['Calculadora do Simples','Alíquota efetiva, DAS da nota e texto pronto para a NF'],whats:['WhatsApp','Funil de clientes e agentes de atendimento'],prospec:['Gerador de leads','Empresas do Google Maps e do CNPJ, com e-mail, WhatsApp e redes'],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Sua semana organizada por prazo, prioridade e horários livres'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],propostas:['Propostas','Monte, envie e acompanhe as propostas para clientes'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
+  const titles={dashboard:['Início',''],dasmei:['Guias DAS-MEI','Controle manual das guias do mês dos clientes MEI'],irpf:['Imposto de Renda','Clientes de IRPF: CPF, senha do gov.br, quem indicou e situação da declaração'],protocolos:['Protocolos','Pedidos em andamento nos órgãos (Junta, Prefeitura, Bombeiros, Vigilância…)'],simples:['Calculadora do Simples','Alíquota efetiva, DAS da nota e texto pronto para a NF'],whats:['WhatsApp','Funil de clientes e agentes de atendimento'],prospec:['Gerador de leads','Empresas do Google Maps e do CNPJ, com e-mail, WhatsApp e redes'],tarefas:['Tarefas',{'':'Todos os módulos do escritório',societario:'Rotina societária e cadastral',fiscal:'Apurações, obrigações acessórias e guias',contabil:'Escrituração, fechamentos e SPED contábil',dp:'Folha, admissões, rescisões e eSocial',bpo:'Contas a pagar e receber, conciliação e relatórios dos clientes de gestão financeira'}[UI.mod]],cobrancas:['Cobranças','Acompanhamento e cobrança da equipe'],empresas:['Empresas','Cadastro e visão por cliente'],empresa:['Empresa',''],crm:['CRM','Relacionamento com os clientes'],agenda:['Agenda','Sua semana organizada por prazo, prioridade e horários livres'],equipe:['Equipe','Pessoas e departamentos do escritório'],chat:['Chat','Conversas internas da equipe'],mural:['Mural de avisos','Recados, novidades e aniversários da equipe'],alvaras:['Alvarás','Societário · validade e renovação dos alvarás das empresas'],propostas:['Propostas','Monte, envie e acompanhe as propostas para clientes'],obrigacoes:['Obrigações','Cadastro das obrigações de cada departamento · prazos e geração automática'],manual:['Manual e sugestões','Como usar o sistema, novidades e espaço para sugerir melhorias'],relatorios:['Relatórios','Indicadores do período por pessoa, categoria e empresa · exporta Excel e PDF'],carga:['Carga de trabalho','Entrada e saída de serviço da equipe · ajuda a decidir sobre contratar'],rendimento:['Rendimento da equipe','Tarefas feitas, pontualidade e feedback · últimos 30 dias'],financeiro:['Financeiro','Honorários e recebimentos dos seus clientes'],reembolso:['Reembolso de km','Combustível e uso do veículo · carro e moto']};
   const tt=titles[UI.view]||titles.dashboard;const bVolt=document.getElementById('btnVoltar');if(bVolt)bVolt.hidden=UI.view==='dashboard';
   $('#pageTitle').innerHTML=`${tt[0]}${UI.mod&&['tarefas','dashboard','cobrancas','relatorios','agenda'].includes(UI.view)?`<span class="mod-tag" style="--c:${MODC[UI.mod]}">${MODL[UI.mod]}</span>`:''}<span class="ws-tag">Lucas · privado</span>${MESTRE.ok?'<button class="mk-tag" id="btnMestre" title="Clique para desligar">🔑 Chave mestre</button>':''}${tt[1]?`<small>${WS==='pessoal'&&UI.view==='dashboard'?'Espaço do Lucas · protegido por senha · ':''}${tt[1]}</small>`:''}`;
   const fq=document.activeElement&&document.activeElement.id;const pos=fq&&document.activeElement.selectionStart;
   setTimeout(festaCheck,600);setTimeout(semanaCheck,1500);setTimeout(bomDiaCheck,2200);if(!pzLigar.on){pzLigar();setTimeout(pzAvisos,5000)}if(!rotLigar.on)rotLigar();if(!obLigar.on)obLigar();if(!sugLigar.on)sugLigar();setTimeout(novidadesCheck,2600);setTimeout(alvAvisos,5500);setTimeout(somEntradaCheck,700);rdSync();
   const v=$('#view');
-  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,protocolos:vProtocolos,dasmei:vDasManual,simples:vSimples,whats:vWhats,prospec:vProspec,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras,propostas:vPropostas}[UI.view]||vDashboard)();
+  v.innerHTML=({dashboard:vDashboard,tarefas:vTarefas,cobrancas:vCobrancas,empresas:vEmpresas,empresa:()=>vEmpresa(UI.empresaId),crm:vCRM,protocolos:vProtocolos,dasmei:vDasManual,irpf:vIrpf,simples:vSimples,whats:vWhats,prospec:vProspec,equipe:vEquipe,rendimento:vRendimento,carga:vCarga,relatorios:vRelatorios,obrigacoes:vObrigacoes,manual:vManual,mural:vMural,financeiro:vFinanceiro,agenda:vAgenda,reembolso:vReembolso,alvaras:vAlvaras,propostas:vPropostas}[UI.view]||vDashboard)();
   if(UI.view==='chat')chatPos(fq);
   try{modTabsAplicar()}catch(e){}try{ferAplicar()}catch(e){}try{nmAplicar()}catch(e){}
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
@@ -6947,6 +6948,61 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-dasm],[dat
   cur[ac]=agora();cur.por=meuNome();put('das',k,cur);toast({emitida:'Guia emitida',enviada:'Guia enviada ao cliente',paga:'Guia paga'}[ac])});
 document.addEventListener('input',e=>{if(e.target.id==='dasQ'){UI.dasQ=e.target.value;clearTimeout(UI.dasT);UI.dasT=setTimeout(()=>{render();const el=document.getElementById('dasQ');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}},250)}});
 
+/* ================= Imposto de Renda (IRPF) ================= */
+const IRPF_ST={pendente:['Pendente',''],elaborando:['Em elaboração','amb'],entregue:['Entregue','grn']};
+const IRPF_RES={restituir:['A restituir','grn'],pagar:['A pagar','amb'],isento:['Isento','']};
+function irpfAno(){return UI.irA||String(new Date().getFullYear())}
+function irpfLista(){const a=irpfAno();return [...D.irpf.entries()].map(([id,r])=>({id,r})).filter(x=>String(x.r.ano||'')===a).sort((p,q)=>(p.r.nome||'').localeCompare(q.r.nome||'','pt'))}
+function vIrpf(){
+  if(mode!=='db')return `<section class="panel">${empty('O Imposto de Renda usa os dados compartilhados do escritório (entre com seu usuário).')}</section>`;
+  const a=irpfAno();const anos=[...new Set([...D.irpf.values()].map(r=>String(r.ano||'')).filter(Boolean).concat(a))].sort().reverse();
+  const l=irpfLista();const q=norm(UI.irQ||'');const f=UI.irF||'';const st=x=>x.r.status||'pendente';const n=k=>l.filter(x=>st(x)===k).length;
+  const vis=l.filter(x=>(!f||st(x)===f)&&(!q||norm((x.r.nome||'')+' '+(x.r.cpf||'')+' '+(x.r.indicacao||'')).includes(q)));
+  const porInd={};l.forEach(x=>{const k=(x.r.indicacao||'').trim();if(k)porInd[k]=(porInd[k]||0)+1});
+  const topInd=Object.entries(porInd).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const inds=[...new Set([...D.irpf.values()].map(r=>(r.indicacao||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt'));
+  const ch=(k,t,c)=>`<button class="btn sm ${f===k?'pri':'ghost'}" data-irf="${k}">${t} <small>${c}</small></button>`;
+  return `<section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><h2 style="margin:0">Imposto de Renda · ${esc(a)}</h2>
+    <select class="sel" id="irAno" style="max-width:110px">${anos.map(y=>`<option value="${esc(y)}" ${y===a?'selected':''}>${esc(y)}</option>`).join('')}</select>
+    <span class="flag ${l.length&&n('entregue')===l.length?'grn':'amb'}">${n('entregue')}/${l.length} entregues</span><span class="sp"></span>
+    <button class="btn sm pri" data-irnovo>+ Nova pessoa</button></div>
+   <div style="padding:0 16px 10px;font-size:12.5px;color:var(--mut)">Clientes de IRPF do ano, com CPF, senha do gov.br e quem indicou. A senha fica oculta — toque em “Senha” para mostrar.</div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px;align-items:center">${ch('','Todas',l.length)}${ch('pendente','Pendentes',n('pendente'))}${ch('elaborando','Em elaboração',n('elaborando'))}${ch('entregue','Entregues',n('entregue'))}<span class="sp"></span><input class="inp" id="irQ" placeholder="Buscar nome, CPF ou indicação" value="${esc(UI.irQ||'')}" style="max-width:240px"></div>
+   ${topInd.length?`<div style="padding:0 16px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:var(--dim)">Indicações:</span>${topInd.map(([k,c])=>`<span class="flag">${esc(k)} · ${c}</span>`).join('')}</div>`:''}
+   ${vis.length?`<div class="rows">${vis.map(x=>{const s=st(x),r=x.r,c=soNum(r.cpf),res=IRPF_RES[r.resultado];return `<div class="row" style="cursor:default;flex-wrap:wrap;gap:8px"><div class="main-t" style="min-width:200px"><div>${esc(r.nome||'—')}</div><div class="sub mono">${esc(maskCPF(r.cpf)||'CPF não informado')}${r.indicacao?' · '+esc(r.indicacao):''}</div></div>
+     <span class="flag ${IRPF_ST[s][1]}">${IRPF_ST[s][0]}</span>${s==='entregue'&&res?`<span class="flag ${res[1]}">${res[0]}</span>`:''}
+     ${c?`<button class="btn ghost sm" data-copy="${c}">CPF</button>`:''}${r.senhaGov?`<button class="btn ghost sm" data-irsenha="${x.id}">${UI.irV===x.id?'🙈 '+esc(r.senhaGov):'👁 Senha'}</button>`:''}
+     ${r.telefone?`<a class="wabtn" href="${waLink(r.telefone,'Olá'+(r.nome?' '+esc(r.nome.split(' ')[0]):'')+'! Aqui é da Londe & Rodrigues, sobre o seu Imposto de Renda.')}" target="_blank" rel="noopener" title="WhatsApp">${svg('wa',2)}</a>`:''}
+     ${s!=='entregue'?`<button class="btn sm pri" data-irav="${x.id}">${s==='pendente'?'Em elaboração':'Entregue'}</button>`:`<button class="btn ghost sm" data-irav="${x.id}|voltar">Reabrir</button>`}
+     <button class="btn ghost sm" data-ired="${x.id}">Editar</button></div>`}).join('')}</div>`:`<div style="padding:0 16px 16px">${empty(l.length?'Nenhuma pessoa neste filtro.':'Nenhum cliente de IRPF em '+esc(a)+'. Toque em “+ Nova pessoa”.')}</div>`}
+   <datalist id="irInds">${inds.map(i=>`<option value="${esc(i)}">`).join('')}</datalist></section>`}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-irnovo],[data-ired],[data-irav],[data-irf],[data-irsenha]');if(!t)return;
+  if(t.hasAttribute('data-irnovo')){irpfForm(null);return}
+  if(t.dataset.irf!==undefined){UI.irF=t.dataset.irf;render();return}
+  if(t.dataset.irsenha){UI.irV=UI.irV===t.dataset.irsenha?null:t.dataset.irsenha;render();return}
+  if(t.dataset.ired){irpfForm(t.dataset.ired);return}
+  if(t.dataset.irav){const [id,ac]=t.dataset.irav.split('|');const r=D.irpf.get(id);if(!r)return;const n=Object.assign({},r);
+    if(ac==='voltar')n.status='elaborando';else n.status=r.status==='pendente'?'elaborando':'entregue';
+    if(n.status==='entregue')n.entregueEm=agora();n.por=meuNome();n.atualizadoEm=agora();put('irpf',id,n);return}});
+document.addEventListener('input',e=>{if(e.target.id==='irQ'){UI.irQ=e.target.value;clearTimeout(UI.irT);UI.irT=setTimeout(()=>{render();const el=document.getElementById('irQ');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}},250)}});
+document.addEventListener('change',e=>{if(e.target.id==='irAno'){UI.irA=e.target.value;render()}});
+function irpfForm(id){const r=id?(D.irpf.get(id)||{}):{};const ano=r.ano||irpfAno();
+  openModal(`${mh(id?'Editar pessoa — IRPF':'Nova pessoa — IRPF')}<form id="irF" style="display:flex;flex-direction:column;gap:10px">
+   <div class="fg"><div class="fd"><label for="ir_nome">Nome</label><input class="inp" id="ir_nome" value="${esc(r.nome||'')}" required></div>
+   <div class="fd"><label for="ir_cpf">CPF</label><input class="inp mono" id="ir_cpf" value="${esc(r.cpf||'')}" placeholder="000.000.000-00"></div></div>
+   <div class="fg"><div class="fd"><label for="ir_sg">Senha do gov.br</label><input class="inp" id="ir_sg" value="${esc(r.senhaGov||'')}" placeholder="senha do portal gov.br"></div>
+   <div class="fd"><label for="ir_tel">WhatsApp</label><input class="inp" id="ir_tel" value="${esc(r.telefone||'')}" placeholder="(62) 90000-0000"></div></div>
+   <div class="fg"><div class="fd"><label for="ir_ind">Indicação (quem indicou)</label><input class="inp" id="ir_ind" list="irInds" value="${esc(r.indicacao||'')}" placeholder="nome da imobiliária, cliente…"></div>
+   <div class="fd"><label for="ir_ano">Ano</label><input class="inp" id="ir_ano" value="${esc(ano)}"></div></div>
+   <div class="fg"><div class="fd"><label for="ir_st">Situação</label><select class="sel" id="ir_st">${Object.keys(IRPF_ST).map(k=>`<option value="${k}" ${(r.status||'pendente')===k?'selected':''}>${IRPF_ST[k][0]}</option>`).join('')}</select></div>
+   <div class="fd"><label for="ir_res">Resultado</label><select class="sel" id="ir_res"><option value="">—</option>${Object.keys(IRPF_RES).map(k=>`<option value="${k}" ${r.resultado===k?'selected':''}>${IRPF_RES[k][0]}</option>`).join('')}</select></div></div>
+   <datalist id="irInds">${[...new Set([...D.irpf.values()].map(x=>(x.indicacao||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt')).map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
+   <div class="fd full"><label for="ir_obs">Observações</label><textarea class="inp" id="ir_obs" style="min-height:60px">${esc(r.obs||'')}</textarea></div>
+   <div class="mf">${id?`<button type="button" class="btn ghost" data-irdel="${id}">Excluir</button>`:''}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
+  $('#irF').addEventListener('submit',ev=>{ev.preventDefault();const nome=val('ir_nome');if(!nome){toast('Informe o nome.');return}
+    const n=Object.assign({},r,{nome,cpf:val('ir_cpf'),senhaGov:document.getElementById('ir_sg').value,telefone:val('ir_tel'),indicacao:val('ir_ind'),ano:val('ir_ano')||irpfAno(),status:val('ir_st'),resultado:val('ir_res'),obs:document.getElementById('ir_obs').value,por:meuNome(),atualizadoEm:agora()});if(!r.criadoEm)n.criadoEm=agora();
+    put('irpf',id||uid(),n);closeModal();toast(id?'Salvo':'Pessoa adicionada')});
+  const bd=document.querySelector('[data-irdel]');if(bd)bd.onclick=()=>{confirmBox('Excluir <b>'+esc(r.nome||'')+'</b> do IRPF?','Excluir',()=>{del('irpf',id);closeModal()})}}
 /* ================= Aparência (layouts premium) ================= */
 const SKINS=[["padrao", "Padrão", "#7B90FF", "#07090E", "#10131A"], ["grafite", "Grafite", "#E8E8EA", "#0A0A0B", "#141416"], ["meianoite", "Meia-noite dourado", "#D4AF6A", "#070B16", "#0E1424"], ["esmeralda", "Esmeralda", "#3DD6A0", "#06100D", "#0C1A15"], ["vinho", "Vinho", "#E8B4A0", "#12070A", "#1C0D12"], ["oceano", "Oceano", "#5CC8F0", "#050D14", "#0B1822"]];
 function skinModal(){const cur=document.documentElement.getAttribute('data-skin')||'padrao';const comp=document.documentElement.hasAttribute('data-compacto');
