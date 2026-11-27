@@ -44,6 +44,8 @@ trocas = [
     ("const nFin=WS==='pessoal'?finAtrasados().length:0;", "const nFin=finAtrasados().length;", 1),
     ("${k==='financeiro'&&WS==='pessoal'&&nFin", "${k==='financeiro'&&nFin", 1),
     ("${WS==='pessoal'?`<div class=\"fd full\"><div class=\"sec-t\" style=\"margin:6px 0 0\">Financeiro (honorários)", "${true?`<div class=\"fd full\"><div class=\"sec-t\" style=\"margin:6px 0 0\">Financeiro (honorários)", 1),
+    ("const APP_PAINEL=false;", "const APP_PAINEL=true;", 1),
+    ("  if(WS!=='pessoal')return `<section class=\"panel\">${empty('O Financeiro fica no espaço Lucas.')}</section>`;\n", "", 1),
 ]
 for de, para, n in trocas:
     c = s.count(de)

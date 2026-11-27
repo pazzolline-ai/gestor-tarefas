@@ -20,7 +20,7 @@ function criar() {
   Menu.setApplicationMenu(null);
   win.loadURL(URL_SISTEMA);
   // Links externos (WhatsApp, mapas, e-mail) abrem no navegador padrão
-  win.webContents.setWindowOpenHandler(({ url }) => { if (/^(https?:|mailto:|webcal:)/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
+  win.webContents.setWindowOpenHandler(({ url }) => { if (/^https:\/\/web\.whatsapp\.com/.test(url)) { abrirWhats(); return { action: 'deny' }; } if (/^(https?:|mailto:|webcal:)/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
   win.webContents.on('will-navigate', (e, url) => {
     try { const h = new URL(url).host; if (h && h !== HOST) { e.preventDefault(); if (/^(https?:|mailto:|webcal:)/.test(url)) shell.openExternal(url); } } catch (_) {}
   });
@@ -40,6 +40,24 @@ function criar() {
     if (i.control && i.shift && i.key.toLowerCase() === 'i') e.preventDefault();
   });
 }
+
+// WhatsApp Web dentro do programa: conecta pelo QR code uma vez e a sessão fica salva
+let whats = null;
+const UA_CHROME = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/' + process.versions.chrome + ' Safari/537.36';
+function abrirWhats() {
+  if (whats && !whats.isDestroyed()) { if (whats.isMinimized()) whats.restore(); whats.show(); whats.focus(); return; }
+  const b = win ? win.getBounds() : { x: 80, y: 40, width: 1400, height: 900 };
+  whats = new BrowserWindow({
+    width: Math.min(1100, b.width), height: b.height, x: b.x + Math.max(0, b.width - 1100), y: b.y,
+    title: 'WhatsApp', backgroundColor: '#111b21', autoHideMenuBar: true, icon: path.join(__dirname, 'build', 'icon.png'),
+    webPreferences: { partition: 'persist:whatsapp', contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: true }
+  });
+  whats.webContents.setUserAgent(UA_CHROME);
+  whats.webContents.session.setPermissionRequestHandler((wc, perm, cb) => cb(['notifications', 'media', 'clipboard-sanitized-write', 'fullscreen'].includes(perm)));
+  whats.webContents.setWindowOpenHandler(({ url }) => { if (/^(https?:|mailto:)/.test(url)) shell.openExternal(url); return { action: 'deny' }; });
+  whats.on('close', (e) => { if (!saindo) { e.preventDefault(); whats.hide(); } });
+  whats.loadURL('https://web.whatsapp.com/', { userAgent: UA_CHROME });
+}
 app.on('second-instance', mostrar);
 app.setAppUserModelId('br.com.londerodrigues.gestor');
 function mostrar() { if (!win) return; if (win.isMinimized()) win.restore(); win.show(); win.focus(); }
@@ -48,6 +66,7 @@ function criarBandeja() {
   tray.setToolTip('Gestor de Tarefas');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Abrir', click: mostrar },
+    { label: 'WhatsApp', click: abrirWhats },
     { label: 'Iniciar junto com o Windows', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin,
       click: (it) => app.setLoginItemSettings({ openAtLogin: it.checked, args: ['--oculto'] }) },
     { type: 'separator' },
