@@ -49,6 +49,9 @@ trocas = [
     # logo do raio como padrão do Painel
     ("function aplicarMarca(){const o=GT.org||{};", "function aplicarMarca(){const o=Object.assign({},GT.org||{});if(!o.app_logo)o.app_logo='icon-192.png';", 1),
     ("function marcaSalva(){try{return JSON.parse(localStorage.getItem('gt.marca')||'{}')||{}}catch(e){return {}}}", "function marcaSalva(){let r={};try{r=JSON.parse(localStorage.getItem('gt.marca')||'{}')||{}}catch(e){}if(!r.app_logo)r.app_logo='icon-192.png';return r}", 1),
+    # Painel: assistente (com voz) visível
+    ("#btnAs,.as-panel{display:none!important}", "", 1),
+    ('<button class="btn" id="btnAs" hidden ', '<button class="btn" id="btnAs" ', 1),
 ]
 for de, para, n in trocas:
     c = s.count(de)

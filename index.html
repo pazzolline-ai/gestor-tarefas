@@ -1810,6 +1810,7 @@ GT.sair=async()=>{try{localStorage.removeItem('gt.lock')}catch(e){}try{await sb.
 GT.trocarSenha=()=>{const ov=document.createElement('div');ov.id='sbLoginWrap';document.body.appendChild(ov);telaNovaSenha('Trocar minha senha','Escolha a nova senha.',()=>{const el=document.getElementById('sbLogin');if(el)el.remove();window.GT.toast&&GT.toast('Senha alterada')});
   const el=document.getElementById('sbLogin');const x=document.createElement('button');x.className='lg-link';x.textContent='Cancelar';x.onclick=()=>el.remove();el.querySelector('.lg-card').appendChild(x)};
 GT.fn=async(acao,body)=>{const {data:{session}}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/usuarios',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+(session?session.access_token:'')},body:JSON.stringify(Object.assign({acao},body))});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.erro)throw new Error(j.erro||'Não foi possível concluir.');return j};
+GT.ia=async(messages,signal)=>{const {data:{session}}=await sb.auth.getSession();const r=await fetch(SB_URL+'/functions/v1/ia',{method:'POST',signal,headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+(session?session.access_token:'')},body:JSON.stringify({messages})});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.erro){const er=new Error(j.erro||'A IA não respondeu agora.');er.code=j.code;er.fromFn=true;throw er}return j};
 GT.linkAgenda=async(novo)=>{const {data,error}=await sb.rpc('meu_link_agenda',{novo:!!novo});if(error)throw error;return SB_URL+'/functions/v1/agenda?t='+data};
 GT.recarregarMembros=carregarMembro;
 GT.senhaProv=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';let s='';const v=crypto.getRandomValues(new Uint32Array(10));v.forEach(n=>s+=a[n%a.length]);return s+'7'};
@@ -4766,7 +4767,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
- {id:'2026-11-27g',data:'27/11/2026',itens:['🎙️ Assistente por voz: toque no microfone, fale a pergunta e ele responde falando. O botão 🔊 deixa todas as respostas faladas.']},
+ {id:'2026-11-27g',data:'27/11/2026',itens:['🎙️ Assistente por voz: botão ✨ no topo (ou Ctrl+J). Toque no microfone, fale a pergunta e ele responde falando. O botão 🔊 deixa todas as respostas faladas.']},
  {id:'2026-11-27f',data:'27/11/2026',itens:['🔗 Imposto de Renda → Financeiro: o valor lançado no IR passa a entrar no Financeiro mesmo que só o pagamento tenha sido preenchido, e aceita valores digitados com “R$”.']},
  {id:'2026-11-27e',data:'27/11/2026',itens:['📊 Financeiro › Receitas por tipo: compara o que entra de mensalidade (por regime), Imposto de Renda, abertura e baixa, e mostra o maior faturamento.','👁 Olho e 🔒 cadeado em todas as abas do Financeiro.','🧾 Abertura e Baixa agora têm valor cobrado e pagamento.','💪 Dieta e treino: fichas de treino, cardápio do dia, água e evolução do peso.','💬 No programa do PC, o WhatsApp Web abre dentro do sistema (conecte pelo QR code uma vez).']},
  {id:'2026-11-27d',data:'27/11/2026',itens:['🔗 Financeiro: o Imposto de Renda do ano (cobrado, recebido e a receber) aparece também na aba principal, e a aba IR atualiza na hora.']},
@@ -5980,13 +5981,14 @@ function asRender(){
   body.scrollTop=body.scrollHeight;
   const sb=$('#asSend');if(sb){sb.innerHTML=AS.busy?'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';sb.setAttribute('aria-label',AS.busy?'Parar':'Enviar')}
 }
-async function asAbrir(){return;
+async function asAbrir(){
   if(!AS.sample){AS.sample=await (window.claude&&window.claude.use?window.claude.use('sample'):null)}
+  if(!AS.sample&&window.GT&&GT.ia)AS.sample={json:async(msgs,o)=>{const r=await GT.ia(msgs,o&&o.signal);const t=String(r.text||'');const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<a)return {resposta:t};try{return JSON.parse(t.slice(a,b+1))}catch(e){return {resposta:t}}}};
   if(!AS.sample){toast('O Assistente não está disponível nesta visualização. Abra o sistema pelo Claude.');return}
   asPainel();const p=$('#asPanel');p.hidden=false;AS.open=true;document.documentElement.classList.add('as-on');asRender();setTimeout(()=>{const i=$('#asIn');if(i)i.focus()},60);
 }
 function asFechar(){const p=$('#asPanel');if(p)p.hidden=true;AS.open=false;document.documentElement.classList.remove('as-on')}
-function asErr(e){const c=e&&e.code;return {cancelled:'',not_granted:'Você não permitiu o uso da IA nesta página.',sampling_disabled:'A IA não está disponível para esta conta.',rate_limited:'Muitas solicitações seguidas. Tente de novo em instantes.',session_expired:'Sua sessão expirou. Entre no Claude de novo.',invalid_json:'A IA respondeu fora do formato. Tente de novo.',prompt_too_large:'A conversa ficou grande demais. Clique em Limpar e tente de novo.'}[c]}
+function asErr(e){if(e&&e.name==='AbortError')return '';if(e&&e.fromFn)return e.message;const c=e&&e.code;return {cancelled:'',not_granted:'Você não permitiu o uso da IA nesta página.',sampling_disabled:'A IA não está disponível para esta conta.',rate_limited:'Muitas solicitações seguidas. Tente de novo em instantes.',session_expired:'Sua sessão expirou. Entre no Claude de novo.',invalid_json:'A IA respondeu fora do formato. Tente de novo.',prompt_too_large:'A conversa ficou grande demais. Clique em Limpar e tente de novo.'}[c]}
 async function asDrive(dr,signal){
   if(!mcp)return 'Google Drive indisponível nesta visualização (abra o sistema pelo Claude e libere o Google Drive).';
   try{
