@@ -1,4 +1,4 @@
-name: App Controle Lucas para Android
+name: App Painel Lucas para Android
 on:
   workflow_dispatch:
   push:
@@ -21,9 +21,9 @@ jobs:
       - name: Montar projeto Android
         working-directory: mobile
         run: |
-          # Controle Lucas: mesmo app do Gestor, abrindo o endereço do Controle
-          sed -i 's#"appId": "[^"]*"#"appId": "br.com.pazolline.controlelucas"#; s#"appName": "[^"]*"#"appName": "Controle Lucas"#; s#gestor-tarefas/"#gestor-tarefas/controle/"#' capacitor.config.json
-          sed -i 's#Gestor de Tarefas#Controle Lucas#; s#gestor-tarefas/#gestor-tarefas/controle/#' www/index.html
+          # Painel Lucas: mesmo app do Gestor, abrindo o endereço do Controle
+          sed -i 's#"appId": "[^"]*"#"appId": "br.com.pazolline.controlelucas"#; s#"appName": "[^"]*"#"appName": "Painel Lucas"#; s#gestor-tarefas/"#gestor-tarefas/controle/"#' capacitor.config.json
+          sed -i 's#Gestor de Tarefas#Painel Lucas#; s#gestor-tarefas/#gestor-tarefas/controle/#' www/index.html
           cat capacitor.config.json
           sed -i "s/__VER__/${VER}/" capacitor.config.json
           npm install --no-audit --no-fund
@@ -60,8 +60,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: app-android-controle
-          name: Controle Lucas para Android ${{ env.VER }}
-          body: App do Controle Lucas para Android. Baixe Controle-Lucas.apk no celular e instale.
+          name: Painel Lucas para Android ${{ env.VER }}
+          body: App do Painel Lucas para Android. Baixe Controle-Lucas.apk no celular e instale.
           files: Controle-Lucas.apk
           make_latest: false
       - name: Avisar os usuários

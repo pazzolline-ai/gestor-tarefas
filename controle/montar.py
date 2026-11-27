@@ -33,11 +33,17 @@ trocas = [
     ("releases/latest/download/Gestor-de-Tarefas-Instalador.exe", "releases/download/programa-windows-controle/Controle-Lucas-Instalador.exe", 1),
     ("gestor-tarefas/releases/download/app-android/Gestor-de-Tarefas.apk", "gestor-tarefas/releases/download/app-android-controle/Controle-Lucas.apk", 1),
     # nome
-    ("<title>Gestor de Tarefas</title>", "<title>Controle Lucas</title>", 1),
-    ("mk.app_nome||'Gestor de Tarefas'", "mk.app_nome||'Controle Lucas'", 2),
+    ("<title>Gestor de Tarefas</title>", "<title>Painel Lucas</title>", 1),
+    ("mk.app_nome||'Gestor de Tarefas'", "mk.app_nome||'Painel Lucas'", 2),
     ("mk.app_sub||'Londe & Rodrigues'", "mk.app_sub||'Lucas Pazolline'", 1),
-    ("o.app_nome||'Gestor de Tarefas'", "o.app_nome||'Controle Lucas'", 2),
+    ("o.app_nome||'Gestor de Tarefas'", "o.app_nome||'Painel Lucas'", 2),
     ("o.app_sub||'Londe & Rodrigues'", "o.app_sub||'Lucas Pazolline'", 2),
+    # Painel Lucas: Financeiro (honorários e IR) também no espaço principal, onde ficam as MEIs
+    ("(k!=='financeiro'||WS==='pessoal')", "(k!=='financeiro'||true)", 1),
+    ("(k!=='inadimp'||WS==='pessoal')", "(k!=='inadimp'||true)", 1),
+    ("const nFin=WS==='pessoal'?finAtrasados().length:0;", "const nFin=finAtrasados().length;", 1),
+    ("${k==='financeiro'&&WS==='pessoal'&&nFin", "${k==='financeiro'&&nFin", 1),
+    ("${WS==='pessoal'?`<div class=\"fd full\"><div class=\"sec-t\" style=\"margin:6px 0 0\">Financeiro (honorários)", "${true?`<div class=\"fd full\"><div class=\"sec-t\" style=\"margin:6px 0 0\">Financeiro (honorários)", 1),
 ]
 for de, para, n in trocas:
     c = s.count(de)
