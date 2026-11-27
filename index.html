@@ -4766,6 +4766,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-27g',data:'27/11/2026',itens:['🎙️ Assistente por voz: toque no microfone, fale a pergunta e ele responde falando. O botão 🔊 deixa todas as respostas faladas.']},
  {id:'2026-11-27f',data:'27/11/2026',itens:['🔗 Imposto de Renda → Financeiro: o valor lançado no IR passa a entrar no Financeiro mesmo que só o pagamento tenha sido preenchido, e aceita valores digitados com “R$”.']},
  {id:'2026-11-27e',data:'27/11/2026',itens:['📊 Financeiro › Receitas por tipo: compara o que entra de mensalidade (por regime), Imposto de Renda, abertura e baixa, e mostra o maior faturamento.','👁 Olho e 🔒 cadeado em todas as abas do Financeiro.','🧾 Abertura e Baixa agora têm valor cobrado e pagamento.','💪 Dieta e treino: fichas de treino, cardápio do dia, água e evolução do peso.','💬 No programa do PC, o WhatsApp Web abre dentro do sistema (conecte pelo QR code uma vez).']},
  {id:'2026-11-27d',data:'27/11/2026',itens:['🔗 Financeiro: o Imposto de Renda do ano (cobrado, recebido e a receber) aparece também na aba principal, e a aba IR atualiza na hora.']},
@@ -5939,11 +5940,12 @@ function asPainel(){
   if($('#asPanel'))return;
   document.body.insertAdjacentHTML('beforeend',`<aside class="as-panel" id="asPanel" role="dialog" aria-label="Assistente" hidden>
     <div class="as-h"><span class="as-ic">${svg('spark')}</span><div style="flex:1;min-width:0"><b>Assistente</b><small id="asSub"></small></div>
-      <button class="btn ghost sm" id="asLimpar" title="Nova conversa">Limpar</button><button class="btn ghost sm" id="asFechar" aria-label="Fechar assistente">${svg('x',2.2)}</button></div>
+      <button class="btn ghost sm" id="asVoz" title="Respostas faladas" aria-label="Respostas faladas" aria-pressed="false">🔈</button><button class="btn ghost sm" id="asLimpar" title="Nova conversa">Limpar</button><button class="btn ghost sm" id="asFechar" aria-label="Fechar assistente">${svg('x',2.2)}</button></div>
     <div class="as-body" id="asBody"></div>
-    <form class="as-f" id="asForm"><textarea class="inp" id="asIn" rows="1" placeholder="Pergunte ou peça uma tarefa…" aria-label="Mensagem para o assistente"></textarea><button class="btn pri icon" id="asSend" type="submit" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
+    <form class="as-f" id="asForm"><textarea class="inp" id="asIn" rows="1" placeholder="Pergunte ou peça uma tarefa…" aria-label="Mensagem para o assistente"></textarea><button class="btn icon" id="asMic" type="button" aria-label="Falar" title="Falar (segure ou toque)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn pri icon" id="asSend" type="submit" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></form>
   </aside>`);
   $('#asFechar').addEventListener('click',asFechar);
+  vozInit();
   $('#asLimpar').addEventListener('click',()=>{if(AS.busy&&AS.ctl)AS.ctl.abort();AS.msgs=[];asRender()});
   const inp=$('#asIn');
   inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(140,inp.scrollHeight)+'px'});
@@ -6004,6 +6006,25 @@ async function asDrive(dr,signal){
   }catch(e){if(signal&&signal.aborted)throw {code:'cancelled'};return 'Erro no Google Drive: '+gdErr(e)}
   return 'Pedido de Drive inválido.';
 }
+
+/* ---------- Voz no assistente: fala a pergunta, ouve a resposta ---------- */
+const VOZ={falar:(()=>{try{return localStorage.getItem('cs.asVoz')==='1'}catch(e){return false}})(),daVoz:false,rec:null,ouvindo:false};
+function vozLimpo(t){return String(t||'').replace(/<[^>]+>/g,' ').replace(/[*_#`>|]/g,' ').replace(/R\$\s?/g,'').replace(/https?:\/\/\S+/g,'').replace(/\s+/g,' ').trim().slice(0,1200)}
+function vozFalar(t){try{if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(vozLimpo(t));u.lang='pt-BR';u.rate=1.05;const vs=speechSynthesis.getVoices();const v=vs.find(x=>/pt[-_]BR/i.test(x.lang)&&/Google|Natural|Online|Francisca|Antonio|Luciana|Felipe/i.test(x.name))||vs.find(x=>/pt[-_]BR/i.test(x.lang))||vs.find(x=>/^pt/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+function vozBotao(){const b=$('#asVoz');if(!b)return;b.textContent=VOZ.falar?'🔊':'🔈';b.setAttribute('aria-pressed',VOZ.falar?'true':'false');b.title=VOZ.falar?'Respostas faladas: ligado':'Respostas faladas: desligado'}
+function vozInit(){vozBotao();
+  $('#asVoz').addEventListener('click',()=>{VOZ.falar=!VOZ.falar;try{localStorage.setItem('cs.asVoz',VOZ.falar?'1':'')}catch(e){}if(!VOZ.falar)try{speechSynthesis.cancel()}catch(e){}vozBotao();toast(VOZ.falar?'Vou responder falando':'Respostas só em texto')});
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const mic=$('#asMic');
+  if(!SR||/Electron|GestorPC/.test(navigator.userAgent)){mic.addEventListener('click',()=>{$('#asIn').focus();toast(/Electron|GestorPC/.test(navigator.userAgent)?'No programa do PC: aperte Windows + H para ditar e depois Enter.':/Android|iPhone|Mobi/.test(navigator.userAgent)?'Toque no microfone do teclado do celular para ditar e depois envie.':'Este navegador não ouve voz. Use o Google Chrome.')});return}
+  mic.addEventListener('click',()=>{if(VOZ.ouvindo){try{VOZ.rec.stop()}catch(e){}return}try{speechSynthesis.cancel()}catch(e){}
+    const r=new SR();VOZ.rec=r;r.lang='pt-BR';r.interimResults=true;r.continuous=false;let final='';const inp=$('#asIn');
+    r.onstart=()=>{VOZ.ouvindo=true;mic.classList.add('pri');mic.setAttribute('aria-label','Parar de ouvir');inp.placeholder='Ouvindo… pode falar'};
+    r.onresult=ev=>{let tmp='';for(let i=ev.resultIndex;i<ev.results.length;i++){const x=ev.results[i];if(x.isFinal)final+=x[0].transcript;else tmp+=x[0].transcript}inp.value=(final+tmp).trim()};
+    r.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed')toast('Libere o microfone para o sistema nas permissões do navegador.');else if(ev.error!=='no-speech'&&ev.error!=='aborted')toast('Não consegui ouvir. Tente de novo.')};
+    r.onend=()=>{VOZ.ouvindo=false;mic.classList.remove('pri');mic.setAttribute('aria-label','Falar');inp.placeholder='Pergunte ou peça uma tarefa…';const t=final.trim();if(t&&!AS.busy){inp.value='';VOZ.daVoz=true;asEnviar(t)}};
+    try{r.start()}catch(e){toast('Não consegui ligar o microfone.')}});
+}
+try{if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=()=>{}}catch(e){}
 async function asEnviar(texto){
   if(AS.busy)return;
   AS.msgs.push({role:'user',content:texto});AS.busy=true;AS.st='Pensando…';AS.ctl=new AbortController();asRender();
@@ -6022,6 +6043,7 @@ async function asEnviar(texto){
       }
       const acoes=(Array.isArray(r&&r.acoes)?r.acoes:[]).filter(a=>a&&typeof a==='object'&&a.tipo).slice(0,12);
       AS.msgs.push({role:'assistant',content:JSON.stringify({resposta:resp,acoes}),texto:resp||(acoes.length?'Confira e confirme:':'Pronto.'),acoes,drive:driveTxt});
+      if(VOZ.falar||VOZ.daVoz)vozFalar(resp||(acoes.length?'Preparei as ações, confira na tela.':'Pronto.'));VOZ.daVoz=false;
       break;
     }
   }catch(e){
