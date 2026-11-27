@@ -4765,6 +4765,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-27d',data:'27/11/2026',itens:['🔗 Financeiro: o Imposto de Renda do ano (cobrado, recebido e a receber) aparece também na aba principal, e a aba IR atualiza na hora.']},
  {id:'2026-11-27c',data:'27/11/2026',itens:['🏷️ O Controle Lucas agora se chama Painel Lucas, com o Financeiro (honorários e IR) direto no espaço das MEIs.']},
  {id:'2026-11-27b',data:'27/11/2026',itens:['💰 Imposto de Renda: campo de pagamento (data, valor recebido, forma e observação). Botão “Receber” na lista, e o pagamento aparece direto no Financeiro › Pessoa Física · IR.']},
  {id:'2026-11-27a',data:'27/11/2026',itens:['✨ Sistema com animações: telas e cartões entrando suavemente, números do painel contando, janelas e botões com movimento.']},
@@ -5736,7 +5737,7 @@ function vFinanceiro(){
   const tab=UI.finTab||'pj';
   const tabs=`<div class="bar" style="gap:6px"><button class="btn sm ${tab==='pj'?'pri':'ghost'}" data-fintab="pj">Pessoa Jurídica</button><button class="btn sm ${tab==='pf'?'pri':'ghost'}" data-fintab="pf">Pessoa Física · IR</button><span style="flex:1"></span></div>`;
   if(tab==='pf')return tabs+finPFHtml();
-  return tabs+`${todosAtr.length?`<section class="panel fin-alert"><div class="ph"><span class="fa-ic">!</span><h2>Pagamentos atrasados</h2><span class="flag red">${todosAtr.length}</span><span class="sp"></span><b class="mono" style="color:var(--red)">${brlF(totAtr)}</b></div>
+  return tabs+finIRResumo()+`${todosAtr.length?`<section class="panel fin-alert"><div class="ph"><span class="fa-ic">!</span><h2>Pagamentos atrasados</h2><span class="flag red">${todosAtr.length}</span><span class="sp"></span><b class="mono" style="color:var(--red)">${brlF(totAtr)}</b></div>
     <div class="rows">${finAgrupar(todosAtr).map(g=>`<div class="row" style="cursor:default"><div class="main-t"><div>${esc(g.e.fantasia||g.e.razao)}</div><div class="sub">${g.itens.map(x=>MESES[+x.comp.slice(5)-1].slice(0,3)+'/'+x.comp.slice(2,4)).join(' · ')} · mais antigo há ${g.max} dias</div></div><span class="flag red">${plural(g.itens.length,'mês','meses')}</span><b class="mono" style="min-width:100px;text-align:right">${brlF(g.total)}</b>${g.e.whatsapp?`<a class="wabtn" href="${waLink(g.e.whatsapp,finMsgGrupo(g))}" target="_blank" rel="noopener" title="Cobrar no WhatsApp" aria-label="Cobrar no WhatsApp">${svg('wa',2)}</a>`:''}<button class="btn sm" data-fin-pago="${g.id}|${g.itens[g.itens.length-1].comp}">Pagar ${MESES[+g.itens[g.itens.length-1].comp.slice(5)-1].slice(0,3)}</button></div>`).join('')}</div></section>`:''}
   <div class="bar"><button class="btn sm" data-fin="-1" aria-label="Mês anterior">${svg('l',2)}</button><b style="font-size:16px;min-width:170px;text-align:center">${compTxt(comp).replace(/^./,c=>c.toUpperCase())}</b><button class="btn sm" data-fin="1" aria-label="Próximo mês">${svg('r',2)}</button><button class="btn ghost sm" data-fin="0">Mês atual</button><span style="flex:1"></span><button class="btn sm icon ${FIN.oculto?'on':''}" data-fin-olho aria-label="${FIN.oculto?'Mostrar valores':'Ocultar valores'}" title="${FIN.oculto?'Mostrar valores':'Ocultar valores'}">${FIN.oculto?OLHO_F:OLHO_A}</button>${mode==='db'?'<button class="btn sm" data-fin-lock title="Bloquear o Financeiro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Bloquear</button>':''}<button class="btn sm" data-pix>Chave Pix: ${esc(FIN.pix||'cadastrar')}</button></div>
   <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr))">
@@ -5756,9 +5757,11 @@ function vFinanceiro(){
   </tbody></table></div>${ls.length?'':empty('Nenhum honorário cadastrado. Edite uma empresa e preencha o honorário mensal, o dia e a forma de pagamento.')}</section>
   ${semHon?`<div style="font-size:12px;color:var(--dim)">${plural(semHon,'empresa','empresas')} sem honorário cadastrado.</div>`:''}<div class="fc-tip" id="fcTip" hidden></div>`;
 }
+function finIRResumo(){const todos=irpfFinLista().filter(r=>+r.valor>0);if(!todos.length)return '';const ano=todos.map(r=>String(r.ano||'')).sort().pop();const arr=todos.filter(r=>String(r.ano||'')===ano);
+  const cob=arr.reduce((s,r)=>s+(+r.valor||0),0),rec=arr.reduce((s,r)=>s+irRec(r),0),ab=arr.filter(r=>!r.pago).reduce((s,r)=>s+(+r.valor||0),0),nAb=arr.filter(r=>!r.pago).length;
+  return `<section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><h2 style="margin:0">Imposto de Renda ${esc(ano)}</h2><span class="flag">Cobrado ${brlF(cob)}</span><span class="flag grn">Recebido ${brlF(rec)}</span><span class="flag ${nAb?'amb':''}">A receber ${brlF(ab)} (${nAb})</span><span class="sp"></span><button class="btn sm" data-fintab="pf">Ver IR</button></div></section>`}
 function finPFHtml(){
-  const ano=UI.finPFano||String(new Date().getFullYear());
-  const todos=irpfFinLista();const arr=todos.filter(r=>+r.valor>0&&String(r.ano||'')===ano).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+  const todos=irpfFinLista();const ano=UI.finPFano||(todos.filter(r=>+r.valor>0).map(r=>String(r.ano||'')).sort().pop())||String(new Date().getFullYear());const arr=todos.filter(r=>+r.valor>0&&String(r.ano||'')===ano).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
   const anos=[...new Set(todos.filter(r=>+r.valor>0).map(r=>String(r.ano||'')).filter(Boolean).concat(ano))].sort().reverse();
   const cob=arr.reduce((s,r)=>s+(+r.valor||0),0),rec=arr.reduce((s,r)=>s+irRec(r),0),ab=arr.filter(r=>!r.pago).reduce((s,r)=>s+(+r.valor||0),0);
   return `<div class="bar"><b style="font-size:16px">Imposto de Renda · PF</b><select class="sel" id="finPFano" data-finpfano style="max-width:110px">${anos.map(y=>`<option value="${esc(y)}" ${y===ano?'selected':''}>${esc(y)}</option>`).join('')}</select><span style="flex:1"></span><button class="btn sm" data-pix>Chave Pix: ${esc(FIN.pix||'cadastrar')}</button></div>
@@ -7313,7 +7316,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-flm],[data
   else if('flall' in d)flRecibos(flFiltrada(),FL.ym);else if('flxls' in d)flExportar();else if('flnew' in d)flEditar(null);else if('flpar' in d)flTabelas();else if('flimp' in d)flImportar()});
 /* ===== Imposto de Renda (pessoa física) no financeiro ===== */
 let IRPFOFF=new Map();
-function irpfOffLigar(){if(irpfOffLigar.on||mode!=='db'||!db)return;irpfOffLigar.on=true;try{db.collection('irpf').onSnapshot(s=>{IRPFOFF=new Map();s.forEach(d=>IRPFOFF.set(d.id,d.data()));if(UI.view==='painel'||UI.view==='inadimp')render()},()=>{})}catch(e){}}
+function irpfOffLigar(){if(irpfOffLigar.on||mode!=='db'||!db)return;irpfOffLigar.on=true;try{db.collection('irpf').onSnapshot(s=>{IRPFOFF=new Map();s.forEach(d=>IRPFOFF.set(d.id,d.data()));if(['painel','inadimp','financeiro','dashboard','irpf'].includes(UI.view))render()},()=>{})}catch(e){}}
 function irpfFin(){const arr=[...IRPFOFF.entries()].map(([id,r])=>Object.assign({id},r)).filter(r=>+r.valor>0);const cob=arr.reduce((s,r)=>s+(+r.valor||0),0);const rec=arr.filter(r=>r.pago).reduce((s,r)=>s+(+r.valor||0),0);const aberto=arr.filter(r=>!r.pago).sort((a,b)=>(+b.valor||0)-(+a.valor||0));return {arr,cob,rec,aberto,abertoTot:aberto.reduce((s,r)=>s+(+r.valor||0),0)}}
 function irMsg(r){const nm=r.nome?' '+r.nome.split(' ')[0]:'';if(+r.valor>0&&!r.pago)return 'Olá'+nm+'! Sobre a sua declaração de Imposto de Renda, o valor do serviço é '+brl(r.valor)+'.'+(FIN.pix?' Pode pagar via Pix: '+FIN.pix+'.':'')+' Qualquer dúvida estou à disposição. Lucas';return 'Olá'+nm+'! Aqui é da Londe & Rodrigues, sobre o seu Imposto de Renda.'}
 function vInadimplencia(){
