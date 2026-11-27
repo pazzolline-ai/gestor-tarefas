@@ -10,7 +10,6 @@ import pathlib, sys
 
 raiz = pathlib.Path(__file__).resolve().parent.parent
 s = (raiz / 'index.html').read_text(encoding='utf-8')
-folha = (raiz / 'controle' / 'folha.js').read_text(encoding='utf-8')
 
 # Preferências do Controle ficam separadas das do Gestor (mesmo site); o login é o mesmo.
 SHIM = ("<script>(function(){var S=Storage.prototype,g=S.getItem,t=S.setItem,r=S.removeItem;"
@@ -39,15 +38,6 @@ trocas = [
     ("mk.app_sub||'Londe & Rodrigues'", "mk.app_sub||'Lucas Pazolline'", 1),
     ("o.app_nome||'Gestor de Tarefas'", "o.app_nome||'Controle Lucas'", 2),
     ("o.app_sub||'Londe & Rodrigues'", "o.app_sub||'Lucas Pazolline'", 2),
-    # módulo Pró-labore e folha
-    ("['financeiro','Financeiro','money']];", "['financeiro','Financeiro','money'],['folha','Pró-labore e folha','money']];", 1),
-    ("propostas:vPropostas}[UI.view]", "propostas:vPropostas,folha:vFolha}[UI.view]", 1),
-    ("['dp','Depto. Pessoal','#4f8fe8',['@dp']]", "['dp','Depto. Pessoal','#4f8fe8',['@dp','folha']]", 1),
-    ("const titles={dashboard:['Início',''],", "const titles={dashboard:['Início',''],folha:['Pró-labore e folha','Recibos de pró-labore e de colaboradores, com INSS, IRRF e FGTS do mês'],", 1),
-    ("agcfg:new Map(),irpf:new Map(),salmat:new Map(),abertura:new Map(),baixa:new Map()};", "agcfg:new Map(),irpf:new Map(),salmat:new Map(),abertura:new Map(),baixa:new Map(),folha:new Map()};", 1),
-    ("agcfg:false,irpf:false,salmat:false,abertura:false,baixa:false};", "agcfg:false,irpf:false,salmat:false,abertura:false,baixa:false,folha:false};", 1),
-    ("'compromissos','agcfg','leads','irpf','salmat','abertura','baixa']", "'compromissos','agcfg','leads','irpf','salmat','abertura','baixa','folha']", None),
-    ("\nboot();\n})();", "\n" + folha + "\nboot();\n})();", 1),
 ]
 for de, para, n in trocas:
     c = s.count(de)
