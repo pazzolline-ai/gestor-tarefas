@@ -1983,6 +1983,7 @@ async function boot(){
     assinar();
     rbAssinar();
     presInit();
+    carregarPix();irpfOffLigar();
   }else{
     mode='local';
     const s=lsGet('cs.local',{tarefas:{},empresas:{},contatos:{},equipe:{},pagamentos:{},das:{}});
@@ -6981,7 +6982,7 @@ function vIrpf(){
      ${r.valor!=null?`<b class="mono" title="Valor cobrado">${brl(r.valor)}</b><span class="flag ${r.pago?'grn':'amb'}">${r.pago?'Pago':'A receber'}</span>`:''}
      <span class="flag ${IRPF_ST[s][1]}">${IRPF_ST[s][0]}</span>${s==='entregue'&&res?`<span class="flag ${res[1]}">${res[0]}</span>`:''}
      ${c?`<button class="btn ghost sm" data-copy="${c}">CPF</button>`:''}${r.senhaGov?`<button class="btn ghost sm" data-irsenha="${x.id}">${UI.irV===x.id?'🙈 '+esc(r.senhaGov):'👁 Senha'}</button>`:''}
-     ${r.telefone?`<a class="wabtn" href="${waLink(r.telefone,'Olá'+(r.nome?' '+esc(r.nome.split(' ')[0]):'')+'! Aqui é da Londe & Rodrigues, sobre o seu Imposto de Renda.')}" target="_blank" rel="noopener" title="WhatsApp">${svg('wa',2)}</a>`:''}
+     ${r.telefone?`<a class="wabtn" href="${waLink(r.telefone,irMsg(r))}" target="_blank" rel="noopener" title="${+r.valor>0&&!r.pago?'Cobrar no WhatsApp':'WhatsApp'}">${svg('wa',2)}</a>`:''}
      ${s!=='entregue'?`<button class="btn sm pri" data-irav="${x.id}">${s==='pendente'?'Em elaboração':'Entregue'}</button>`:`<button class="btn ghost sm" data-irav="${x.id}|voltar">Reabrir</button>`}
      <button class="btn ghost sm" data-ired="${x.id}">Editar</button></div>`}).join('')}</div>`:`<div style="padding:0 16px 16px">${empty(l.length?'Nenhuma pessoa neste filtro.':'Nenhum cliente de IRPF em '+esc(a)+'. Toque em “+ Nova pessoa”.')}</div>`}
    <datalist id="irInds">${inds.map(i=>`<option value="${esc(i)}">`).join('')}</datalist></section>`}
@@ -7102,21 +7103,31 @@ function finMsgRegua(g){const est=finReguaEstagio(g.max);if(est==='lembrete')ret
   const nome=g.e.responsavel?' '+g.e.responsavel.split(' ')[0]:'';const lista=g.itens.slice().reverse().map(x=>`• ${compTxt(x.comp)}: ${brl(x.valor)} (venc. ${fmt(x.venc)})`).join('\n');const pix=FIN.pix?`\nChave Pix: ${FIN.pix}`:'';
   if(est==='cobranca')return `Olá${nome}! Tudo bem? Identificamos honorários em aberto e precisamos regularizar:\n${lista}\nTotal: ${brl(g.total)}${pix}\nPode acertar por Pix ou me chamar aqui para combinarmos. Obrigado, Lucas.`;
   return `Olá${nome}. Os honorários abaixo seguem em aberto:\n${lista}\nTotal: ${brl(g.total)}${pix}\nPara mantermos seus serviços em dia, pedimos a regularização ou um retorno nos próximos dias. Fico à disposição para negociarmos. Lucas.`}
+/* ===== Imposto de Renda (pessoa física) no financeiro ===== */
+let IRPFOFF=new Map();
+function irpfOffLigar(){if(irpfOffLigar.on||mode!=='db'||!db)return;irpfOffLigar.on=true;try{db.collection('irpf').onSnapshot(s=>{IRPFOFF=new Map();s.forEach(d=>IRPFOFF.set(d.id,d.data()));if(UI.view==='painel'||UI.view==='inadimp')render()},()=>{})}catch(e){}}
+function irpfFin(){const arr=[...IRPFOFF.entries()].map(([id,r])=>Object.assign({id},r)).filter(r=>+r.valor>0);const cob=arr.reduce((s,r)=>s+(+r.valor||0),0);const rec=arr.filter(r=>r.pago).reduce((s,r)=>s+(+r.valor||0),0);const aberto=arr.filter(r=>!r.pago).sort((a,b)=>(+b.valor||0)-(+a.valor||0));return {arr,cob,rec,aberto,abertoTot:aberto.reduce((s,r)=>s+(+r.valor||0),0)}}
+function irMsg(r){const nm=r.nome?' '+r.nome.split(' ')[0]:'';if(+r.valor>0&&!r.pago)return 'Olá'+nm+'! Sobre a sua declaração de Imposto de Renda, o valor do serviço é '+brl(r.valor)+'.'+(FIN.pix?' Pode pagar via Pix: '+FIN.pix+'.':'')+' Qualquer dúvida estou à disposição. Lucas';return 'Olá'+nm+'! Aqui é da Londe & Rodrigues, sobre o seu Imposto de Renda.'}
 function vInadimplencia(){
   if(WS!=='pessoal')return `<section class="panel">${empty('A Inadimplência fica no espaço Lucas, junto do Financeiro.')}</section>`;
   if(!finLiberado())return finLockView();
   const gs=finAgrupar(finAtrasados());const tot=gs.reduce((s,g)=>s+g.total,0);const crit=gs.filter(g=>g.max>45).length;
   const q=norm(UI.inaQ||'');const vis=q?gs.filter(g=>norm((g.e.fantasia||'')+' '+(g.e.razao||'')+' '+(g.e.responsavel||'')).includes(q)):gs;
-  const k=[['Clientes em atraso',gs.length,!!gs.length],['Em aberto',FIN.oculto?'•••':brlF(tot),true],['Críticos +45d',crit,!!crit],['Chave Pix',esc(FIN.pix||'cadastrar'),false]];
+  const ir=irpfFin();const k=[['Clientes (PJ) em atraso',gs.length,!!gs.length],['Honorários em aberto',FIN.oculto?'•••':brlF(tot),true],['IR a receber (PF)',FIN.oculto?'•••':brlF(ir.abertoTot),!!ir.abertoTot],['Chave Pix',esc(FIN.pix||'cadastrar'),false]];
   return `<section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><h2 style="margin:0">Inadimplência · régua de cobrança</h2><span class="sp"></span><input class="inp" id="inaQ" data-inaq placeholder="Buscar cliente" value="${esc(UI.inaQ||'')}" style="max-width:220px"></div>
    <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr));padding:0 16px 10px">${k.map(([l,v,red])=>`<div class="tile"><span class="n" style="font-size:20px${red?';color:var(--red)':''}">${v}</span><span class="l">${l}</span></div>`).join('')}</div>
    <div style="padding:0 16px 10px;font-size:12.5px;color:var(--mut)">A régua sobe sozinha pelo atraso: até 15 dias = 1º lembrete, 16–45 = cobrança, acima de 45 = aviso final. O botão do WhatsApp já vem com o texto no tom certo e marca a cobrança.</div>
+   <div style="padding:0 16px 6px"><div class="sec-t">Pessoa Jurídica · honorários</div></div>
    ${vis.length?`<div class="rows">${vis.map(g=>{const est=finReguaEstagio(g.max),e=g.e,ult=e.cobEm;return `<div class="row" style="cursor:default;flex-wrap:wrap;gap:8px"><div class="main-t" style="min-width:200px"><div>${esc(e.fantasia||e.razao)}</div><div class="sub">${g.itens.map(x=>MESES[+x.comp.slice(5)-1].slice(0,3)+'/'+x.comp.slice(2,4)).join(' · ')} · mais antigo há ${g.max} dias${ult?' · cobrado '+quando(ult):''}</div></div>
      <span class="flag ${REGUA_L[est][1]}">${REGUA_L[est][0]}</span><span class="flag red">${plural(g.itens.length,'mês','meses')}</span><b class="mono" style="min-width:95px;text-align:right">${brlF(g.total)}</b>
      ${e.whatsapp?`<a class="wabtn" href="${waLink(e.whatsapp,finMsgRegua(g))}" target="_blank" rel="noopener" title="Cobrar no WhatsApp" data-cobreg="${g.id}">${svg('wa',2)}</a>`:''}
      <button class="btn ghost sm" data-cobreg="${g.id}">Registrar cobrança</button>
-     <button class="btn sm" data-fin-pago="${g.id}|${g.itens[g.itens.length-1].comp}">Pagar ${MESES[+g.itens[g.itens.length-1].comp.slice(5)-1].slice(0,3)}</button></div>`}).join('')}</div>`:`<div style="padding:0 16px 16px">${empty(gs.length?'Nenhum cliente neste filtro.':'Ninguém em atraso. 👏')}</div>`}</section>`}
+     <button class="btn sm" data-fin-pago="${g.id}|${g.itens[g.itens.length-1].comp}">Pagar ${MESES[+g.itens[g.itens.length-1].comp.slice(5)-1].slice(0,3)}</button></div>`}).join('')}</div>`:`<div style="padding:0 16px 10px">${empty(gs.length?'Nenhum cliente neste filtro.':'Nenhum honorário em atraso. 👏')}</div>`}
+   <div style="padding:10px 16px 6px"><div class="sec-t">Pessoa Física · Imposto de Renda</div></div>
+   ${ir.aberto.length?`<div class="rows">${ir.aberto.map(r=>`<div class="row" style="cursor:default;flex-wrap:wrap;gap:8px"><div class="main-t" style="min-width:200px"><div>${esc(r.nome||'—')}</div><div class="sub mono">${esc(maskCPF(r.cpf)||'')}${r.indicacao?' · '+esc(r.indicacao):''}${r.ano?' · IR '+esc(r.ano):''}</div></div><b class="mono" style="min-width:95px;text-align:right">${brlF(+r.valor||0)}</b>${r.telefone?`<a class="wabtn" href="${waLink(r.telefone,irMsg(r))}" target="_blank" rel="noopener" title="Cobrar no WhatsApp">${svg('wa',2)}</a>`:''}<button class="btn sm" data-irpago="${r.id}">Marcar pago</button></div>`).join('')}</div>`:`<div style="padding:0 16px 16px">${empty('Nenhum IR a receber.')}</div>`}
+   </section>`}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-cobreg]');if(!t)return;const em=D.empresas.get(t.dataset.cobreg);if(!em)return;put('empresas',t.dataset.cobreg,Object.assign({},em,{cobEm:agora(),cobPor:meuNome()}));if(t.tagName!=='A')toast('Cobrança registrada')});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-irpago]');if(!t||!db)return;db.collection('irpf').doc(t.dataset.irpago).update({pago:true,atualizadoEm:agora(),por:meuNome()}).then(()=>toast('IR marcado como pago')).catch(()=>toast('Não foi possível salvar.'))});
 document.addEventListener('input',e=>{if(e.target&&e.target.hasAttribute&&e.target.hasAttribute('data-inaq')){UI.inaQ=e.target.value;clearTimeout(UI.inaT);UI.inaT=setTimeout(()=>{render();const el=document.getElementById('inaQ');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}},250)}});
 /* ================= Contratos de honorários ================= */
 function contratoReajuste(e){if(!e.contratoBase)return null;const ano=new Date().getFullYear();const feito=e.contratoUltReaj&&e.contratoUltReaj.slice(0,4)==String(ano);const due=!feito&&(new Date().getMonth()+1)>=+e.contratoBase;return {ano,feito,due,mes:+e.contratoBase}}
@@ -7151,11 +7162,14 @@ function vPainel(){
   const meis=[...D.empresas.values()].filter(e=>e.regime==='MEI'&&!e.inativa&&e.faturMEI>0).map(e=>({e,pct:Math.round(e.faturMEI/MEI_TETO*100)})).filter(x=>x.pct>=70).sort((a,b)=>b.pct-a.pct);
   const mesN=new Date().getMonth()+1;const aniv=[...D.empresas.values()].filter(e=>e.dataAbertura&&+e.dataAbertura.slice(5,7)===mesN).map(e=>({e,dia:+e.dataAbertura.slice(8,10)})).sort((a,b)=>a.dia-b.dia);
   const emAnd=[...D.abertura.values()].filter(x=>(x.status||'')!=='concluida').length;const emBaixa=[...D.baixa.values()].filter(x=>(x.status||'')!=='concluida').length;const emSal=[...D.salmat.values()].filter(x=>{const s=x.status||'a_dar_entrada';return s!=='concedido'&&s!=='indeferido'}).length;
-  const irPend=[...D.irpf.values()].filter(r=>(r.status||'pendente')!=='entregue'&&String(r.ano||'')===String(new Date().getFullYear())).length;
+  const irPend=[...IRPFOFF.values()].filter(r=>(r.status||'pendente')!=='entregue'&&String(r.ano||'')===String(new Date().getFullYear())).length;const ir=irpfFin();
   const tile=(l,v,c)=>`<div class="tile"><span class="n" style="font-size:20px${c?';color:'+c:''}">${v}</span><span class="l">${l}</span></div>`;
   const mx=Math.max(1,...Object.values(regimes));
   return `<section class="panel"><div class="ph"><h2 style="margin:0">Painel da diretoria · ${compTxt(comp).replace(/^./,c=>c.toUpperCase())}</h2><span class="sp"></span><button class="btn sm" data-resumo>Resumo do cliente</button></div>
+   <div style="padding:0 16px 6px"><div class="sec-t">Pessoa Jurídica · honorários (mês)</div></div>
    <div class="tiles" style="grid-template-columns:repeat(5,minmax(0,1fr));padding:0 16px 12px">${tile('Previsto no mês',brlF(prev))}${tile('Recebido',brlF(rec),'var(--grn)')}${tile('Em atraso',brlF(totAtr),totAtr?'var(--red)':'')}${tile('Clientes',nCli)}${tile('Ticket médio',brlF(ticket))}</div>
+   <div style="padding:0 16px 6px"><div class="sec-t">Pessoa Física · Imposto de Renda (ano)</div></div>
+   <div class="tiles" style="grid-template-columns:repeat(3,minmax(0,1fr));padding:0 16px 12px">${tile('IR cobrado',brlF(ir.cob))}${tile('IR recebido',brlF(ir.rec),'var(--grn)')}${tile('IR a receber',brlF(ir.abertoTot),ir.abertoTot?'var(--red)':'')}</div>
    <div style="padding:0 16px 14px"><div class="sec-t">Carteira por regime</div>${Object.entries(regimes).sort((a,b)=>b[1]-a[1]).map(([r,c])=>`<div class="fb-r"><span style="min-width:120px">${esc(r)}</span><div class="fb-t"><div style="width:${c/mx*100}%"></div></div><b>${c}</b></div>`).join('')||'<div class="gd-msg">Sem clientes cadastrados.</div>'}</div>
    ${meis.length?`<div style="padding:0 16px 14px"><div class="sec-t" style="color:var(--amb)">MEIs perto do teto (R$ ${MEI_TETO.toLocaleString('pt-BR')})</div><div class="rows">${meis.map(x=>`<div class="row" style="cursor:default"><div class="main-t"><div>${esc(x.e.fantasia||x.e.razao)}</div><div class="sub mono">${brlF(x.e.faturMEI)} no ano</div></div><span class="flag ${x.pct>=100?'red':'amb'}">${x.pct}% do teto</span></div>`).join('')}</div></div>`:''}
    ${aniv.length?`<div style="padding:0 16px 14px"><div class="sec-t">Aniversários de empresa em ${MESES[mesN-1]}</div><div class="rows">${aniv.map(x=>`<div class="row" style="cursor:default"><div class="main-t"><div>${esc(x.e.fantasia||x.e.razao)}</div><div class="sub">abertura em ${fmt(x.e.dataAbertura)}</div></div><span class="flag">dia ${x.dia}</span></div>`).join('')}</div></div>`:''}
