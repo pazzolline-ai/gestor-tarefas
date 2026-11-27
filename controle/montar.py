@@ -46,6 +46,9 @@ trocas = [
     ("${WS==='pessoal'?`<div class=\"fd full\"><div class=\"sec-t\" style=\"margin:6px 0 0\">Financeiro (honorários)", "${true?`<div class=\"fd full\"><div class=\"sec-t\" style=\"margin:6px 0 0\">Financeiro (honorários)", 1),
     ("const APP_PAINEL=false;", "const APP_PAINEL=true;", 1),
     ("  if(WS!=='pessoal')return `<section class=\"panel\">${empty('O Financeiro fica no espaço Lucas.')}</section>`;\n", "", 1),
+    # logo do raio como padrão do Painel
+    ("function aplicarMarca(){const o=GT.org||{};", "function aplicarMarca(){const o=Object.assign({},GT.org||{});if(!o.app_logo)o.app_logo='icon-192.png';", 1),
+    ("function marcaSalva(){try{return JSON.parse(localStorage.getItem('gt.marca')||'{}')||{}}catch(e){return {}}}", "function marcaSalva(){let r={};try{r=JSON.parse(localStorage.getItem('gt.marca')||'{}')||{}}catch(e){}if(!r.app_logo)r.app_logo='icon-192.png';return r}", 1),
 ]
 for de, para, n in trocas:
     c = s.count(de)

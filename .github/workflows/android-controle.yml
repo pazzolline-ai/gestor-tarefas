@@ -28,7 +28,7 @@ jobs:
           sed -i "s/__VER__/${VER}/" capacitor.config.json
           npm install --no-audit --no-fund
           npx cap add android
-          cp ../icon-512.png /tmp/icon.png
+          cp ../controle/icon-512.png /tmp/icon.png
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             for f in ic_launcher ic_launcher_round ic_launcher_foreground; do
               [ -f android/app/src/main/res/mipmap-$d/$f.png ] && cp /tmp/icon.png android/app/src/main/res/mipmap-$d/$f.png || true

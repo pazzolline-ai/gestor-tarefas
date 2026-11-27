@@ -19,6 +19,7 @@ jobs:
         shell: bash
         run: |
           cp -r desktop desktop-ctl
+          cp controle/icon.png desktop-ctl/build/icon.png && cp controle/icon.ico desktop-ctl/build/icon.ico
           node -e "
             const fs=require('fs');
             let m=fs.readFileSync('desktop-ctl/main.js','utf8');
