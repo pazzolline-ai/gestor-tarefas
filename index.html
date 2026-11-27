@@ -4766,6 +4766,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-27f',data:'27/11/2026',itens:['🔗 Imposto de Renda → Financeiro: o valor lançado no IR passa a entrar no Financeiro mesmo que só o pagamento tenha sido preenchido, e aceita valores digitados com “R$”.']},
  {id:'2026-11-27e',data:'27/11/2026',itens:['📊 Financeiro › Receitas por tipo: compara o que entra de mensalidade (por regime), Imposto de Renda, abertura e baixa, e mostra o maior faturamento.','👁 Olho e 🔒 cadeado em todas as abas do Financeiro.','🧾 Abertura e Baixa agora têm valor cobrado e pagamento.','💪 Dieta e treino: fichas de treino, cardápio do dia, água e evolução do peso.','💬 No programa do PC, o WhatsApp Web abre dentro do sistema (conecte pelo QR code uma vez).']},
  {id:'2026-11-27d',data:'27/11/2026',itens:['🔗 Financeiro: o Imposto de Renda do ano (cobrado, recebido e a receber) aparece também na aba principal, e a aba IR atualiza na hora.']},
  {id:'2026-11-27c',data:'27/11/2026',itens:['🏷️ O Controle Lucas agora se chama Painel Lucas, com o Financeiro (honorários e IR) direto no espaço das MEIs.']},
@@ -5760,13 +5761,13 @@ function vFinanceiro(){
   </tbody></table></div>${ls.length?'':empty('Nenhum honorário cadastrado. Edite uma empresa e preencha o honorário mensal, o dia e a forma de pagamento.')}</section>
   ${semHon?`<div style="font-size:12px;color:var(--dim)">${plural(semHon,'empresa','empresas')} sem honorário cadastrado.</div>`:''}<div class="fc-tip" id="fcTip" hidden></div>`;
 }
-function finIRResumo(){const todos=irpfFinLista().filter(r=>+r.valor>0);if(!todos.length)return '';const ano=todos.map(r=>String(r.ano||'')).sort().pop();const arr=todos.filter(r=>String(r.ano||'')===ano);
-  const cob=arr.reduce((s,r)=>s+(+r.valor||0),0),rec=arr.reduce((s,r)=>s+irRec(r),0),ab=arr.filter(r=>!r.pago).reduce((s,r)=>s+(+r.valor||0),0),nAb=arr.filter(r=>!r.pago).length;
+function finIRResumo(){const todos=irpfFinLista().filter(r=>irTem(r));if(!todos.length)return '';const ano=todos.map(r=>String(r.ano||'')).sort().pop();const arr=todos.filter(r=>String(r.ano||'')===ano);
+  const cob=arr.reduce((s,r)=>s+irCob(r),0),rec=arr.reduce((s,r)=>s+irRec(r),0),ab=arr.filter(r=>!r.pago).reduce((s,r)=>s+irCob(r),0),nAb=arr.filter(r=>!r.pago).length;
   return `<section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><h2 style="margin:0">Imposto de Renda ${esc(ano)}</h2><span class="flag">Cobrado ${brlF(cob)}</span><span class="flag grn">Recebido ${brlF(rec)}</span><span class="flag ${nAb?'amb':''}">A receber ${brlF(ab)} (${nAb})</span><span class="sp"></span><button class="btn sm" data-fintab="pf">Ver IR</button></div></section>`}
 function finPFHtml(){
-  const todos=irpfFinLista();const ano=UI.finPFano||(todos.filter(r=>+r.valor>0).map(r=>String(r.ano||'')).sort().pop())||String(new Date().getFullYear());const arr=todos.filter(r=>+r.valor>0&&String(r.ano||'')===ano).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
-  const anos=[...new Set(todos.filter(r=>+r.valor>0).map(r=>String(r.ano||'')).filter(Boolean).concat(ano))].sort().reverse();
-  const cob=arr.reduce((s,r)=>s+(+r.valor||0),0),rec=arr.reduce((s,r)=>s+irRec(r),0),ab=arr.filter(r=>!r.pago).reduce((s,r)=>s+(+r.valor||0),0);
+  const todos=irpfFinLista();const ano=UI.finPFano||(todos.filter(r=>irTem(r)).map(r=>String(r.ano||'')).sort().pop())||String(new Date().getFullYear());const arr=todos.filter(r=>irTem(r)&&String(r.ano||'')===ano).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+  const anos=[...new Set(todos.filter(r=>irTem(r)).map(r=>String(r.ano||'')).filter(Boolean).concat(ano))].sort().reverse();
+  const cob=arr.reduce((s,r)=>s+irCob(r),0),rec=arr.reduce((s,r)=>s+irRec(r),0),ab=arr.filter(r=>!r.pago).reduce((s,r)=>s+irCob(r),0);
   return `<div class="bar"><b style="font-size:16px">Imposto de Renda · PF</b><select class="sel" id="finPFano" data-finpfano style="max-width:110px">${anos.map(y=>`<option value="${esc(y)}" ${y===ano?'selected':''}>${esc(y)}</option>`).join('')}</select><span style="flex:1"></span><button class="btn sm" data-pix>Chave Pix: ${esc(FIN.pix||'cadastrar')}</button></div>
    <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="tile" style="--c:var(--acc);cursor:default"><span class="n" style="font-size:22px">${brlF(cob)}</span><span class="l">Cobrado (${arr.length})</span></div>
@@ -5775,7 +5776,7 @@ function finPFHtml(){
     <div class="tile" style="--c:var(--acc);cursor:default"><span class="n" style="font-size:22px">${arr.length}</span><span class="l">Declarações</span></div>
    </div>
    <section class="panel"><div class="tw"><table class="ftable"><thead><tr><th>Cliente</th><th>CPF</th><th>Valor</th><th>Situação</th><th>Recebido</th><th></th></tr></thead><tbody>
-   ${arr.map(r=>`<tr><td>${esc(r.nome||'—')}${r._org==='pes'?' <span class="flag" style="font-size:10px">Pessoal</span>':''}${r.indicacao?`<div style="font-size:11px;color:var(--dim)">${esc(r.indicacao)}</div>`:''}</td><td class="num mono">${esc(maskCPF(r.cpf)||'—')}</td><td class="num">${brlF(+r.valor||0)}</td><td>${r.pago?`<span class="flag grn">Pago${r.pagoEm?' '+esc(fmt(r.pagoEm)):''}</span>`:'<span class="flag amb">A receber</span>'}</td><td class="num">${r.pago?`${brlF(irRec(r))}${r.formaPag?`<div style="font-size:11px;color:var(--dim)">${esc(r.formaPag)}</div>`:''}`:'—'}</td><td style="white-space:nowrap;text-align:right">${r.pago?`<button class="btn ghost sm" data-irreceber="${r.id}">Editar</button><button class="btn ghost sm" data-irdesf="${r.id}">Desfazer</button>`:`${r.telefone?`<a class="btn ghost sm" target="_blank" rel="noopener" href="${waLink(r.telefone,irMsg(r))}">${svg('wa')}Cobrar</a>`:''}<button class="btn sm" data-irreceber="${r.id}">Marcar pago</button>`}</td></tr>`).join('')}
+   ${arr.map(r=>`<tr><td>${esc(r.nome||'—')}${r._org==='pes'?' <span class="flag" style="font-size:10px">Pessoal</span>':''}${r.indicacao?`<div style="font-size:11px;color:var(--dim)">${esc(r.indicacao)}</div>`:''}</td><td class="num mono">${esc(maskCPF(r.cpf)||'—')}</td><td class="num">${brlF(irCob(r))}</td><td>${r.pago?`<span class="flag grn">Pago${r.pagoEm?' '+esc(fmt(r.pagoEm)):''}</span>`:'<span class="flag amb">A receber</span>'}</td><td class="num">${r.pago?`${brlF(irRec(r))}${r.formaPag?`<div style="font-size:11px;color:var(--dim)">${esc(r.formaPag)}</div>`:''}`:'—'}</td><td style="white-space:nowrap;text-align:right">${r.pago?`<button class="btn ghost sm" data-irreceber="${r.id}">Editar</button><button class="btn ghost sm" data-irdesf="${r.id}">Desfazer</button>`:`${r.telefone?`<a class="btn ghost sm" target="_blank" rel="noopener" href="${waLink(r.telefone,irMsg(r))}">${svg('wa')}Cobrar</a>`:''}<button class="btn sm" data-irreceber="${r.id}">Marcar pago</button>`}</td></tr>`).join('')}
    </tbody></table></div>${arr.length?'':empty('Nenhum IR com valor cobrado em '+esc(ano)+'. Preencha o valor cobrado na tela Imposto de Renda.')}</section>`}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-fintab],[data-irdesf]');if(!t)return;if(t.dataset.fintab){UI.finTab=t.dataset.fintab;render();return}if(t.dataset.irdesf&&db){irpfCol(t.dataset.irdesf).doc(t.dataset.irdesf).update({pago:false,pagoEm:'',valorPago:null,formaPag:'',obsPag:'',atualizadoEm:agora(),por:meuNome()}).then(()=>toast('Pagamento desfeito')).catch(()=>toast('Não foi possível salvar.'))}});
 document.addEventListener('change',e=>{if(e.target&&e.target.hasAttribute&&e.target.hasAttribute('data-finpfano')){UI.finPFano=e.target.value;render()}});
@@ -7005,10 +7006,12 @@ document.addEventListener('input',e=>{if(e.target.id==='dasQ'){UI.dasQ=e.target.
 const IRPF_ST={pendente:['Pendente',''],elaborando:['Em elaboração','amb'],entregue:['Entregue','grn']};
 const IRPF_RES={restituir:['A restituir','grn'],pagar:['A pagar','amb'],isento:['Isento','']};
 const IR_FORMAS=['Pix','Boleto','Transferência','Dinheiro','Cartão'];
+const irTem=r=>+r.valor>0||(!!r.pago&&+r.valorPago>0);
+const irCob=r=>+r.valor>0?+r.valor:(+r.valorPago||0);
 const irRec=r=>r.pago?(r.valorPago!=null&&r.valorPago!==''?+r.valorPago:+r.valor||0):0;
 function irpfReg(id){return (D.irpf&&D.irpf.get(id))||IRPFOFF.get(id)||null}
 function irpfCol(id){return D.irpf&&D.irpf.has(id)?C('irpf'):db.collection('irpf')}
-function irpfFinLista(){const m=new Map();IRPFOFF.forEach((r,id)=>m.set(id,Object.assign({id,_org:'esc'},r)));if(WS==='pessoal'&&D.irpf)D.irpf.forEach((r,id)=>m.set(id,Object.assign({id,_org:'pes'},r)));return [...m.values()]}
+function irpfFinLista(){const m=new Map();IRPFOFF.forEach((r,id)=>m.set(id,Object.assign({id,_org:'esc'},r)));if(D.irpf)D.irpf.forEach((r,id)=>m.set(id,Object.assign({id,_org:WS==='pessoal'?'pes':'esc'},r)));return [...m.values()]}
 function irpfPagoForm(id){const r=irpfReg(id);if(!r||!db)return;
   openModal(`${mh('Registrar pagamento · IR')}<form id="irPF"><div class="mb"><div><b>${esc(r.nome||'')}</b> · IR ${esc(r.ano||'')}${+r.valor>0?' · cobrado '+brl(+r.valor):''}</div><div class="fg">
     <div class="fd"><label for="irp_d">Pago em</label><input class="inp" type="date" id="irp_d" value="${esc(r.pagoEm||hoje())}"></div>
@@ -7017,7 +7020,7 @@ function irpfPagoForm(id){const r=irpfReg(id);if(!r||!db)return;
     <div class="fd"><label for="irp_o">Observação</label><input class="inp" id="irp_o" value="${esc(r.obsPag||'')}"></div></div>
     <div style="font-size:12px;color:var(--dim);margin-top:8px">Entra no Financeiro › Pessoa Física · IR como recebido.</div></div>
     <div class="mf"><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Confirmar pagamento</button></div></form>`);
-  $('#irPF').addEventListener('submit',ev=>{ev.preventDefault();const v=parseFloat(val('irp_v').replace(/\./g,'').replace(',','.'));
+  $('#irPF').addEventListener('submit',ev=>{ev.preventDefault();const v=parseFloat(val('irp_v').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));
     const up={pago:true,pagoEm:val('irp_d')||hoje(),valorPago:isNaN(v)?(+r.valor||0):v,formaPag:val('irp_f'),obsPag:val('irp_o'),atualizadoEm:agora(),por:meuNome()};
     irpfCol(id).doc(id).update(up).then(()=>{closeModal();toast('Pagamento registrado no Financeiro')}).catch(()=>toast('Não foi possível salvar.'))})}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-irreceber]');if(!t)return;irpfPagoForm(t.dataset.irreceber)});
@@ -7079,7 +7082,7 @@ function irpfForm(id){const r=id?(D.irpf.get(id)||{}):{};const ano=r.ano||irpfAn
    <div class="mf">${id?`<button type="button" class="btn ghost" data-irdel="${id}">Excluir</button>`:''}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
   {const ps=document.getElementById('ir_pago');if(ps)ps.onchange=()=>{document.getElementById('ir_pgbox').hidden=ps.value!=='pago'}}
   $('#irF').addEventListener('submit',ev=>{ev.preventDefault();const nome=val('ir_nome');if(!nome){toast('Informe o nome.');return}
-    const n=Object.assign({},r,{nome,cpf:val('ir_cpf'),senhaGov:document.getElementById('ir_sg').value,telefone:val('ir_tel'),indicacao:val('ir_ind'),ano:val('ir_ano')||irpfAno(),status:val('ir_st'),resultado:val('ir_res'),obs:document.getElementById('ir_obs').value,por:meuNome(),atualizadoEm:agora()});const vv=parseFloat(val('ir_valor').replace(/\./g,'').replace(',','.'));n.valor=isNaN(vv)?null:vv;n.pago=val('ir_pago')==='pago';if(n.pago){n.pagoEm=val('ir_pgd')||hoje();const pv=parseFloat(val('ir_pgv').replace(/\./g,'').replace(',','.'));n.valorPago=isNaN(pv)?n.valor:pv;n.formaPag=val('ir_pgf');n.obsPag=val('ir_pgo')}else{n.pagoEm='';n.valorPago=null;n.formaPag='';n.obsPag=''}if(!r.criadoEm)n.criadoEm=agora();
+    const n=Object.assign({},r,{nome,cpf:val('ir_cpf'),senhaGov:document.getElementById('ir_sg').value,telefone:val('ir_tel'),indicacao:val('ir_ind'),ano:val('ir_ano')||irpfAno(),status:val('ir_st'),resultado:val('ir_res'),obs:document.getElementById('ir_obs').value,por:meuNome(),atualizadoEm:agora()});const vv=parseFloat(val('ir_valor').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));n.valor=isNaN(vv)?null:vv;n.pago=val('ir_pago')==='pago';if(n.pago){n.pagoEm=val('ir_pgd')||hoje();const pv=parseFloat(val('ir_pgv').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));n.valorPago=isNaN(pv)?n.valor:pv;n.formaPag=val('ir_pgf');n.obsPag=val('ir_pgo')}else{n.pagoEm='';n.valorPago=null;n.formaPag='';n.obsPag=''}if(!r.criadoEm)n.criadoEm=agora();
     put('irpf',id||uid(),n);closeModal();toast(id?'Salvo':'Pessoa adicionada')});
   const bd=document.querySelector('[data-irdel]');if(bd)bd.onclick=()=>{confirmBox('Excluir <b>'+esc(r.nome||'')+'</b> do IRPF?','Excluir',()=>{del('irpf',id);closeModal()})}}
 /* ================= Salário-maternidade (MEI) ================= */
@@ -7163,7 +7166,7 @@ function trkForm(col,id){const ST=col==='abertura'?ABERTURA_ST:BAIXA_ST;const r=
    <div class="fd full"><label for="trk_obs">Observações</label><textarea class="inp" id="trk_obs" style="min-height:60px">${esc(r.obs||'')}</textarea></div>
    <div class="mf">${id?`<button type="button" class="btn ghost" data-trkdel="1">Excluir</button>`:''}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
   $('#trkF').addEventListener('submit',ev=>{ev.preventDefault();const nome=val('trk_nome');if(!nome){toast('Informe o nome.');return}
-    const n=Object.assign({},r,{nome,cnpj:val('trk_cnpj'),responsavel:val('trk_resp'),telefone:val('trk_tel'),status:val('trk_st'),obs:document.getElementById('trk_obs').value,por:meuNome(),atualizadoEm:agora()});if(!r.criadoEm)n.criadoEm=agora();{const v=parseFloat(val('trk_val').replace(/\./g,'').replace(',','.'));n.valor=isNaN(v)?null:v;n.pago=val('trk_pg')==='pago';n.pagoEm=n.pago?(val('trk_pgd')||hoje()):'';if(n.pago&&n.valorPago==null)n.valorPago=n.valor}
+    const n=Object.assign({},r,{nome,cnpj:val('trk_cnpj'),responsavel:val('trk_resp'),telefone:val('trk_tel'),status:val('trk_st'),obs:document.getElementById('trk_obs').value,por:meuNome(),atualizadoEm:agora()});if(!r.criadoEm)n.criadoEm=agora();{const v=parseFloat(val('trk_val').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.'));n.valor=isNaN(v)?null:v;n.pago=val('trk_pg')==='pago';n.pagoEm=n.pago?(val('trk_pgd')||hoje()):'';if(n.pago&&n.valorPago==null)n.valorPago=n.valor}
     put(col,id||uid(),n);closeModal();toast(id?'Salvo':'Adicionado')});
   const bd=document.querySelector('[data-trkdel]');if(bd)bd.onclick=()=>{confirmBox('Excluir <b>'+esc(r.nome||'')+'</b>?','Excluir',()=>{del(col,id);closeModal()})}}
 /* ================= Receitas: comparativo por tipo ================= */
@@ -7174,7 +7177,7 @@ function recCategorias(ano){
   D.empresas.forEach((e,id)=>{if(!(e.honorario>0))return;const reg='Mensal · '+((e.regime||'').trim()||'Sem regime');
     let meses=0,rec=0;for(let m=1;m<=12;m++){const comp=ano+'-'+pad(m);if(e.inicioCobranca&&e.inicioCobranca>comp)continue;meses++;const p=D.pagamentos&&D.pagamentos.get(id+'_'+comp);if(p&&p.pagoEm)rec+=(p.valorPago!=null?+p.valorPago:+(p.valor!=null?p.valor:e.honorario))||0}
     add(reg,'mensal',meses*e.honorario,rec,1)});
-  irpfFinLista().filter(r=>+r.valor>0&&String(r.ano||'')===ano).forEach(r=>add('Imposto de Renda','ir',+r.valor||0,irRec(r),1));
+  irpfFinLista().filter(r=>irTem(r)&&String(r.ano||'')===ano).forEach(r=>add('Imposto de Renda','ir',irCob(r),irRec(r),1));
   [['abertura','Abertura de CNPJ'],['baixa','Baixa / Distrato']].forEach(([col,nome])=>{if(!D[col])return;D[col].forEach(r=>{if(!(+r.valor>0))return;const ref=String(r.pagoEm||r.criadoEm||'').slice(0,4);if(ref!==ano)return;add(nome,col,+r.valor||0,r.pago?(r.valorPago!=null&&r.valorPago!==''?+r.valorPago:+r.valor):0,1)})});
   return Object.values(cats).sort((a,b)=>b.rec-a.rec||b.cob-a.cob)}
 function finReceitasHtml(){
