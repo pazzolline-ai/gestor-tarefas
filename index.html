@@ -3099,7 +3099,7 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   try{modTabsAplicar()}catch(e){}try{ferAplicar()}catch(e){}try{nmAplicar()}catch(e){}
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
-function go(view,doHistorico){if(telaOculta(view)&&view!=='dashboard'){toast('Esta tela não está liberada para você.');view='dashboard'}const ant=UI.view,antE=UI.empresaId;UI.view=view;if(view==='chat')chatMarcar();if(view==='mural')lsSet('cs.muralVisto',agora());if(view!=='empresa')UI.empresaId=null;if(view!=='empresas'){UI.selMode=false;UI.sel.clear()}if(!doHistorico)navMarcar(view,ant!==view||(view==='empresa'&&antE!==UI.empresaId));render();window.scrollTo(0,0);const cv=$('#view');if(cv){cv.classList.remove('enter','mo-in');void cv.offsetWidth;cv.classList.add('enter','mo-in');clearTimeout(go.mo);go.mo=setTimeout(()=>cv.classList.remove('mo-in'),500);moContar(cv)}}
+function go(view,doHistorico){if(telaOculta(view)&&view!=='dashboard'){toast('Esta tela não está liberada para você.');view='dashboard'}const ant=UI.view,antE=UI.empresaId;const FV=['financeiro','painel','inadimp','contratos'];if(FIN.ok&&FV.includes(ant)&&!FV.includes(view)){FIN.ok=false;try{sessionStorage.removeItem('cs.finOk')}catch(e){}}UI.view=view;if(view==='chat')chatMarcar();if(view==='mural')lsSet('cs.muralVisto',agora());if(view!=='empresa')UI.empresaId=null;if(view!=='empresas'){UI.selMode=false;UI.sel.clear()}if(!doHistorico)navMarcar(view,ant!==view||(view==='empresa'&&antE!==UI.empresaId));render();window.scrollTo(0,0);const cv=$('#view');if(cv){cv.classList.remove('enter','mo-in');void cv.offsetWidth;cv.classList.add('enter','mo-in');clearTimeout(go.mo);go.mo=setTimeout(()=>cv.classList.remove('mo-in'),500);moContar(cv)}}
 function moContar(root){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
   root.querySelectorAll('.tile .n,.mc-n,.pd-st b').forEach(el=>{const tn=[...el.childNodes].find(n=>n.nodeType===3&&/^\s*\d+\s*$/.test(n.textContent));if(!tn)return;const fim=+tn.textContent.trim();if(!(fim>0))return;const t0=performance.now(),d=Math.min(400,180+fim*15);
     const passo=t=>{if(!tn.isConnected)return;const k=Math.max(0,Math.min(1,(t-t0)/d));tn.textContent=String(Math.round(fim*(1-Math.pow(1-k,3))));if(k<1)requestAnimationFrame(passo)};tn.textContent='0';requestAnimationFrame(passo)})}
@@ -7123,6 +7123,42 @@ function finMsgRegua(g){const est=finReguaEstagio(g.max);if(est==='lembrete')ret
   const nome=g.e.responsavel?' '+g.e.responsavel.split(' ')[0]:'';const lista=g.itens.slice().reverse().map(x=>`• ${compTxt(x.comp)}: ${brl(x.valor)} (venc. ${fmt(x.venc)})`).join('\n');const pix=FIN.pix?`\nChave Pix: ${FIN.pix}`:'';
   if(est==='cobranca')return `Olá${nome}! Tudo bem? Identificamos honorários em aberto e precisamos regularizar:\n${lista}\nTotal: ${brl(g.total)}${pix}\nPode acertar por Pix ou me chamar aqui para combinarmos. Obrigado, Lucas.`;
   return `Olá${nome}. Os honorários abaixo seguem em aberto:\n${lista}\nTotal: ${brl(g.total)}${pix}\nPara mantermos seus serviços em dia, pedimos a regularização ou um retorno nos próximos dias. Fico à disposição para negociarmos. Lucas.`}
+/* ================= Pró-labore e folha (DP) ================= */
+const FOLHA_TIPO={prolabore:['Pró-labore',''],empregado:['Empregado','amb']};
+function folhaComp(){return UI.flComp||hoje().slice(0,7)}
+function vFolha(){
+  if(mode!=='db')return `<section class="panel">${empty('A folha usa os dados compartilhados do escritório (entre com seu usuário).')}</section>`;
+  const FOLHA=D.folha||new Map();const comp=folhaComp();
+  const l=[...FOLHA.entries()].map(([id,r])=>Object.assign({id},r)).filter(r=>(r.comp||'')===comp).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+  const f=UI.flF||'';const vis=l.filter(x=>!f||(x.tipo||'prolabore')===f);
+  const liq=r=>(+r.bruto||0)-(+r.inss||0)-(+r.irrf||0);const sum=k=>l.reduce((s,r)=>s+(+r[k]||0),0);const totLiq=l.reduce((s,r)=>s+liq(r),0);
+  return `<section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><h2 style="margin:0">Pró-labore e folha</h2><span class="sp"></span><button class="btn sm pri" data-flnovo>+ Lançar</button></div>
+   <div class="bar"><button class="btn sm" data-flmes="-1" aria-label="Mês anterior">${svg('l',2)}</button><b style="font-size:16px;min-width:170px;text-align:center">${compTxt(comp).replace(/^./,c=>c.toUpperCase())}</b><button class="btn sm" data-flmes="1" aria-label="Próximo mês">${svg('r',2)}</button><button class="btn ghost sm" data-flmes="0">Mês atual</button></div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px">${[['','Todos'],['prolabore','Pró-labore'],['empregado','Empregados']].map(([k,t])=>`<button class="btn sm ${f===k?'pri':'ghost'}" data-flf="${k}">${t} <small>${k?l.filter(x=>(x.tipo||'prolabore')===k).length:l.length}</small></button>`).join('')}</div>
+   <div class="tiles" style="grid-template-columns:repeat(4,minmax(0,1fr));padding:0 16px 10px">${[['Bruto',sum('bruto')],['INSS',sum('inss')],['IRRF',sum('irrf')],['Líquido',totLiq]].map(([t,v])=>`<div class="tile"><span class="n" style="font-size:19px">${brl(v)}</span><span class="l">${t}</span></div>`).join('')}</div>
+   ${vis.length?`<div class="tw"><table class="tlist"><thead><tr><th>Beneficiário</th><th>Tipo</th><th>Empresa</th><th>Bruto</th><th>INSS</th><th>IRRF</th><th>FGTS</th><th>Líquido</th><th></th></tr></thead><tbody>${vis.map(r=>`<tr><td><b>${esc(r.nome||'—')}</b></td><td><span class="flag ${FOLHA_TIPO[r.tipo||'prolabore'][1]}">${FOLHA_TIPO[r.tipo||'prolabore'][0]}</span></td><td>${esc(r.empresa||'—')}</td><td class="num mono">${brl(+r.bruto||0)}</td><td class="num mono">${brl(+r.inss||0)}</td><td class="num mono">${brl(+r.irrf||0)}</td><td class="num mono">${brl(+r.fgts||0)}</td><td class="num mono"><b>${brl(liq(r))}</b></td><td style="white-space:nowrap;text-align:right"><button class="btn ghost sm" data-fled="${r.id}">Editar</button> <button class="btn ghost sm danger" data-fldel="${r.id}">Apagar</button></td></tr>`).join('')}</tbody></table></div>`:`<div style="padding:0 16px 16px">${empty(l.length?'Nada neste filtro.':'Nenhum lançamento em '+compTxt(comp)+'. Toque em “+ Lançar”.')}</div>`}</section>`}
+function folhaForm(id){const FOLHA=D.folha||new Map();const r=id?(FOLHA.get(id)||{}):{};const comp=r.comp||folhaComp();
+  const num=(lbl,idf,v)=>`<div class="fd"><label for="${idf}">${lbl}</label><input class="inp mono" id="${idf}" inputmode="decimal" value="${v!=null&&v!==''?String(v).replace('.',','):''}" placeholder="0,00"></div>`;
+  openModal(`${mh(id?'Editar lançamento':'Lançar pró-labore / folha')}<form id="flF" style="display:flex;flex-direction:column;gap:10px">
+   <div class="fg"><div class="fd"><label for="fl_nome">Beneficiário</label><input class="inp" id="fl_nome" value="${esc(r.nome||'')}" required></div>
+   <div class="fd"><label for="fl_tipo">Tipo</label><select class="sel" id="fl_tipo">${Object.keys(FOLHA_TIPO).map(k=>`<option value="${k}" ${(r.tipo||'prolabore')===k?'selected':''}>${FOLHA_TIPO[k][0]}</option>`).join('')}</select></div></div>
+   <div class="fg"><div class="fd"><label for="fl_emp">Empresa</label><input class="inp" id="fl_emp" value="${esc(r.empresa||'')}" placeholder="nome da empresa"></div>
+   <div class="fd"><label for="fl_comp">Competência</label><input class="inp" type="month" id="fl_comp" value="${esc(comp)}"></div></div>
+   <div class="fg">${num('Bruto (R$)','fl_bruto',r.bruto)}${num('INSS (R$)','fl_inss',r.inss)}</div>
+   <div class="fg">${num('IRRF (R$)','fl_irrf',r.irrf)}${num('FGTS (R$)','fl_fgts',r.fgts)}</div>
+   <div class="fd full"><label for="fl_obs">Observações</label><textarea class="inp" id="fl_obs" style="min-height:50px">${esc(r.obs||'')}</textarea></div>
+   <div class="mf">${id?`<button type="button" class="btn ghost danger" data-flrm="${id}">Excluir</button>`:''}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
+  const money=idf=>{const v=parseFloat(val(idf).replace(/\./g,'').replace(',','.'));return isNaN(v)?0:v};
+  $('#flF').addEventListener('submit',ev=>{ev.preventDefault();const nome=val('fl_nome');if(!nome){toast('Informe o beneficiário.');return}
+    const n=Object.assign({},r,{nome,tipo:val('fl_tipo'),empresa:val('fl_emp'),comp:val('fl_comp')||folhaComp(),bruto:money('fl_bruto'),inss:money('fl_inss'),irrf:money('fl_irrf'),fgts:money('fl_fgts'),obs:document.getElementById('fl_obs').value,por:meuNome(),atualizadoEm:agora()});if(!r.criadoEm)n.criadoEm=agora();
+    put('folha',id||uid(),n);closeModal();toast(id?'Salvo':'Lançado')});
+  const bd=document.querySelector('[data-flrm]');if(bd)bd.onclick=()=>confirmBox('Apagar o lançamento de <b>'+esc(r.nome||'')+'</b>?','Apagar',()=>{del('folha',id);closeModal()})}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-flnovo],[data-fled],[data-fldel],[data-flf],[data-flmes]');if(!t)return;
+  if(t.hasAttribute('data-flnovo')){folhaForm(null);return}
+  if(t.hasAttribute('data-flf')){UI.flF=t.dataset.flf;render();return}
+  if(t.hasAttribute('data-flmes')){const d=+t.dataset.flmes;UI.flComp=d===0?hoje().slice(0,7):compAdd(folhaComp(),d);render();return}
+  if(t.dataset.fled){folhaForm(t.dataset.fled);return}
+  if(t.dataset.fldel){const r=(D.folha||new Map()).get(t.dataset.fldel)||{};confirmBox('Apagar o lançamento de <b>'+esc(r.nome||'')+'</b>?','Apagar',()=>del('folha',t.dataset.fldel))}});
 /* ===== Imposto de Renda (pessoa física) no financeiro ===== */
 let IRPFOFF=new Map();
 function irpfOffLigar(){if(irpfOffLigar.on||mode!=='db'||!db)return;irpfOffLigar.on=true;try{db.collection('irpf').onSnapshot(s=>{IRPFOFF=new Map();s.forEach(d=>IRPFOFF.set(d.id,d.data()));if(UI.view==='painel'||UI.view==='inadimp')render()},()=>{})}catch(e){}}
