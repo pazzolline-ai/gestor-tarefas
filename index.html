@@ -3034,6 +3034,23 @@ const ST_TXT={afazer:'A fazer',andamento:'Em andamento',aguard_cliente:'Aguardan
 let SWREG=null;const CEL=/Android|iPhone|iPad/i.test(navigator.userAgent);
 try{const LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;if(LN)LN.requestPermissions().catch(()=>{})}catch(e){}
 try{if(!window.Capacitor&&'serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').then(r=>{SWREG=r},()=>{})}catch(e){}
+/* ===== Atualização automática: recarrega sozinho quando sai versão nova ===== */
+let APP_TAG=null,APP_RELOADING=false;
+async function verCheck(){if(window.Capacitor||location.protocol!=='https:'||APP_RELOADING)return;
+  try{const r=await fetch(location.pathname,{method:'HEAD',cache:'no-store'});const tag=r.headers.get('etag')||r.headers.get('last-modified')||'';if(!tag)return;
+    if(APP_TAG===null){APP_TAG=tag;return}
+    if(tag!==APP_TAG){APP_TAG=tag;verNova()}}catch(e){}}
+function verOcupado(){const a=document.activeElement;return (document.querySelector('#modalRoot .ov'))||(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))||document.getElementById('sbLogin')}
+function verNova(){if(APP_RELOADING)return;
+  if(!verOcupado()){APP_RELOADING=true;location.reload();return}
+  if(document.getElementById('verBanner'))return;
+  const b=document.createElement('div');b.id='verBanner';b.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:var(--acc);color:var(--acc-ink);padding:9px 10px 9px 16px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.35);display:flex;gap:10px;align-items:center;font-size:13.5px;font-weight:500';
+  b.innerHTML='Nova versão disponível <button type="button" style="background:var(--acc-ink);color:var(--acc);border:0;border-radius:999px;padding:5px 14px;font-weight:600;cursor:pointer">Atualizar</button>';
+  b.querySelector('button').onclick=()=>{APP_RELOADING=true;location.reload()};document.body.appendChild(b)}
+setInterval(verCheck,90000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});
+window.addEventListener('focus',verCheck);
+setTimeout(verCheck,4000);
 let PEDIDO_INST=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();PEDIDO_INST=e;const b=document.getElementById('btnInstalar');if(b)b.hidden=false});
 let LNID=1;
 function notificar(titulo,corpo,abrir){
