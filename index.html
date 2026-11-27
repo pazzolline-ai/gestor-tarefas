@@ -1707,9 +1707,12 @@ async function verAtualizacao(){if(Date.now()-verUlt<5*60e3)return;verUlt=Date.n
   if(BUILD!=='__BUILD__'&&v.site===BUILD)marcar('gt.faixa.site.'+v.site);
   const pc=(navigator.userAgent.match(/GestorPC\/([\d.]+)/)||[])[1]||null;
   if(pc&&v.programa&&verNum(pc)>=verNum(v.programa))marcar('gt.faixa.pc.'+v.programa);
+  if(v.site&&BUILD!=='__BUILD__'&&v.site!==BUILD&&!visto('gt.faixa.site.'+v.site)&&podeRecarregar()){const u=location.href.split('#')[0].split('?')[0];location.replace(u+'?v='+v.site.slice(0,7)+location.hash);return}
   if(v.site&&BUILD!=='__BUILD__'&&v.site!==BUILD&&!visto('gt.faixa.site.'+v.site))faixa('site',v.site,'🔄 Saiu uma atualização do sistema. Nada do que foi lançado se perde.','Atualizar agora',()=>{const u=location.href.split('#')[0].split('?')[0];location.replace(u+'?v='+v.site.slice(0,7)+location.hash)});
-  else if(NO_APP&&v.android&&verNum(v.android)>verNum((navigator.userAgent.match(/GestorApp\/([\d.]+)/)||[])[1])&&!visto('gt.faixa.apk.'+v.android))faixa('apk',v.android,`⬇️ Nova versão do app (${esc(v.android)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{window.open(LINK_APK,'_blank')});
+  else if(NO_APP&&v.android&&verNum(v.android)>verNum((navigator.userAgent.match(/GestorApp\/([\d.]+)/)||[])[1])&&!visto('gt.faixa.apk.'+v.android))faixa('apk',v.android,`⬇️ Nova versão do app (${esc(v.android)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{abrirNoChrome(LINK_APK)});
   else if(NO_PC&&v.programa&&(!pc||verNum(v.programa)>verNum(pc))&&!visto('gt.faixa.pc.'+v.programa))faixa('pc',v.programa,`⬇️ Nova versão do programa do PC (${esc(v.programa)}). Instale por cima: seus dados continuam.`,'Baixar',()=>{window.open(LINK_PC,'_blank')})}
+function podeRecarregar(){try{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return false;const m=document.getElementById('modalRoot');if(m&&m.innerHTML.trim())return false;if(document.getElementById('asPanel')&&!document.getElementById('asPanel').hidden)return false;return true}catch(e){return false}}
+function abrirNoChrome(url){const ua=navigator.userAgent;if(/Android/i.test(ua)){let saiu=false;const h=()=>{if(document.hidden)saiu=true};document.addEventListener('visibilitychange',h);try{location.href='googlechrome://navigate?url='+encodeURIComponent(url)}catch(e){}setTimeout(()=>{document.removeEventListener('visibilitychange',h);if(!saiu)window.open(url,'_blank')},1800);return}window.open(url,'_blank')}
 function faixa(tipo,ver,txt,bt,fn){const k='gt.faixa.'+tipo+'.'+ver;let el=document.getElementById('gtFaixa');if(el&&el.dataset.k===k)return;
   if(!el){el=document.createElement('div');el.id='gtFaixa';document.body.appendChild(el)}el.dataset.k=k;
   el.innerHTML=`<span>${txt}</span><button class="btn pri sm" id="gtFxGo">${bt}</button><button class="btn ghost sm" id="gtFxX">Agora não</button>`;
@@ -4767,6 +4770,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-27h',data:'27/11/2026',itens:['🔄 O sistema se atualiza sozinho quando sai versão nova (se você não estiver digitando). No celular, o botão Baixar do app abre no Google Chrome.']},
  {id:'2026-11-27g',data:'27/11/2026',itens:['🎙️ Assistente por voz: botão ✨ no topo (ou Ctrl+J). Toque no microfone, fale a pergunta e ele responde falando. O botão 🔊 deixa todas as respostas faladas.']},
  {id:'2026-11-27f',data:'27/11/2026',itens:['🔗 Imposto de Renda → Financeiro: o valor lançado no IR passa a entrar no Financeiro mesmo que só o pagamento tenha sido preenchido, e aceita valores digitados com “R$”.']},
  {id:'2026-11-27e',data:'27/11/2026',itens:['📊 Financeiro › Receitas por tipo: compara o que entra de mensalidade (por regime), Imposto de Renda, abertura e baixa, e mostra o maior faturamento.','👁 Olho e 🔒 cadeado em todas as abas do Financeiro.','🧾 Abertura e Baixa agora têm valor cobrado e pagamento.','💪 Dieta e treino: fichas de treino, cardápio do dia, água e evolução do peso.','💬 No programa do PC, o WhatsApp Web abre dentro do sistema (conecte pelo QR code uma vez).']},

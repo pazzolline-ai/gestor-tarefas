@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['mobile/**', 'controle/**', '.github/workflows/android-controle.yml']
+    paths: ['mobile/**', 'controle/icon-*.png', '.github/workflows/android-controle.yml']
 permissions:
   contents: write
   actions: write
