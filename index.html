@@ -6971,12 +6971,14 @@ function vIrpf(){
   const ch=(k,t,c)=>`<button class="btn sm ${f===k?'pri':'ghost'}" data-irf="${k}">${t} <small>${c}</small></button>`;
   return `<section class="panel"><div class="ph" style="flex-wrap:wrap;gap:8px"><h2 style="margin:0">Imposto de Renda · ${esc(a)}</h2>
     <select class="sel" id="irAno" style="max-width:110px">${anos.map(y=>`<option value="${esc(y)}" ${y===a?'selected':''}>${esc(y)}</option>`).join('')}</select>
-    <span class="flag ${l.length&&n('entregue')===l.length?'grn':'amb'}">${n('entregue')}/${l.length} entregues</span><span class="sp"></span>
+    <span class="flag ${l.length&&n('entregue')===l.length?'grn':'amb'}">${n('entregue')}/${l.length} entregues</span>
+    <span class="flag" title="Recebido de total cobrado">${brl(l.filter(x=>x.r.pago).reduce((s,x)=>s+(+x.r.valor||0),0))} / ${brl(l.reduce((s,x)=>s+(+x.r.valor||0),0))}</span><span class="sp"></span>
     <button class="btn sm pri" data-irnovo>+ Nova pessoa</button></div>
    <div style="padding:0 16px 10px;font-size:12.5px;color:var(--mut)">Clientes de IRPF do ano, com CPF, senha do gov.br e quem indicou. A senha fica oculta — toque em “Senha” para mostrar.</div>
    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px;align-items:center">${ch('','Todas',l.length)}${ch('pendente','Pendentes',n('pendente'))}${ch('elaborando','Em elaboração',n('elaborando'))}${ch('entregue','Entregues',n('entregue'))}<span class="sp"></span><input class="inp" id="irQ" placeholder="Buscar nome, CPF ou indicação" value="${esc(UI.irQ||'')}" style="max-width:240px"></div>
    ${topInd.length?`<div style="padding:0 16px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:var(--dim)">Indicações:</span>${topInd.map(([k,c])=>`<span class="flag">${esc(k)} · ${c}</span>`).join('')}</div>`:''}
    ${vis.length?`<div class="rows">${vis.map(x=>{const s=st(x),r=x.r,c=soNum(r.cpf),res=IRPF_RES[r.resultado];return `<div class="row" style="cursor:default;flex-wrap:wrap;gap:8px"><div class="main-t" style="min-width:200px"><div>${esc(r.nome||'—')}</div><div class="sub mono">${esc(maskCPF(r.cpf)||'CPF não informado')}${r.indicacao?' · '+esc(r.indicacao):''}</div></div>
+     ${r.valor!=null?`<b class="mono" title="Valor cobrado">${brl(r.valor)}</b><span class="flag ${r.pago?'grn':'amb'}">${r.pago?'Pago':'A receber'}</span>`:''}
      <span class="flag ${IRPF_ST[s][1]}">${IRPF_ST[s][0]}</span>${s==='entregue'&&res?`<span class="flag ${res[1]}">${res[0]}</span>`:''}
      ${c?`<button class="btn ghost sm" data-copy="${c}">CPF</button>`:''}${r.senhaGov?`<button class="btn ghost sm" data-irsenha="${x.id}">${UI.irV===x.id?'🙈 '+esc(r.senhaGov):'👁 Senha'}</button>`:''}
      ${r.telefone?`<a class="wabtn" href="${waLink(r.telefone,'Olá'+(r.nome?' '+esc(r.nome.split(' ')[0]):'')+'! Aqui é da Londe & Rodrigues, sobre o seu Imposto de Renda.')}" target="_blank" rel="noopener" title="WhatsApp">${svg('wa',2)}</a>`:''}
@@ -7003,11 +7005,13 @@ function irpfForm(id){const r=id?(D.irpf.get(id)||{}):{};const ano=r.ano||irpfAn
    <div class="fd"><label for="ir_ano">Ano</label><input class="inp" id="ir_ano" value="${esc(ano)}"></div></div>
    <div class="fg"><div class="fd"><label for="ir_st">Situação</label><select class="sel" id="ir_st">${Object.keys(IRPF_ST).map(k=>`<option value="${k}" ${(r.status||'pendente')===k?'selected':''}>${IRPF_ST[k][0]}</option>`).join('')}</select></div>
    <div class="fd"><label for="ir_res">Resultado</label><select class="sel" id="ir_res"><option value="">—</option>${Object.keys(IRPF_RES).map(k=>`<option value="${k}" ${r.resultado===k?'selected':''}>${IRPF_RES[k][0]}</option>`).join('')}</select></div></div>
+   <div class="fg"><div class="fd"><label for="ir_valor">Valor cobrado (R$)</label><input class="inp mono" id="ir_valor" inputmode="decimal" value="${r.valor!=null?String(r.valor).replace('.',','):''}" placeholder="0,00"></div>
+   <div class="fd"><label for="ir_pago">Pagamento</label><select class="sel" id="ir_pago"><option value="">Em aberto</option><option value="pago" ${r.pago?'selected':''}>Pago</option></select></div></div>
    <datalist id="irInds">${[...new Set([...D.irpf.values()].map(x=>(x.indicacao||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt')).map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
    <div class="fd full"><label for="ir_obs">Observações</label><textarea class="inp" id="ir_obs" style="min-height:60px">${esc(r.obs||'')}</textarea></div>
    <div class="mf">${id?`<button type="button" class="btn ghost" data-irdel="${id}">Excluir</button>`:''}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" type="submit">Salvar</button></div></form>`,true);
   $('#irF').addEventListener('submit',ev=>{ev.preventDefault();const nome=val('ir_nome');if(!nome){toast('Informe o nome.');return}
-    const n=Object.assign({},r,{nome,cpf:val('ir_cpf'),senhaGov:document.getElementById('ir_sg').value,telefone:val('ir_tel'),indicacao:val('ir_ind'),ano:val('ir_ano')||irpfAno(),status:val('ir_st'),resultado:val('ir_res'),obs:document.getElementById('ir_obs').value,por:meuNome(),atualizadoEm:agora()});if(!r.criadoEm)n.criadoEm=agora();
+    const n=Object.assign({},r,{nome,cpf:val('ir_cpf'),senhaGov:document.getElementById('ir_sg').value,telefone:val('ir_tel'),indicacao:val('ir_ind'),ano:val('ir_ano')||irpfAno(),status:val('ir_st'),resultado:val('ir_res'),obs:document.getElementById('ir_obs').value,por:meuNome(),atualizadoEm:agora()});const vv=parseFloat(val('ir_valor').replace(/\./g,'').replace(',','.'));n.valor=isNaN(vv)?null:vv;n.pago=val('ir_pago')==='pago';if(!r.criadoEm)n.criadoEm=agora();
     put('irpf',id||uid(),n);closeModal();toast(id?'Salvo':'Pessoa adicionada')});
   const bd=document.querySelector('[data-irdel]');if(bd)bd.onclick=()=>{confirmBox('Excluir <b>'+esc(r.nome||'')+'</b> do IRPF?','Excluir',()=>{del('irpf',id);closeModal()})}}
 /* ================= Salário-maternidade (MEI) ================= */
