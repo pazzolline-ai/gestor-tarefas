@@ -3098,7 +3098,10 @@ function render(){document.documentElement.dataset.cad=podeCadastro()?'1':'0';
   try{modTabsAplicar()}catch(e){}try{ferAplicar()}catch(e){}try{nmAplicar()}catch(e){}
   if(fq&&(fq==='fq'||fq==='empQ')){const el=document.getElementById(fq);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch(e){}}}
 }
-function go(view,doHistorico){if(telaOculta(view)&&view!=='dashboard'){toast('Esta tela não está liberada para você.');view='dashboard'}const ant=UI.view,antE=UI.empresaId;UI.view=view;if(view==='chat')chatMarcar();if(view==='mural')lsSet('cs.muralVisto',agora());if(view!=='empresa')UI.empresaId=null;if(view!=='empresas'){UI.selMode=false;UI.sel.clear()}if(!doHistorico)navMarcar(view,ant!==view||(view==='empresa'&&antE!==UI.empresaId));render();window.scrollTo(0,0);const cv=$('#view');if(cv){cv.classList.remove('enter');void cv.offsetWidth;cv.classList.add('enter')}}
+function go(view,doHistorico){if(telaOculta(view)&&view!=='dashboard'){toast('Esta tela não está liberada para você.');view='dashboard'}const ant=UI.view,antE=UI.empresaId;UI.view=view;if(view==='chat')chatMarcar();if(view==='mural')lsSet('cs.muralVisto',agora());if(view!=='empresa')UI.empresaId=null;if(view!=='empresas'){UI.selMode=false;UI.sel.clear()}if(!doHistorico)navMarcar(view,ant!==view||(view==='empresa'&&antE!==UI.empresaId));render();window.scrollTo(0,0);const cv=$('#view');if(cv){cv.classList.remove('enter','mo-in');void cv.offsetWidth;cv.classList.add('enter','mo-in');clearTimeout(go.mo);go.mo=setTimeout(()=>cv.classList.remove('mo-in'),900);moContar(cv)}}
+function moContar(root){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
+  root.querySelectorAll('.tile .n,.mc-n,.pd-st b').forEach(el=>{const tn=[...el.childNodes].find(n=>n.nodeType===3&&/^\s*\d+\s*$/.test(n.textContent));if(!tn)return;const fim=+tn.textContent.trim();if(!(fim>0))return;const t0=performance.now(),d=Math.min(700,300+fim*25);
+    const passo=t=>{if(!tn.isConnected)return;const k=Math.max(0,Math.min(1,(t-t0)/d));tn.textContent=String(Math.round(fim*(1-Math.pow(1-k,3))));if(k<1)requestAnimationFrame(passo)};tn.textContent='0';requestAnimationFrame(passo)})}
 
 /* ---------- Modais ---------- */
 function openModal(html,wide){$('#modalRoot').innerHTML=`<div class="ov" data-ov><div class="md ${wide?'wide':''}" role="dialog" aria-modal="true">${html}</div></div>`;const f=$('#modalRoot').querySelector('input:not([type=hidden]),select,textarea');if(f&&window.innerWidth>760)f.focus()}
@@ -4744,6 +4747,7 @@ document.addEventListener('click',e=>{const pop=document.getElementById('agPop')
 
 /* ---------- Novidades (o que mudou em cada atualização) ---------- */
 const NOVIDADES=[
+ {id:'2026-11-27a',data:'27/11/2026',itens:['✨ Sistema com animações: telas e cartões entrando suavemente, números do painel contando, janelas e botões com movimento.']},
  {id:'2026-11-25d',data:'25/11/2026',itens:['🎨 Aparência (menu ⋯): layouts premium Grafite, Meia-noite dourado, Esmeralda, Vinho e Oceano, mais modo compacto.','🧾 O robô de emissão automática do DAS-MEI saiu. No lugar, a tela Guias DAS-MEI (Fiscal) controla a emissão manual: Pendente → Emitida → Enviada ao cliente → Paga, mês a mês, com atalho para o PGMEI, copiar CNPJ e mensagem pronta no WhatsApp.']},
  {id:'2026-11-25c',data:'25/11/2026',itens:['🧾 Serviços prestados por empresa: marque em Editar empresa se o escritório faz as guias do mês, a declaração anual, a emissão de nota fiscal, a folha ou a contabilidade. Aparece na ficha e nos cartões, e dá para filtrar a lista de empresas por serviço.']},
  {id:'2026-11-25b',data:'25/11/2026',itens:['📁 Pasta do cliente na ficha da empresa: envie XML de NF-e/NFS-e (ou um .zip), PDF de notas e documentos. O sistema soma o faturamento do mês e dos últimos 12 meses sozinho, com botão para copiar e planilha das notas.','👥 Usuários → Telas: a diretoria escolhe quais módulos e telas cada pessoa vê no menu.','📋 Ficha da empresa: toque em qualquer dado cadastral para copiar, ou use Copiar tudo.','🧹 O módulo BPO Financeiro saiu do menu (as tarefas antigas continuam guardadas).']},
@@ -7625,5 +7629,28 @@ h1,h2,h3,.top h1,.mh h3,.ph h2{font-family:var(--f-head)}
 :root[data-skin="cobre"][data-theme="light"]{--acc:#A2601E;--acc-2:#A2601E;--acc-soft:color-mix(in srgb,#A2601E 10%,#fff);--acc-ring:color-mix(in srgb,#A2601E 30%,transparent);--ink:#A2601E;--ink-fg:#fff}
 :root[data-compacto] .nav button{height:34px}:root[data-compacto] .row{padding-top:8px;padding-bottom:8px}:root[data-compacto] .ph{padding-top:10px;padding-bottom:10px}
 .sk-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.sk-c{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.sk-c.on{border-color:var(--acc)}.sk-p{height:70px;display:flex;gap:6px;padding:10px;box-sizing:border-box}.sk-p i{border-radius:8px}.sk-c b{padding:8px 10px;font-size:13px}
+
+/* ---------- Motion ---------- */
+:root{--mo:cubic-bezier(.22,1,.36,1)}
+@keyframes moUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes moFade{from{opacity:0}to{opacity:1}}
+@keyframes moMd{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes moToast{from{opacity:0;transform:translate(-50%,14px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
+.content.enter{animation:moFade .2s ease-out}
+.mo-in>*,.mo-in .tile,.mo-in .mod-card,.mo-in .panel,.mo-in .reminder,.mo-in .pd-st,.mo-in .pd-card{animation:moUp .45s var(--mo) both}
+.mo-in>*:nth-child(2){animation-delay:.04s}.mo-in>*:nth-child(3){animation-delay:.08s}.mo-in>*:nth-child(4){animation-delay:.12s}.mo-in>*:nth-child(5){animation-delay:.16s}.mo-in>*:nth-child(n+6){animation-delay:.2s}
+.mo-in .tile:nth-child(2),.mo-in .mod-card:nth-child(2),.mo-in .pd-st:nth-child(2){animation-delay:.05s}.mo-in .tile:nth-child(3),.mo-in .mod-card:nth-child(3),.mo-in .pd-st:nth-child(3){animation-delay:.1s}.mo-in .tile:nth-child(4),.mo-in .mod-card:nth-child(4),.mo-in .pd-st:nth-child(4){animation-delay:.15s}.mo-in .tile:nth-child(5),.mo-in .mod-card:nth-child(5){animation-delay:.2s}.mo-in .tile:nth-child(6){animation-delay:.25s}
+.mo-in .tlist tbody tr,.mo-in .row{animation:moUp .4s var(--mo) both}
+.mo-in .tlist tbody tr:nth-child(2),.mo-in .row:nth-child(2){animation-delay:.03s}.mo-in .tlist tbody tr:nth-child(3),.mo-in .row:nth-child(3){animation-delay:.06s}.mo-in .tlist tbody tr:nth-child(4),.mo-in .row:nth-child(4){animation-delay:.09s}.mo-in .tlist tbody tr:nth-child(5),.mo-in .row:nth-child(5){animation-delay:.12s}.mo-in .tlist tbody tr:nth-child(n+6),.mo-in .row:nth-child(n+6){animation-delay:.15s}
+.md{animation:moMd .32s var(--mo)}
+.ov{animation:moFade .2s ease-out}
+.toast{animation:moToast .35s var(--mo)}
+.btn,.tile,.mod-card,.pd-st,.nav button,.mods button{transition:transform .18s var(--mo),background-color .18s,border-color .18s,box-shadow .18s,color .18s}
+.btn:active,.nav button:active,.mods button:active{transform:scale(.96)}
+.tile:hover,.mod-card:hover,.pd-st:hover{transform:translateY(-2px)}
+.tile:active,.mod-card:active{transform:translateY(0) scale(.98)}
+.nav button:hover:not(.on){transform:translateX(2px)}
+.tlist tbody tr{transition:background-color .15s}
+@media (prefers-reduced-motion:reduce){.mo-in>*,.mo-in .tile,.mo-in .mod-card,.mo-in .panel,.mo-in .reminder,.mo-in .tlist tbody tr,.mo-in .row,.md,.ov,.toast,.content.enter{animation:none!important}.btn,.tile,.mod-card,.nav button,.mods button{transition:none!important;transform:none!important}}
 </style>
 </body></html>
